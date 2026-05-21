@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+const PLANS_CACHE_KEY = "boutiki_plans";
 
 export type Plan = {
   id: string;
@@ -24,23 +26,42 @@ let cachedPlans: Plan[] | null = null;
 
 export async function getPlans(force = false): Promise<Plan[]> {
   if (cachedPlans && !force) return cachedPlans;
-  const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
 
-  if (error) {
-    console.warn("Plans fetch error:", error.message);
-    return cachedPlans ?? DEFAULT_PLANS;
+  // Cache AsyncStorage
+  if (!force) {
+    try {
+      const saved = await AsyncStorage.getItem(PLANS_CACHE_KEY);
+      if (saved) {
+        cachedPlans = JSON.parse(saved) as Plan[];
+        fetchAndCachePlans().catch(() => {}); // sync background
+        return cachedPlans;
+      }
+    } catch {}
   }
 
-  if (data && data.length > 0) {
+  return await fetchAndCachePlans();
+}
+
+async function fetchAndCachePlans(): Promise<Plan[]> {
+  try {
+    const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+    if (error || !data || data.length === 0) return cachedPlans ?? DEFAULT_PLANS;
+
     cachedPlans = data.map((p) => ({
       ...p,
       features: Array.isArray(p.features) ? p.features : [],
       daily_edit_limit: p.daily_edit_limit ?? 0,
       edit_cooldown_hours: p.edit_cooldown_hours ?? 0,
     }));
+
+    try {
+      await AsyncStorage.setItem(PLANS_CACHE_KEY, JSON.stringify(cachedPlans));
+    } catch {}
+
     return cachedPlans;
+  } catch {
+    return cachedPlans ?? DEFAULT_PLANS;
   }
-  return DEFAULT_PLANS;
 }
 
 export function getPlanById(plans: Plan[], id: string): Plan {
