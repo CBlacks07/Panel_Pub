@@ -75,18 +75,18 @@ export default function LoginPage() {
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                className="input mt-1"
                 placeholder="ton@email.com" autoFocus />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mot de passe</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                className="input mt-1"
                 placeholder="••••••••" />
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="btn btn-primary w-full justify-center disabled:opacity-50"
               style={{ backgroundColor: primary }}>
               {loading ? "Connexion..." : "Se connecter"}
             </button>

@@ -94,7 +94,7 @@ export default function RegisterPage() {
                   type="text"
                   value={shopName}
                   onChange={(e) => setShopName(e.target.value)}
-                  className="mt-1 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                  className="input mt-1"
                   style={{ ["--tw-ring-color" as any]: primary }}
                   placeholder="Ex: Awa Fashion, Style by Kofi..."
                   autoFocus
@@ -126,7 +126,7 @@ export default function RegisterPage() {
                   if (!businessType) { setError("Choisis ton type de boutique"); return; }
                   setError(""); setStep(2);
                 }}
-                className="w-full py-3 rounded-xl font-bold text-white transition-opacity hover:opacity-90"
+                className="btn btn-primary w-full justify-center"
                 style={{ backgroundColor: primary }}
               >
                 Continuer
@@ -143,18 +143,18 @@ export default function RegisterPage() {
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                  className="input mt-1"
                   placeholder="ton@email.com" autoFocus />
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mot de passe</label>
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                  className="input mt-1"
                   placeholder="6 caractères minimum" />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="btn btn-primary w-full justify-center disabled:opacity-50"
                 style={{ backgroundColor: primary }}>
                 {loading ? "Création..." : config["vendor_cta"] || "Créer ma boutique gratuitement"}
               </button>

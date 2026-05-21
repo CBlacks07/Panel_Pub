@@ -94,14 +94,14 @@ export default function LandingPage() {
         <div className="animate-fade-up delay-300 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/auth/register"
-            className="btn-primary inline-block text-white font-bold px-8 py-4 rounded-2xl text-lg shadow-lg"
+            className="btn btn-primary btn-lg"
             style={{ backgroundColor: primary }}
           >
             {vendorCta}
           </Link>
           <Link
             href="/marketplace"
-            className="hover-lift inline-block text-gray-700 font-bold px-8 py-4 rounded-2xl text-lg border-2 border-gray-200 hover:border-gray-300 transition-colors"
+            className="btn btn-secondary btn-lg hover-lift"
           >
             Voir les boutiques <ArrowRight size={16} className="inline ml-1" />
           </Link>
@@ -174,7 +174,7 @@ export default function LandingPage() {
                   </ul>
                   {plan.price === 0 ? (
                     <Link href="/auth/register"
-                      className={`text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 border-2 border-gray-200 text-gray-700 hover:border-gray-300`}>
+                      className="btn btn-secondary w-full justify-center">
                       Commencer gratuitement
                     </Link>
                   ) : (
@@ -182,7 +182,7 @@ export default function LandingPage() {
                       href={`https://wa.me/22893914694?text=${encodeURIComponent(`Bonjour ! Je souhaite souscrire au plan ${plan.name} (${plan.price.toLocaleString("fr-FR")} ${plan.currency}/${plan.billing}).`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 text-white block"
+                      className="btn btn-primary w-full justify-center"
                       style={{ backgroundColor: primary }}>
                       Choisir {plan.name} <ArrowRight size={14} className="inline ml-1" />
                     </a>

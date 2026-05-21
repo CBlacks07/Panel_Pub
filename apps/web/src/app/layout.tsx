@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Panel Pub — Vendez sur WhatsApp",
-  description: "Créez votre vitrine en ligne et vendez via WhatsApp en 30 secondes.",
+  title: "Boutiki — Vendez via WhatsApp",
+  description: "Créez votre boutique en ligne en 30 secondes. Partagez-la. Recevez vos commandes sur WhatsApp.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className={inter.className}>{children}</body>
+    <html lang="fr" className={jakarta.variable}>
+      <body className={jakarta.className}>{children}</body>
     </html>
   );
 }
