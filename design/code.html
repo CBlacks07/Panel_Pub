@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@100..1000&amp;family=New+Amsterdam&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#a8f0e3",
+                    "on-tertiary-fixed-variant": "#005047",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed-dim": "#84cfff",
+                    "on-surface-variant": "#3e4850",
+                    "surface-variant": "#e0e3e5",
+                    "tertiary-fixed": "#8ff4e3",
+                    "secondary": "#1c695f",
+                    "on-primary-fixed-variant": "#004c6c",
+                    "surface-dim": "#d8dadc",
+                    "secondary-container": "#a5ede0",
+                    "primary": "#00658e",
+                    "on-tertiary-fixed": "#00201c",
+                    "primary-fixed": "#c7e7ff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#34adea",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#72d8c8",
+                    "surface-tint": "#00658e",
+                    "surface-container": "#eceef0",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#84cfff",
+                    "tertiary-container": "#4bb3a4",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-container": "#00413a",
+                    "outline": "#6e7881",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f7f9fb",
+                    "surface": "#f7f9fb",
+                    "surface-container-high": "#e6e8ea",
+                    "on-secondary-container": "#226e63",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-container": "#003e59",
+                    "on-primary-fixed": "#001e2e",
+                    "outline-variant": "#bec8d1",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#191c1e",
+                    "error": "#ba1a1a",
+                    "background": "#f7f9fb",
+                    "tertiary": "#006b5f",
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-fixed-dim": "#8cd4c7",
+                    "on-secondary-fixed": "#00201c",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#005047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "32px",
+                    "container-max": "1280px",
+                    "base": "8px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Roboto Flex"],
+                    "label-sm": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"],
+                    "headline-lg-mobile": ["New Amsterdam"],
+                    "headline-xl": ["New Amsterdam"],
+                    "body-lg": ["Roboto Flex"],
+                    "headline-md": ["New Amsterdam"],
+                    "headline-lg": ["New Amsterdam"],
+                    "body-sm": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "52px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "36px", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .bounce-animation {
+            animation: bounce-subtle 0.5s ease-in-out;
+        }
+        .pill-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .pill-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .whatsapp-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest shadow-sm border-b border-outline-variant">
+<div class="flex justify-between items-center px-4 h-16 w-full max-w-container-max mx-auto">
+<button class="flex items-center justify-center w-10 h-10 hover:bg-surface-container rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">Panel Pub</h1>
+<div class="relative group">
+<button class="flex items-center justify-center w-10 h-10 hover:opacity-80 transition-all duration-300 hover:scale-110 text-on-surface-variant" id="cart-btn">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-error text-on-error text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface-container-lowest">2</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-20 pb-24 px-4 min-h-screen">
+<!-- Search Bar (Premium Minimalist) -->
+<div class="mb-6">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary-container focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/50 text-body-md" placeholder="Rechercher un produit..." type="text"/>
+</div>
+</div>
+<!-- Category Pills -->
+<div class="flex gap-3 overflow-x-auto pill-scroll pb-6 -mx-4 px-4">
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-primary text-on-primary font-label-md transition-all active:scale-95">Tous</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all active:scale-95">Mode</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all active:scale-95">Électronique</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all active:scale-95">Maison</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all active:scale-95">Accessoires</button>
+</div>
+<!-- Product Grid -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Product Item 1 -->
+<div class="group bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300">
+<div class="aspect-square overflow-hidden rounded-t-xl bg-surface-container-low">
+<img alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A premium, sleek minimalist white watch with a clean face and silver metallic details, photographed on a soft grey architectural background. The lighting is bright and diffuse, highlighting the smooth textures and elegant curves of the device. The overall aesthetic is professional, modern, and high-end, aligning with a luxury electronics storefront." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz03o0AqBJaJPy4DVojX7Z9Il4EV90qEwlN0Q019cfIcEj1pgP-F14vDkinZMBYo-ILUEIfjGaEjqcoVLgJkYV919FgMUPBILwbnbRlPVcrNG6qe3qvOB3qSDCdsdG1AftKZ69ZidF2vK9FJqZHpxWeCusavP0ue5y123WzbYPiHKQTIDt_DLAfLI_EysQpk8wGBva4PtJuqJownTeQDwBdLJ0o5DA-YpFTLqZHcjv2fJIKs8i3JVwyP-o5arUfbGRmO2lGkF3IGV1"/>
+</div>
+<div class="p-3 flex flex-col gap-1">
+<h3 class="font-headline-md text-[18px] text-on-surface leading-tight">Montre Minimaliste</h3>
+<p class="text-on-surface-variant font-body-sm mb-2">Série Argent</p>
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold text-lg">129.00 €</span>
+<button class="bg-primary-container text-on-primary-container w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform hover:bg-primary hover:text-on-primary" onclick="addToCartAnimation()">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 2 -->
+<div class="group bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300">
+<div class="aspect-square overflow-hidden rounded-t-xl bg-surface-container-low">
+<img alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="High-fidelity black wireless headphones featuring plush leather ear cushions and a matte finish. They are set against a vibrant blue studio background with soft side lighting that accentuates the premium build quality. The mood is sophisticated and tech-focused, perfectly suited for an upscale electronics retail display." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoB8LYc5Bkvp4m3rZnvg4AwUS9WjSjF9034_qLxFwNd5p_Buv-bMLa0UWuAQynAI_IcLzl92ecXmM-N6yeKRVbwEL_mc3irflRqPDDTJOMguDCNF4IGZgA-JVyTAxd_YcCSynSJwj48AYOWM8xxyxiiMhBuOUunHG2H38pVLVCEE3a8KcPGGJOLm4TEVjj6y5ysQplZTevcJfCaBNQWzn-YoLEXvTOvGmv7fYNW71rz6n22mErbH9waKnH3hiha1u1XrBcXR96SvFS"/>
+</div>
+<div class="p-3 flex flex-col gap-1">
+<h3 class="font-headline-md text-[18px] text-on-surface leading-tight">Casque Studio V2</h3>
+<p class="text-on-surface-variant font-body-sm mb-2">Réduction de bruit</p>
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold text-lg">249.00 €</span>
+<button class="bg-primary-container text-on-primary-container w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform hover:bg-primary hover:text-on-primary" onclick="addToCartAnimation()">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 3 -->
+<div class="group bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300">
+<div class="aspect-square overflow-hidden rounded-t-xl bg-surface-container-low">
+<img alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A pair of stylish, high-top classic sneakers in a vibrant yellow and white color scheme. The shoes are placed on a clean white surface with a minimalist pastel blue backdrop. Bright, even lighting creates a clean, commercial look that highlights the canvas texture and classic silhouette. The style is fresh, youthful, and trendy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTZaw50EHl2nV4DkuGLFb0s0GqgVtGh6srjydVxFTIGU27bVQmBwwUW_rgorqkwW7bf_qyEJe4iJxew8moNmsccOycKwUx74kxv0GAo540ZeRKBhVXeHoITfTMBdX_oJNMxxW4A8XQBpl-Qm-Nf5fmxQKeduiDBaMdcNyIxLTJAh3441XR6j_tTLa9Q2hWRU2QRQx1kCDO7lHHkxckiBuUiEsQKj2RcTWJ72jInH9rmtkwmBNjka6Vh3oqeVxgbuAgqPWzBY-Mi15I"/>
+</div>
+<div class="p-3 flex flex-col gap-1">
+<h3 class="font-headline-md text-[18px] text-on-surface leading-tight">Sneakers Classic</h3>
+<p class="text-on-surface-variant font-body-sm mb-2">Collection Été</p>
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold text-lg">85.00 €</span>
+<button class="bg-primary-container text-on-primary-container w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform hover:bg-primary hover:text-on-primary" onclick="addToCartAnimation()">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 4 -->
+<div class="group bg-white rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300">
+<div class="aspect-square overflow-hidden rounded-t-xl bg-surface-container-low">
+<img alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Vibrant red athletic running shoe displayed in a dynamic, angled pose. The background is a neutral, soft-lit white studio setting with gentle shadows that give the shoe a three-dimensional feel. The focus is sharp on the high-tech mesh material and sleek sole design, conveying a sense of speed and high-performance engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3MqOg5745sJC4j64pQHwwmgXk8mxPXfBSFh2tLPtpg87WHBFjSQVvOsprZhDHlFbGl7LHjkW-KOjIlT34rr1nBVh5h1_ZOAJEqUn6mxfFVY9KmFFTzMzoE-FbXVqitl7vhHG5Wme6qaRLxc0vnTcV7MA_eh-SpD2ZCaZdNHdtTGKxKQuWL-rEv2U9fyzAtGUCwmUj3gQhM1jCqd49Fy5uSairpJmFHUhDnDO-xIBfagtBkH1dKxzvSPM_nimIMyOYoTqY72OgDdSy"/>
+</div>
+<div class="p-3 flex flex-col gap-1">
+<h3 class="font-headline-md text-[18px] text-on-surface leading-tight">Running Air Max</h3>
+<p class="text-on-surface-variant font-body-sm mb-2">Performance Pro</p>
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold text-lg">159.00 €</span>
+<button class="bg-primary-container text-on-primary-container w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform hover:bg-primary hover:text-on-primary" onclick="addToCartAnimation()">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- WhatsApp FAB -->
+<div class="fixed bottom-20 right-6 z-40">
+<button class="bg-[#25D366] text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center whatsapp-pulse hover:scale-110 active:scale-95 transition-all">
+<svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.82c1.516.903 3.009 1.365 4.616 1.365 5.176 0 9.389-4.215 9.392-9.391.001-2.505-.974-4.859-2.748-6.635-1.775-1.775-4.13-2.75-6.633-2.75-5.176 0-9.389 4.215-9.392 9.391-.001 1.83.526 3.515 1.523 4.931l-.994 3.633 3.736-.98zm11.238-6.19c-.3-.15-1.773-.875-2.048-.976-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-.3-.15-1.268-.467-2.414-1.49-.893-.795-1.495-1.778-1.67-2.078-.175-.3-.018-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.587-.492-.508-.675-.517-.175-.009-.375-.01-.575-.01s-.525.075-.8.375c-.275.3-1.05 1.025-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.115 3.23 5.125 4.53 1.114.48 1.956.764 2.623.974.72.228 1.374.196 1.892.118.577-.087 1.773-.725 2.023-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35z"></path></svg>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center py-2 px-4 bg-surface-container-lowest shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-50 rounded-t-xl border-t border-outline-variant">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-95 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-sm text-label-sm mt-1">Items</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-label-sm text-label-sm mt-1">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-label-sm mt-1">Settings</span>
+</a>
+</nav>
+<script>
+        function addToCartAnimation() {
+            const cartBtn = document.getElementById('cart-btn');
+            cartBtn.classList.remove('bounce-animation');
+            void cartBtn.offsetWidth; // Trigger reflow
+            cartBtn.classList.add('bounce-animation');
+        }
+
+        // Horizontal category pill scrolling effect
+        const pillScroll = document.querySelector('.pill-scroll');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        pillScroll.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - pillScroll.offsetLeft;
+            scrollLeft = pillScroll.scrollLeft;
+        });
+        pillScroll.addEventListener('mouseleave', () => { isDown = false; });
+        pillScroll.addEventListener('mouseup', () => { isDown = false; });
+        pillScroll.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - pillScroll.offsetLeft;
+            const walk = (x - startX) * 2;
+            pillScroll.scrollLeft = scrollLeft - walk;
+        });
+
+        // Simple active pill toggle
+        const pills = document.querySelectorAll('.pill-scroll button');
+        pills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                pills.forEach(p => {
+                    p.classList.remove('bg-primary', 'text-on-primary');
+                    p.classList.add('bg-white', 'text-on-surface-variant', 'border-outline-variant');
+                });
+                pill.classList.add('bg-primary', 'text-on-primary');
+                pill.classList.remove('bg-white', 'text-on-surface-variant', 'border-outline-variant');
+            });
+        });
+    </script>
+</body></html>

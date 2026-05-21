@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Panel Pub - Dashboard Vendeur</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=New+Amsterdam&amp;family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#a8f0e3",
+                        "on-tertiary-fixed-variant": "#005047",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#84cfff",
+                        "on-surface-variant": "#3e4850",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary-fixed": "#8ff4e3",
+                        "secondary": "#1c695f",
+                        "on-primary-fixed-variant": "#004c6c",
+                        "surface-dim": "#d8dadc",
+                        "secondary-container": "#a5ede0",
+                        "primary": "#00658e",
+                        "on-tertiary-fixed": "#00201c",
+                        "primary-fixed": "#c7e7ff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#34adea",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#72d8c8",
+                        "surface-tint": "#00658e",
+                        "surface-container": "#eceef0",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#84cfff",
+                        "tertiary-container": "#4bb3a4",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface": "#191c1e",
+                        "on-tertiary-container": "#00413a",
+                        "outline": "#6e7881",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "surface-container-high": "#e6e8ea",
+                        "on-secondary-container": "#226e63",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-container": "#003e59",
+                        "on-primary-fixed": "#001e2e",
+                        "outline-variant": "#bec8d1",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "background": "#f7f9fb",
+                        "tertiary": "#006b5f",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-fixed-dim": "#8cd4c7",
+                        "on-secondary-fixed": "#00201c",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#005047"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-desktop": "32px",
+                        "container-max": "1280px",
+                        "base": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Roboto Flex"],
+                        "label-sm": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "headline-lg-mobile": ["New Amsterdam"],
+                        "headline-xl": ["New Amsterdam"],
+                        "body-lg": ["Roboto Flex"],
+                        "headline-md": ["New Amsterdam"],
+                        "headline-lg": ["New Amsterdam"],
+                        "body-sm": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "32px", "fontWeight": "400"}],
+                        "headline-xl": ["48px", {"lineHeight": "52px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "36px", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes pulse-fab {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pulse-fab {
+            animation: pulse-fab 2s infinite ease-in-out;
+        }
+        .bounce-animation:active {
+            transform: translateY(-4px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest border-b border-outline-variant shadow-sm h-16">
+<div class="flex justify-between items-center px-4 h-full w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary text-2xl cursor-pointer hover:opacity-80 transition-opacity" data-icon="menu">menu</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Panel Pub</h1>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative bounce-animation cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">3</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-20 px-margin-mobile flex flex-col gap-8">
+<!-- Welcome Header -->
+<section class="mt-4">
+<h2 class="font-headline-md text-headline-md text-on-surface">Tableau de bord</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bienvenue, Boutique de Mode</p>
+</section>
+<!-- Statistics Section (Bento-style stacked cards) -->
+<section class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Statistiques</h3>
+<span class="text-primary text-xs font-bold">7 derniers jours</span>
+</div>
+<!-- Views Card -->
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Vues Totales</span>
+<span class="material-symbols-outlined text-primary" data-icon="visibility">visibility</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-primary">1,284</span>
+<span class="text-secondary text-label-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span> 12%
+                    </span>
+</div>
+</div>
+<!-- Sales Card -->
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Ventes</span>
+<span class="material-symbols-outlined text-primary" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-primary">84</span>
+<span class="text-secondary text-label-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span> 8%
+                    </span>
+</div>
+</div>
+<!-- Conversion Card -->
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Conversion Rate</span>
+<span class="material-symbols-outlined text-primary" data-icon="leaderboard">leaderboard</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-primary">6.5%</span>
+<span class="text-error text-label-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_downward">arrow_downward</span> 2%
+                    </span>
+</div>
+</div>
+</section>
+<!-- Items List Section -->
+<section class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Derniers Articles</h3>
+<button class="text-primary font-label-sm text-label-sm">Voir tout</button>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Item 1 -->
+<div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant hover:bg-surface-container transition-colors cursor-pointer group">
+<img class="w-16 h-16 object-cover rounded-lg group-hover:scale-105 transition-transform" data-alt="A professional high-end minimalist product photo of a sleek white modern smartwatch on a clean light grey background. The lighting is soft and corporate, following a premium SaaS aesthetic with subtle shadows and high clarity. The overall mood is sophisticated and technologically advanced, using a neutral color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrXeXqF7p9ZthXPp6YYJs73nQ40m_P6urLZ5mudD7qK012HmoBlw0wIygM-Hle2gx3o2dltM8VLNN2CP7dUYS7zGUYkvQVtJTl_uG18a0E6iDwcMrZLEag2DCUuvgf749dEwa1T9Kqe3v1QKGGXX_DvdSohEUVPCX5h8lvmtktfREH1rtNmuzRvqD6VC4fEDuzU1PTmjj2sFN2Y6EJDSfdhjil0TfMperLRSM3-RY0gn6Q-PVD3JjFmDNCGCoMj_QNKMd3Wc_7DMZg"/>
+<div class="flex-1">
+<h4 class="font-label-md text-label-md text-on-surface">Montre Connectée Pro</h4>
+<p class="text-primary font-bold">129.00 €</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant hover:bg-surface-container transition-colors cursor-pointer group">
+<img class="w-16 h-16 object-cover rounded-lg group-hover:scale-105 transition-transform" data-alt="A studio shot of premium black over-ear wireless headphones isolated on a soft white background. The lighting highlights the matte textures and elegant curves of the product, reflecting a modern and clean design language. The composition is centered and balanced, ideal for a high-end e-commerce storefront." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhztZATtwybGpORtS0df0qCHB_Dd-NjOZ7jQ6AfXOoKRLQKtBnmPe_qkqHqg-_Un7skcKvq_ZxgyWxwKWDwEyBHGQnjRtrx5K32Aze4wP8aiPZ-eRYKXH95e_g1Hgy7CBYaGWKo3E7N2uMu9w2stATSPRc9bAEzpqQdbmI9YGQC9CW_1Wkrfmp1GTzLnPSueFSH6Frbuaqlq_o-3AdYkv0Ak3d8bpeCqqXLS8zqFFTnWqxxGWFDtYbHx2et42b4-BRm_7TZfUZLsyf"/>
+<div class="flex-1">
+<h4 class="font-label-md text-label-md text-on-surface">Casque Audio Studio</h4>
+<p class="text-primary font-bold">89.00 €</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant hover:bg-surface-container transition-colors cursor-pointer group">
+<img class="w-16 h-16 object-cover rounded-lg group-hover:scale-105 transition-transform" data-alt="An aesthetically pleasing view of a minimalist ceramic travel mug in a soft charcoal grey color. The product is placed on a clean marble surface with bright, high-key natural lighting creating a fresh and professional vibe. The scene is uncluttered, emphasizing efficiency and modern lifestyle quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVTAv1gnuPQLnCE3zAKvBkeVcG238csdzf5fxAuTOHyedOi9sofspXoBPd5KBXCgEoZFt3ZuFlvgudk6i8raYo_VSlNW6wrlz5FfvaoKARL-xgWEYPqfLC6JwjkLoFqVfjSUdC175T3HT8xBN2jn-WKOJgJbcfGJKSBNAYv5ENElW841laNNGwyI17lYrmCfrnWvJr_YLRsgy26htgPJUwlft0LYvOape40Sg6ttF2nxqA8YRV_km1W6CClMo2dN0jjNDMBImU3ewj"/>
+<div class="flex-1">
+<h4 class="font-label-md text-label-md text-on-surface">Gourde Isotherme</h4>
+<p class="text-primary font-bold">24.50 €</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-xl flex items-center justify-center animate-pulse-fab z-50 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl font-bold" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center py-2 px-4 bg-surface-container-lowest z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] border-t border-outline-variant">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- Items -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-sm text-label-sm">Items</span>
+</a>
+<!-- Stats (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-all scale-95 active:scale-90 shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart" data-weight="fill">bar_chart</span>
+<span class="font-label-sm text-label-sm font-bold">Stats</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for adding items
+        document.querySelector('.animate-pulse-fab').addEventListener('click', () => {
+            const cart = document.querySelector('.relative.bounce-animation');
+            cart.classList.add('scale-125');
+            setTimeout(() => cart.classList.remove('scale-125'), 300);
+            
+            // Ripple effect logic could be added here
+        });
+
+        // Toggle Active States logic (simulation)
+        const navItems = document.querySelectorAll('nav a');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                navItems.forEach(nav => {
+                    nav.className = "flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all scale-95 active:scale-90";
+                    const icon = nav.querySelector('.material-symbols-outlined');
+                    if(icon) icon.style.fontVariationSettings = "'FILL' 0";
+                });
+                item.className = "flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-all scale-95 active:scale-90 shadow-sm";
+                const activeIcon = item.querySelector('.material-symbols-outlined');
+                if(activeIcon) activeIcon.style.fontVariationSettings = "'FILL' 1";
+            });
+        });
+    </script>
+</body></html>

@@ -11,7 +11,7 @@
     --radius-card: 20px;
   }
 
-  html { font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  html { font-family: var(--font-body); -webkit-font-smoothing: antialiased; background-color: #f7f9fb; }
 
   /* Typography scale */
   .text-display  { font-size: 3rem;   line-height: 1.1;  font-weight: 800; letter-spacing: -0.02em; }
@@ -73,12 +73,17 @@
   .btn-sm { font-size: 0.8125rem; padding: 0.5rem 1rem; border-radius: 10px; }
   .btn-lg { font-size: 1.0625rem; padding: 1rem 2rem; border-radius: 16px; }
 
+  /* Shadows 3 niveaux */
+  .shadow-low    { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
+  .shadow-mid    { box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04); }
+  .shadow-high   { box-shadow: 0 12px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.04); }
+
   /* Card standard */
   .card {
     background: #fff;
     border-radius: var(--radius-card);
-    border: 1px solid #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
   }
 
   /* Input standard */

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=New+Amsterdam&amp;family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#a8f0e3",
+                    "on-tertiary-fixed-variant": "#005047",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed-dim": "#84cfff",
+                    "on-surface-variant": "#3e4850",
+                    "surface-variant": "#e0e3e5",
+                    "tertiary-fixed": "#8ff4e3",
+                    "secondary": "#1c695f",
+                    "on-primary-fixed-variant": "#004c6c",
+                    "surface-dim": "#d8dadc",
+                    "secondary-container": "#a5ede0",
+                    "primary": "#00658e",
+                    "on-tertiary-fixed": "#00201c",
+                    "primary-fixed": "#c7e7ff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#34adea",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#72d8c8",
+                    "surface-tint": "#00658e",
+                    "surface-container": "#eceef0",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#84cfff",
+                    "tertiary-container": "#4bb3a4",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-container": "#00413a",
+                    "outline": "#6e7881",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f7f9fb",
+                    "surface": "#f7f9fb",
+                    "surface-container-high": "#e6e8ea",
+                    "on-secondary-container": "#226e63",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-container": "#003e59",
+                    "on-primary-fixed": "#001e2e",
+                    "outline-variant": "#bec8d1",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#191c1e",
+                    "error": "#ba1a1a",
+                    "background": "#f7f9fb",
+                    "tertiary": "#006b5f",
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-fixed-dim": "#8cd4c7",
+                    "on-secondary-fixed": "#00201c",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#005047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "32px",
+                    "container-max": "1280px",
+                    "base": "8px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Roboto Flex"],
+                    "label-sm": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"],
+                    "headline-lg-mobile": ["New Amsterdam"],
+                    "headline-xl": ["New Amsterdam"],
+                    "body-lg": ["Roboto Flex"],
+                    "headline-md": ["New Amsterdam"],
+                    "headline-lg": ["New Amsterdam"],
+                    "body-sm": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "52px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "36px", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .pulse-whatsapp {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .bg-mesh {
+            background-color: #f7f9fb;
+            background-image: radial-gradient(at 0% 0%, rgba(52, 173, 234, 0.05) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(0, 101, 142, 0.05) 0px, transparent 50%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md antialiased mb-20 bg-mesh">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-16">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Panel Pub</h1>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-error text-on-error text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+</div>
+</div>
+</header>
+<main class="pt-16 max-w-container-max mx-auto overflow-hidden">
+<!-- Hero Product Image (50% of screen height) -->
+<div class="relative w-full h-[442px] overflow-hidden">
+<img alt="Premium Polo Panel Pub" class="w-full h-full object-cover" data-alt="A high-end, professionally photographed minimalist polo shirt displayed in a bright, airy studio setting. The lighting is soft and diffused, highlighting the fine texture of the fabric against a clean, off-white background. The scene exudes a corporate yet modern elegance, consistent with a premium e-commerce platform. Subtle shadows define the garment's shape, while the overall aesthetic is fast, modern, and trustworthy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc5RDz9IwY_FZ6bhcUptHUMMIslKzKGZZFpSmGfJmofd61_FTnCwSKpUdGD05QHLPn7oNmSFmkHImTTPhYIZjjyJDQn2rnrYX0SMjmfRz9Q1qCgfhWWeaGzH-OsU_l3QquP-8SgrwzjIZf5Mu9tXr-CKK3uQWfUXYk2N03H7t-9wJelTkyJxhRQhcdhZ_eRa4wPf6xaXVUJPOiUWXWwBwpvaWc10kv__65evLf9mahtlPA0k0-QAD5y6EPq3_dOIHyBO4M3qil7iGW"/>
+<div class="absolute top-4 right-4">
+<button class="bg-surface/80 backdrop-blur-md p-2 rounded-full shadow-md text-primary">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+</div>
+<!-- Product Content -->
+<section class="px-margin-mobile pt-gutter space-y-gutter bg-surface-container-lowest rounded-t-3xl -mt-6 relative z-10 pb-10">
+<!-- Header Info -->
+<div class="flex justify-between items-start">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Polo Premium "Panel Pub"</h2>
+<p class="text-on-surface-variant font-label-md">Collection Business Casual</p>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md text-primary">45,00€</span>
+<p class="text-outline text-label-sm line-through">59,00€</p>
+</div>
+</div>
+<!-- Description -->
+<div class="space-y-2">
+<h3 class="font-label-md text-label-md uppercase tracking-wider text-outline">Description</h3>
+<p class="text-on-surface-variant text-body-md leading-relaxed">
+                    Conçu pour l'excellence, ce polo allie confort respirant et élégance professionnelle. Idéal pour vos événements networking ou vos journées de travail dynamiques. 100% coton organique.
+                </p>
+</div>
+<!-- Size Selection (Box Radios) -->
+<div class="space-y-base">
+<h3 class="font-label-md text-label-md uppercase tracking-wider text-outline">Taille</h3>
+<div class="flex gap-4" id="size-selector">
+<button class="w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center font-label-md hover:border-primary transition-all duration-200 bg-surface" onclick="selectSize(this)">S</button>
+<button class="w-14 h-14 rounded-lg border-2 border-primary bg-primary-container/10 flex items-center justify-center font-label-md text-primary transition-all duration-200" onclick="selectSize(this)">M</button>
+<button class="w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center font-label-md hover:border-primary transition-all duration-200 bg-surface" onclick="selectSize(this)">L</button>
+<button class="w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center font-label-md hover:border-primary transition-all duration-200 bg-surface" onclick="selectSize(this)">XL</button>
+</div>
+</div>
+<!-- Color Selection (Box Radios) -->
+<div class="space-y-base">
+<h3 class="font-label-md text-label-md uppercase tracking-wider text-outline">Couleur</h3>
+<div class="flex gap-4" id="color-selector">
+<button class="group flex flex-col items-center gap-1" onclick="selectColor(this, 'Bleu')">
+<div class="w-14 h-14 rounded-lg border-2 border-primary bg-primary-container/10 flex items-center justify-center transition-all duration-200">
+<div class="w-8 h-8 rounded-full bg-primary shadow-sm"></div>
+</div>
+<span class="text-label-sm text-primary">Bleu</span>
+</button>
+<button class="group flex flex-col items-center gap-1" onclick="selectColor(this, 'Noir')">
+<div class="w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center transition-all duration-200 bg-surface">
+<div class="w-8 h-8 rounded-full bg-on-background shadow-sm"></div>
+</div>
+<span class="text-label-sm text-on-surface-variant">Noir</span>
+</button>
+<button class="group flex flex-col items-center gap-1" onclick="selectColor(this, 'Blanc')">
+<div class="w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center transition-all duration-200 bg-surface">
+<div class="w-8 h-8 rounded-full bg-white border border-outline-variant shadow-sm"></div>
+</div>
+<span class="text-label-sm text-on-surface-variant">Blanc</span>
+</button>
+</div>
+</div>
+<!-- Details List -->
+<div class="pt-base border-t border-outline-variant">
+<div class="flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-primary" data-icon="local_shipping">local_shipping</span>
+<span class="text-body-sm text-on-surface-variant">Livraison offerte sous 48h</span>
+</div>
+<div class="flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<span class="text-body-sm text-on-surface-variant">Garantie satisfaction Panel Pub</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Shell -->
+<footer class="fixed bottom-0 w-full z-50 bg-primary dark:bg-primary-container shadow-lg flex justify-around items-center h-20 px-4">
+<!-- Catalog Nav Item -->
+<a class="flex flex-row items-center justify-center gap-2 text-on-primary/80 font-label-md hover:scale-105 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span>Catalog</span>
+</a>
+<!-- Commander via WhatsApp (Primary Action) -->
+<button class="flex flex-row items-center justify-center gap-3 bg-primary-container/20 border border-white/30 rounded-xl px-6 py-3 text-on-primary font-label-md hover:scale-105 transition-transform animate-pulse duration-[2000ms]">
+<span class="material-symbols-outlined pulse-whatsapp" data-icon="chat" style="font-variation-settings: 'FILL' 1;">chat</span>
+<span>Commander via WhatsApp</span>
+</button>
+</footer>
+<script>
+        function selectSize(element) {
+            const container = document.getElementById('size-selector');
+            const buttons = container.getElementsByTagName('button');
+            
+            for (let btn of buttons) {
+                btn.className = "w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center font-label-md hover:border-primary transition-all duration-200 bg-surface";
+            }
+            
+            element.className = "w-14 h-14 rounded-lg border-2 border-primary bg-primary-container/10 flex items-center justify-center font-label-md text-primary transition-all duration-200";
+        }
+
+        function selectColor(element, name) {
+            const container = document.getElementById('color-selector');
+            const groups = container.getElementsByTagName('button');
+            
+            for (let btn of groups) {
+                const box = btn.querySelector('div');
+                const label = btn.querySelector('span');
+                box.className = "w-14 h-14 rounded-lg border border-outline-variant flex items-center justify-center transition-all duration-200 bg-surface";
+                label.className = "text-label-sm text-on-surface-variant";
+            }
+            
+            const activeBox = element.querySelector('div');
+            const activeLabel = element.querySelector('span');
+            activeBox.className = "w-14 h-14 rounded-lg border-2 border-primary bg-primary-container/10 flex items-center justify-center transition-all duration-200";
+            activeLabel.className = "text-label-sm text-primary";
+        }
+    </script>
+</body></html>
