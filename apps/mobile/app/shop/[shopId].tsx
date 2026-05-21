@@ -1,0 +1,549 @@
+import { useEffect, useState, useRef } from "react";
+import {
+  View, Text, FlatList, TouchableOpacity, Image,
+  StyleSheet, ActivityIndicator, Modal, ScrollView,
+  Dimensions, StatusBar, Animated,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { supabase } from "../../lib/supabase";
+import { useCartStore, CartItem } from "../../store/cartStore";
+import { buildWhatsAppMessage, openWhatsApp } from "../../lib/whatsapp";
+import CartModal from "../../components/CartModal";
+import RatingModal from "../../components/RatingModal";
+import StarRating from "../../components/StarRating";
+import { useConfig } from "../../context/ConfigContext";
+import { getBusinessType } from "../../lib/businessTypes";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width: screenWidth } = Dimensions.get("window");
+const MAX_WIDTH = Math.min(screenWidth, 680);
+const CARD_SIZE = (MAX_WIDTH - 48) / 2;
+
+type Variation = { type: string; value: string };
+type Product = {
+  id: string;
+  title: string;
+  price: number;
+  description: string | null;
+  category: string;
+  image_url: string | null;
+  product_variations: Variation[];
+};
+type Shop = { shop_name: string; phone_whatsapp: string | null; slogan: string | null; description: string | null; shop_logo_url: string | null; suspended?: boolean; business_type?: string | null };
+
+export default function ShopScreen() {
+  const { shopId } = useLocalSearchParams<{ shopId: string }>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { primary } = useConfig();
+
+  const [shop, setShop] = useState<Shop | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filtered, setFiltered] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState("Tout");
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [cartVisible, setCartVisible] = useState(false);
+  const [ratingVisible, setRatingVisible] = useState(false);
+  const [shopRating, setShopRating] = useState({ avg: 0, count: 0 });
+
+  const cartAnim = useRef(new Animated.Value(0)).current;
+  const whatsappPulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(whatsappPulse, { toValue: 1.05, duration: 800, useNativeDriver: true }),
+        Animated.timing(whatsappPulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+  const cartStore = useCartStore();
+  const items = cartStore.getItems(shopId as string);
+  const addItem = (item: CartItem) => cartStore.addItem(shopId as string, item);
+  const total = () => cartStore.total(shopId as string);
+  const clearCart = () => cartStore.clear(shopId as string);
+
+  useEffect(() => {
+    loadShop();
+  }, [shopId]);
+
+  useEffect(() => {
+    Animated.spring(cartAnim, {
+      toValue: items.length > 0 ? 1 : 0, // items est déjà scopé par shopId
+      useNativeDriver: true,
+      tension: 80,
+      friction: 10,
+    }).start();
+  }, [items.length]);
+
+  const loadShop = async () => {
+    const [{ data: shopData }, { data: productsData }, { data: ratingsData }] = await Promise.all([
+      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, suspended, business_type").eq("id", shopId).single(),
+      supabase.from("products")
+        .select("id, title, price, description, category, image_url, product_variations(type, value)")
+        .eq("user_id", shopId)
+        .order("created_at", { ascending: false }),
+      supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
+    ]);
+
+    if (ratingsData && ratingsData.length > 0) {
+      const avg = ratingsData.reduce((s, r) => s + r.rating, 0) / ratingsData.length;
+      setShopRating({ avg, count: ratingsData.length });
+    }
+
+    if (shopData) setShop(shopData);
+    if (productsData) {
+      setProducts(productsData);
+      setFiltered(productsData);
+      setCategories(["Tout", ...Array.from(new Set(productsData.map((p) => p.category)))]);
+    }
+    setLoading(false);
+  };
+
+  const filterByCategory = (cat: string) => {
+    setActiveCategory(cat);
+    setFiltered(cat === "Tout" ? products : products.filter((p) => p.category === cat));
+  };
+
+  const openProduct = (product: Product) => {
+    setSelected(product);
+    setSelectedSize(null);
+    setSelectedColor(null);
+    // Tracker la vue
+    supabase.from("product_views").insert({ product_id: product.id }).then(() => {});
+  };
+
+  const handleAddToCart = () => {
+    if (!selected) return;
+    const sizes = selected.product_variations.filter((v) => v.type === "size");
+    const colors = selected.product_variations.filter((v) => v.type === "color");
+    if (sizes.length > 0 && !selectedSize) return;
+    if (colors.length > 0 && !selectedColor) return;
+
+    addItem({
+      id: selected.id,
+      title: selected.title,
+      price: selected.price,
+      image_url: selected.image_url,
+      selectedSize,
+      selectedColor,
+      quantity: 1,
+    });
+    setSelected(null);
+  };
+
+  const handleWhatsApp = async () => {
+    if (!shop?.phone_whatsapp) return;
+    await openWhatsApp(shop.phone_whatsapp, buildWhatsAppMessage(items, shop.shop_name));
+  };
+
+  const cartTranslateY = cartAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [120, 0],
+  });
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={primary} />
+      </View>
+    );
+  }
+
+  if (!shop) {
+    return (
+      <View style={styles.loadingScreen}>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>🔍</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: "#1a1a1a", marginBottom: 8 }}>Boutique introuvable</Text>
+        <Text style={{ fontSize: 14, color: "#888", textAlign: "center", paddingHorizontal: 40 }}>
+          Cette boutique n'existe pas ou a été supprimée.
+        </Text>
+        <TouchableOpacity onPress={() => router.replace("/marketplace")} style={{ marginTop: 24, backgroundColor: primary, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 }}>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Voir toutes les boutiques</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (shop.suspended) {
+    return (
+      <View style={styles.loadingScreen}>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>⛔</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: "#1a1a1a", marginBottom: 8 }}>Boutique suspendue</Text>
+        <Text style={{ fontSize: 14, color: "#888", textAlign: "center", paddingHorizontal: 40 }}>
+          Cette boutique a été temporairement suspendue.
+        </Text>
+        <TouchableOpacity onPress={() => router.replace("/marketplace")} style={{ marginTop: 24, backgroundColor: primary, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 }}>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Voir d'autres boutiques</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // shop est garanti non-null ici
+  const shopBizType = getBusinessType(shop.business_type || "mode");
+
+  return (
+    <View style={styles.outerContainer}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Header boutique */}
+      <View style={styles.shopHeader}>
+        <TouchableOpacity onPress={() => router.canGoBack() && router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
+        </TouchableOpacity>
+
+        <View style={styles.shopHeaderCenter}>
+          {/* Avatar initiale */}
+          <View style={[styles.shopAvatar, { backgroundColor: primary }]}>
+            {shop.shop_logo_url && shop.shop_logo_url.trim().length > 0 ? (
+              <Image source={{ uri: shop.shop_logo_url }} style={{ width: 64, height: 64 }} resizeMode="cover" />
+            ) : (
+              <Text style={styles.shopAvatarText}>{shop.shop_name[0].toUpperCase()}</Text>
+            )}
+          </View>
+          <Text style={styles.shopName}>{shop.shop_name}</Text>
+          {shop.slogan ? (
+            <Text style={[styles.shopSlogan, { color: primary }]}>"{shop.slogan}"</Text>
+          ) : null}
+          {shop.description ? (
+            <Text style={styles.shopDescription}>{shop.description}</Text>
+          ) : null}
+          {shopRating.count > 0 ? (
+            <StarRating rating={shopRating.avg} count={shopRating.count} size="sm" />
+          ) : null}
+          <View style={styles.shopMeta}>
+            <Text style={styles.productCount}>{products.length} {shopBizType.ui.itemLabel}{products.length > 1 ? "s" : ""}</Text>
+            <TouchableOpacity style={styles.rateBtn} onPress={() => setRatingVisible(true)}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="star-outline" size={12} color="#92400e" />
+                <Text style={styles.rateBtnText}>Noter</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bouton panier */}
+        <TouchableOpacity style={styles.cartBtn} onPress={() => setCartVisible(true)}>
+          <Ionicons name="bag-handle-outline" size={24} color="#1a1a1a" />
+          {items.length > 0 && (
+            <View style={[styles.cartBadge, { backgroundColor: primary }]}>
+              <Text style={styles.cartBadgeText}>{items.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Catégories */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoriesBar}
+        contentContainerStyle={styles.categoriesContent}
+      >
+        {categories.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            style={[styles.categoryPill, activeCategory === cat && styles.categoryPillActive]}
+            onPress={() => filterByCategory(cat)}
+          >
+            <Text style={[styles.categoryPillText, activeCategory === cat && styles.categoryPillTextActive]}>
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Grille */}
+      {products.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyIcon}>{shopBizType.emoji}</Text>
+          <Text style={styles.emptyTitle}>{shopBizType.ui.emptyTitle}</Text>
+          <Text style={styles.emptyText}>{shopBizType.ui.emptySubtitle}</Text>
+        </View>
+      ) : filtered.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyIcon}>{shopBizType.emoji}</Text>
+          <Text style={styles.emptyText}>Aucun {shopBizType.ui.itemLabel} dans cette catégorie</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={[styles.grid, { paddingBottom: 120 + insets.bottom }]}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.9}>
+              {item.image_url ? (
+                <Image source={{ uri: item.image_url }} style={styles.cardImage} />
+              ) : (
+                <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+                  <Text style={{ fontSize: 40 }}>{shopBizType.emoji}</Text>
+                </View>
+              )}
+              {/* Overlay prix */}
+              <View style={styles.cardOverlay}>
+                <Text style={styles.cardOverlayPrice}>{item.price.toLocaleString("fr-FR")} FCFA</Text>
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={[styles.cardCategory, { color: primary }]}>{item.category}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+
+      {/* Barre panier flottante */}
+      <Animated.View style={[
+        styles.cartBar,
+        { bottom: insets.bottom + 16, transform: [{ translateY: cartTranslateY }] }
+      ]}>
+        <TouchableOpacity style={styles.cartBarInner} onPress={() => setCartVisible(true)}>
+          <View style={styles.cartBarLeft}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="bag-handle" size={16} color="#aaa" />
+              <Text style={styles.cartBarCount}>{items.length} {shopBizType.ui.itemLabel}{items.length > 1 ? "s" : ""}</Text>
+            </View>
+            <Text style={styles.cartBarTotal}>{total().toLocaleString("fr-FR")} FCFA</Text>
+          </View>
+          <Animated.View style={[styles.whatsappBtn, { transform: [{ scale: whatsappPulse }] }]}>
+            <Ionicons name="chevron-forward" size={14} color="#fff" />
+            <Text style={styles.whatsappBtnText}>Voir le panier</Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Modal panier */}
+      <CartModal
+        visible={cartVisible}
+        onClose={() => setCartVisible(false)}
+        shopId={shopId as string}
+        shopName={shop.shop_name}
+        whatsappPhone={shop.phone_whatsapp}
+        itemLabel={shopBizType.ui.itemLabel}
+      />
+
+      {/* Modal notation */}
+      <RatingModal
+        visible={ratingVisible}
+        onClose={() => setRatingVisible(false)}
+        shopId={shopId as string}
+        shopName={shop.shop_name}
+        onRated={() => loadShop()}
+      />
+
+      {/* Modal produit */}
+      <Modal visible={!!selected} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
+        {selected && (
+          <View style={styles.modal}>
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+              {/* Image grande */}
+              <View style={styles.modalImageWrap}>
+                {selected.image_url ? (
+                  <Image source={{ uri: selected.image_url }} style={styles.modalImage} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.modalImage, styles.cardImagePlaceholder]}>
+                    <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
+                  </View>
+                )}
+                <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
+                  <Ionicons name="close" size={16} color="#fff" />
+                </TouchableOpacity>
+                <View style={[styles.modalPriceTag, { backgroundColor: primary }]}>
+                  <Text style={styles.modalPriceTagText}>{selected.price.toLocaleString("fr-FR")} FCFA</Text>
+                </View>
+              </View>
+
+              <View style={styles.modalContent}>
+                <Text style={[styles.modalCategoryLabel, { color: primary }]}>{selected.category}</Text>
+                <Text style={styles.modalTitle}>{selected.title}</Text>
+
+                {selected.description ? (
+                  <Text style={styles.modalDescription}>{selected.description}</Text>
+                ) : null}
+
+                {/* Tailles */}
+                {selected.product_variations.filter((v) => v.type === "size").length > 0 && (
+                  <View style={styles.varSection}>
+                    <Text style={styles.varLabel}>Taille</Text>
+                    <View style={styles.varChips}>
+                      {selected.product_variations.filter((v) => v.type === "size").map((v) => (
+                        <TouchableOpacity
+                          key={v.value}
+                          style={[styles.varChip, selectedSize === v.value && { backgroundColor: primary, borderColor: primary }]}
+                          onPress={() => setSelectedSize(v.value)}
+                        >
+                          <Text style={[styles.varChipText, selectedSize === v.value && styles.varChipTextActive]}>{v.value}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Couleurs */}
+                {selected.product_variations.filter((v) => v.type === "color").length > 0 && (
+                  <View style={styles.varSection}>
+                    <Text style={styles.varLabel}>Couleur</Text>
+                    <View style={styles.varChips}>
+                      {selected.product_variations.filter((v) => v.type === "color").map((v) => (
+                        <TouchableOpacity
+                          key={v.value}
+                          style={[styles.varChip, selectedColor === v.value && { backgroundColor: primary, borderColor: primary }]}
+                          onPress={() => setSelectedColor(v.value)}
+                        >
+                          <Text style={[styles.varChipText, selectedColor === v.value && styles.varChipTextActive]}>{v.value}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: primary, shadowColor: primary }]} onPress={handleAddToCart}>
+                  <Text style={styles.addToCartBtnText}>+ Ajouter {shopBizType.id === "alimentation" ? "à ma commande" : "au panier"}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        )}
+      </Modal>
+    </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  outerContainer: { flex: 1, backgroundColor: "#f0f0f0", alignItems: "center" },
+  container: { flex: 1, backgroundColor: "#fff", width: "100%", maxWidth: 680 },
+  loadingScreen: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
+  notFoundText: { fontSize: 16, color: "#999" },
+
+  shopHeader: {
+    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff", alignItems: "center",
+  },
+  backBtn: { position: "absolute", top: 12, left: 16, width: 36, height: 36, justifyContent: "center" },
+  backBtnText: { fontSize: 22, color: "#1a1a1a" },
+  shopHeaderCenter: { alignItems: "center", gap: 4, paddingHorizontal: 48 },
+  shopAvatar: {
+    width: 64, height: 64, borderRadius: 32,
+    justifyContent: "center", alignItems: "center",
+    marginBottom: 8, overflow: "hidden",
+  },
+  shopAvatarText: { fontSize: 28, fontWeight: "800", color: "#fff" },
+  shopName: { fontSize: 18, fontWeight: "800", color: "#1a1a1a" },
+  shopSlogan: { fontSize: 13, fontStyle: "italic", fontWeight: "600", textAlign: "center" },
+  shopDescription: { fontSize: 12, color: "#888", textAlign: "center", lineHeight: 18, marginTop: 2 },
+  shopMeta: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 4 },
+  productCount: { fontSize: 11, color: "#aaa" },
+  rateBtn: { backgroundColor: "#fef3c7", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  rateBtnText: { fontSize: 12, color: "#92400e", fontWeight: "700" },
+  cartBtn: { position: "absolute", top: 12, right: 16, width: 40, height: 40, justifyContent: "center", alignItems: "center" },
+  cartBtnIcon: { fontSize: 24 },
+  cartBadge: {
+    position: "absolute", top: 0, right: 0,
+    borderRadius: 8,
+    minWidth: 18, height: 18, justifyContent: "center", alignItems: "center", paddingHorizontal: 3,
+  },
+  cartBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
+
+  categoriesBar: { maxHeight: 50, backgroundColor: "#fff" },
+  categoriesContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+  categoryPill: {
+    paddingHorizontal: 16, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1.5, borderColor: "#eee", backgroundColor: "#fafafa",
+  },
+  categoryPillActive: { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" },
+  categoryPillText: { fontSize: 13, color: "#666", fontWeight: "600" },
+  categoryPillTextActive: { color: "#fff" },
+
+  grid: { padding: 16, gap: 12 },
+  row: { gap: 12 },
+
+  card: { width: CARD_SIZE, borderRadius: 16, overflow: "hidden", backgroundColor: "#f5f5f5" },
+  cardImage: { width: CARD_SIZE, height: CARD_SIZE * 1.2 },
+  cardImagePlaceholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f3e8ff" },
+  cardOverlay: {
+    position: "absolute", bottom: 48, left: 0, right: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  cardOverlayPrice: { color: "#fff", fontSize: 13, fontWeight: "800" },
+  cardInfo: { padding: 10, backgroundColor: "#fff" },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", marginBottom: 2 },
+  cardCategory: { fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
+
+  empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1a1a1a", marginBottom: 8, textAlign: "center" },
+  emptyText: { fontSize: 14, color: "#aaa", textAlign: "center" },
+
+  cartBar: {
+    position: "absolute", left: 16, right: 16,
+    backgroundColor: "#1a1a1a", borderRadius: 20,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25, shadowRadius: 16, elevation: 12,
+    overflow: "hidden",
+  },
+  cartBarInner: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingLeft: 18, paddingRight: 8, paddingVertical: 10,
+  },
+  cartBarLeft: { gap: 2 },
+  cartBarCount: { fontSize: 12, color: "#aaa" },
+  cartBarTotal: { fontSize: 16, fontWeight: "800", color: "#fff" },
+  whatsappBtn: {
+    borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: 10,
+  },
+  whatsappBtnText: { color: "#fff", fontWeight: "800", fontSize: 13 },
+
+  modal: { flex: 1, backgroundColor: "#fff" },
+  modalImageWrap: { position: "relative" },
+  modalImage: { width: "100%", height: MAX_WIDTH * 1.1 },
+  modalCloseBtn: {
+    position: "absolute", top: 16, right: 16,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center", alignItems: "center",
+  },
+  modalCloseBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  modalPriceTag: {
+    position: "absolute", bottom: 16, left: 16,
+    borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  modalPriceTagText: { color: "#fff", fontSize: 16, fontWeight: "800" },
+  modalContent: { padding: 20, gap: 12 },
+  modalCategoryLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+  modalTitle: { fontSize: 22, fontWeight: "800", color: "#1a1a1a", lineHeight: 28 },
+  modalDescription: { fontSize: 14, color: "#666", lineHeight: 22 },
+  varSection: { gap: 10 },
+  varLabel: { fontSize: 13, fontWeight: "700", color: "#444" },
+  varChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  varChip: {
+    borderWidth: 1.5, borderColor: "#e5e7eb", borderRadius: 8,
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: "#fff", minWidth: 48, alignItems: "center",
+  },
+  varChipActive: { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" },
+  varChipText: { fontSize: 13, color: "#555", fontWeight: "600" },
+  varChipTextActive: { color: "#fff" },
+  addToCartBtn: {
+    borderRadius: 16,
+    paddingVertical: 16, alignItems: "center", marginTop: 8, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35, shadowRadius: 10, elevation: 6,
+  },
+  addToCartBtnText: { color: "#fff", fontSize: 16, fontWeight: "800" },
+});
