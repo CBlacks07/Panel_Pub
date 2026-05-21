@@ -33,7 +33,9 @@ export default function LandingPage() {
   }, []);
 
   const appName = config["app_name"] || "Boutiki";
-  const tagline = config["app_tagline"] || "Vends ta mode. Reçois sur WhatsApp.";
+  const rawTagline = config["app_tagline"] || "Vends ta mode. Reçois sur WhatsApp.";
+  // Supprimer les emojis pour l'affichage web propre
+  const tagline = rawTagline.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "").trim();
   const primary = config["primary_color"] || "#34adea";
   const vendorCta = config["vendor_cta"] || "Créer ma boutique gratuitement";
   const logoUrl = config["logo_url"] || "";
