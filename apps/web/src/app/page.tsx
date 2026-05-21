@@ -34,12 +34,12 @@ export default function LandingPage() {
 
   const appName = config["app_name"] || "Boutiki";
   const rawTagline = config["app_tagline"] || "Vends ta mode. Reçois sur WhatsApp.";
-  // Supprimer les emojis pour l'affichage web propre
-  const tagline = rawTagline.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "").trim();
+  const stripEmoji = (str: string) => str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
+  const tagline = stripEmoji(rawTagline);
   const primary = config["primary_color"] || "#34adea";
   const vendorCta = config["vendor_cta"] || "Créer ma boutique gratuitement";
   const logoUrl = config["logo_url"] || "";
-  const bannerTitle = config["marketplace_banner_title"] || "Les meilleures boutiques du moment";
+  const bannerTitle = stripEmoji(config["marketplace_banner_title"] || "Les meilleures boutiques du moment");
 
   return (
     <div className="min-h-screen bg-white">

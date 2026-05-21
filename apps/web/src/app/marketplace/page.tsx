@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Store, Search } from "lucide-react";
+const stripEmoji = (str: string) => str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 
 type Shop = {
@@ -104,7 +105,7 @@ export default function MarketplacePage() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Bannière */}
         <div className="rounded-2xl p-8 mb-8 text-white" style={{ backgroundColor: primary }}>
-          <h1 className="text-2xl font-black mb-2">{config["marketplace_banner_title"] || "Les meilleures boutiques du moment"}</h1>
+          <h1 className="text-2xl font-black mb-2">{stripEmoji(config["marketplace_banner_title"] || "Les meilleures boutiques du moment")}</h1>
           <p className="opacity-80 mb-6">{config["marketplace_banner_subtitle"] || "Mode locale · Commande via WhatsApp"}</p>
           <Link href="/auth/register" className="inline-block bg-white font-bold px-5 py-2.5 rounded-xl text-sm hover:opacity-90 transition-opacity" style={{ color: primary }}>
             {config["vendor_cta"] || "Ouvrir ma boutique gratuitement"}
