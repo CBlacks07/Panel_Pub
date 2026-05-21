@@ -12,6 +12,10 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+
+// Garder le splash screen visible pendant le chargement
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootLayoutNav() {
   const { session, loading } = useAuth();
@@ -26,7 +30,6 @@ function RootLayoutNav() {
     const inPublicGroup = segments[0] === "shop" || segments[0] === "marketplace";
     const isSplash = (segments as string[]).length === 0 || segments[0] === "index";
 
-    // Le splash gère lui-même la navigation — ne pas interférer
     if (isSplash) return;
 
     if (!session && inAppGroup) {
@@ -42,7 +45,7 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
@@ -50,9 +53,17 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
+  useEffect(() => {
+    // Cacher le splash dès que les polices sont prêtes (ou en cas d'erreur)
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
 
-  // Note: police appliquée via StyleSheet dans chaque composant
+  // Attendre que les polices chargent
+  if (!fontsLoaded && !fontError) {
+    return <View style={{ flex: 1, backgroundColor: "#34adea" }} />;
+  }
 
   return (
     <SafeAreaProvider>
