@@ -42,24 +42,32 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="border-b border-gray-100 sticky top-0 bg-white z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             {logoUrl ? (
-              <img src={logoUrl} alt="logo" className="w-9 h-9 rounded-xl object-cover" />
+              <img src={logoUrl} alt="logo" className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover" />
             ) : (
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg" style={{ backgroundColor: primary }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-white font-black text-base sm:text-lg" style={{ backgroundColor: primary }}>
                 {appName[0].toUpperCase()}
               </div>
             )}
-            <span className="font-black text-gray-900 text-lg">{appName}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">
+            <span className="font-black text-gray-900 text-base sm:text-lg">{appName}</span>
+          </Link>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* Connexion — caché sur très petit écran */}
+            <Link href="/auth/login" className="hidden sm:block text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors px-3 py-2">
               Connexion
+            </Link>
+            {/* Sur mobile : lien "Se connecter" compact */}
+            <Link href="/auth/login" className="sm:hidden text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">
+              Se connecter
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm font-bold text-white px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
+              className="text-xs sm:text-sm font-bold text-white px-3 sm:px-4 py-2 rounded-xl transition-opacity hover:opacity-90 flex-shrink-0 whitespace-nowrap"
               style={{ backgroundColor: primary }}
             >
               Commencer
