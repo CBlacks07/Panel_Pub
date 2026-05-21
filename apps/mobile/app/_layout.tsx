@@ -11,7 +11,7 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { View, Text, TextInput } from "react-native";
+import { View } from "react-native";
 
 function RootLayoutNav() {
   const { session, loading } = useAuth();
@@ -52,17 +52,7 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
 
-  // Appliquer Plus Jakarta Sans globalement à tous les Text et TextInput
-  const defaultTextStyle: any = Text.defaultProps ?? {};
-  const defaultInputStyle: any = TextInput.defaultProps ?? {};
-  Text.defaultProps = {
-    ...defaultTextStyle,
-    style: [{ fontFamily: "PlusJakartaSans_400Regular" }, defaultTextStyle.style],
-  };
-  TextInput.defaultProps = {
-    ...defaultInputStyle,
-    style: [{ fontFamily: "PlusJakartaSans_400Regular" }, defaultInputStyle.style],
-  };
+  // Note: police appliquée via StyleSheet dans chaque composant
 
   return (
     <SafeAreaProvider>
