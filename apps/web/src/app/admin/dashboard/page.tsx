@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -245,7 +245,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Topbar */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             {config["logo_url"] ? (
               <img src={config["logo_url"]} alt="logo" className="w-9 h-9 rounded-xl object-cover" />
@@ -274,15 +274,15 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {[
             { label: "Boutiques", value: stats.shops, icon: <Store size={28} /> },
             { label: "Articles", value: stats.products, icon: <Shirt size={28} /> },
             { label: "Avis clients", value: stats.ratings, icon: <Star size={28} /> },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
+            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
               <span className="text-3xl">{s.icon}</span>
               <div>
                 <div className="text-2xl font-black text-gray-900">{s.value}</div>
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
           {(["config", "shops", "plans", "stats"] as const).map((t) => (
             <button
               key={t}
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
         {/* Tab: Config */}
         {tab === "config" && (
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2">
               <h2 className="font-black text-gray-900">Configuration de l&apos;application</h2>
               <button
                 onClick={handleSave}
@@ -325,12 +325,12 @@ export default function AdminDashboard() {
 
             <div className="divide-y divide-gray-50">
               {Object.entries(CONFIG_LABELS).map(([key, meta]) => (
-                <div key={key} className="px-6 py-4 flex items-center gap-6">
+                <div key={key} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-gray-800 text-sm">{meta.label}</div>
                     <div className="text-xs text-gray-400 mt-0.5">{meta.description}</div>
                   </div>
-                  <div className="flex-shrink-0 w-64">
+                  <div className="w-full sm:w-64 flex-shrink-0">
                     {meta.type === "toggle" ? (
                       <button
                         onClick={() => setConfig((prev) => ({ ...prev, [key]: prev[key] === "true" ? "false" : "true" }))}
@@ -387,10 +387,10 @@ export default function AdminDashboard() {
 
         {/* Tab: Boutiques */}
         {tab === "shops" && (
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
             {/* Liste */}
             <div className="flex-1 bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between gap-4">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2 sm:gap-4">
                 <h2 className="font-black text-gray-900 whitespace-nowrap">Boutiques ({filteredShops.length})</h2>
                 <input
                   type="text"
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
 
             {/* Détail boutique */}
             {selectedShop ? (
-              <div className="w-80 bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4 self-start sticky top-24">
+              <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 flex flex-col gap-4 self-start lg:sticky lg:top-24">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-lg" style={{ backgroundColor: primary }}>
                     {selectedShop.shop_name[0].toUpperCase()}
@@ -508,7 +508,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="w-80 bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-center text-gray-300 self-start">
+              <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-center text-gray-300 self-start hidden lg:flex">
                 <div className="text-center">
                   <MousePointer size={36} className="mx-auto mb-2 text-gray-300" />
                   <div className="text-sm">Sélectionne une boutique</div>
@@ -521,9 +521,9 @@ export default function AdminDashboard() {
         {/* Tab: Forfaits */}
         {tab === "plans" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {plans.map((plan) => (
-                <div key={plan.id} className={`bg-white rounded-2xl border-2 p-6 ${plan.is_popular ? "" : "border-gray-100"}`}
+                <div key={plan.id} className={`bg-white rounded-2xl border-2 p-4 sm:p-6 ${plan.is_popular ? "" : "border-gray-100"}`}
                   style={plan.is_popular ? { borderColor: primary } : {}}>
                   {plan.is_popular && (
                     <div className="text-xs font-bold text-white px-3 py-1 rounded-full inline-block mb-3"
