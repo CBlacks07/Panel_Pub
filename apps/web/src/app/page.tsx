@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getPlanFeatures } from "@/lib/planFeatures";
-import { Star, Check, ArrowRight } from "lucide-react";
+import { Star, Check, ArrowRight, Zap, Smartphone, MessageCircle, ShoppingBag, BarChart3 } from "lucide-react";
 
 type Config = Record<string, string>;
 
 const FEATURES = [
-  { emoji: "⚡", title: "30 secondes", desc: "Crée et publie ton premier article en moins de 30 secondes" },
-  { emoji: "📱", title: "Mobile-first", desc: "Conçu pour être utilisé depuis ton téléphone, partout" },
-  { emoji: "💬", title: "WhatsApp intégré", desc: "Tes clients commandent directement via WhatsApp — zéro friction" },
-  { emoji: "🛍️", title: "Vitrine gratuite", desc: "Ton catalogue en ligne accessible par tous tes clients via un lien" },
-  { emoji: "📊", title: "Statistiques", desc: "Suis les vues de tes articles et optimise tes ventes" },
-  { emoji: "⭐", title: "Avis clients", desc: "Les clients notent ta boutique pour renforcer ta crédibilité" },
+  { icon: Zap, color: "#f59e0b", title: "30 secondes", desc: "Crée et publie ton premier article en moins de 30 secondes" },
+  { icon: Smartphone, color: "#3b82f6", title: "Mobile-first", desc: "Conçu pour être utilisé depuis ton téléphone, partout" },
+  { icon: MessageCircle, color: "#25D366", title: "WhatsApp intégré", desc: "Tes clients commandent directement via WhatsApp — zéro friction" },
+  { icon: ShoppingBag, color: "#8b5cf6", title: "Vitrine gratuite", desc: "Ton catalogue en ligne accessible par tous tes clients via un lien" },
+  { icon: BarChart3, color: "#06b6d4", title: "Statistiques", desc: "Suis les vues de tes articles et optimise tes ventes" },
+  { icon: Star, color: "#f59e0b", title: "Avis clients", desc: "Les clients notent ta boutique pour renforcer ta crédibilité" },
 ];
 
 type Plan = { id: string; name: string; price: number; currency: string; billing: string; article_limit: number; features: string[]; is_popular: boolean };
@@ -115,7 +115,9 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
               <div key={f.title} className={`hover-lift animate-scale-in delay-${(i + 1) * 75} bg-white rounded-2xl p-6 border border-gray-100`}>
-                <div className="text-3xl mb-3">{f.emoji}</div>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: f.color + "18" }}>
+                  <f.icon size={22} style={{ color: f.color }} />
+                </div>
                 <h3 className="font-black text-gray-900 mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
