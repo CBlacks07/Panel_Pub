@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -71,6 +71,7 @@ const CONFIG_LABELS: Record<string, { label: string; description: string; type: 
   vendor_cta:                { label: "Texte CTA vendeur", description: "Bouton d'inscription vendeur", type: "text" },
   marketplace_enabled:       { label: "Marketplace activé", description: "Activer/désactiver le marketplace", type: "toggle" },
   ratings_enabled:           { label: "Notation activée", description: "Permettre aux clients de noter", type: "toggle" },
+  support_whatsapp:          { label: "WhatsApp Support", description: "Numéro pour les abonnements (ex: +22893914694)", type: "text" },
 };
 
 export default function AdminDashboard() {
@@ -218,7 +219,7 @@ export default function AdminDashboard() {
 
   const handleSendReset = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://panel-pub.vercel.app/reset-password",
+      redirectTo: "https://panel-pub-web.vercel.app/reset-password",
     });
     alert(error ? `Erreur: ${error.message}` : `Email de réinitialisation envoyé à ${email}`);
   };
@@ -706,3 +707,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

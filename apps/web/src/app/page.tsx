@@ -159,11 +159,21 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link href="/auth/register"
-                    className={`text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 ${plan.is_popular ? "text-white" : "border-2 border-gray-200 text-gray-700 hover:border-gray-300"}`}
-                    style={plan.is_popular ? { backgroundColor: primary } : {}}>
-                    {plan.price === 0 ? "Commencer gratuitement" : `Choisir ${plan.name}`}
-                  </Link>
+                  {plan.price === 0 ? (
+                    <Link href="/auth/register"
+                      className={`text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 border-2 border-gray-200 text-gray-700 hover:border-gray-300`}>
+                      Commencer gratuitement
+                    </Link>
+                  ) : (
+                    <a
+                      href={`https://wa.me/22893914694?text=${encodeURIComponent(`Bonjour ! Je souhaite souscrire au plan ${plan.name} (${plan.price.toLocaleString("fr-FR")} ${plan.currency}/${plan.billing}).`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 text-white block"
+                      style={{ backgroundColor: primary }}>
+                      Choisir {plan.name} →
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
