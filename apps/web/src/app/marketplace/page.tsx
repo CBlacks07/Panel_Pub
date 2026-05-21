@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { Store, Search } from "lucide-react";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 
 type Shop = {
@@ -118,7 +119,7 @@ export default function MarketplacePage() {
               className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all"
               style={{ backgroundColor: activeBiz === "all" ? primary : "white", borderColor: activeBiz === "all" ? primary : "#e5e7eb", color: activeBiz === "all" ? "white" : "#555" }}
             >
-              🏪 Tout
+              <Store size={13} className="inline mr-1" /> Tout
             </button>
             {presentBizTypes.map((b) => (
               <button
@@ -135,7 +136,7 @@ export default function MarketplacePage() {
 
         {/* Recherche */}
         <div className="relative mb-6">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Rechercher une boutique..."
@@ -152,7 +153,7 @@ export default function MarketplacePage() {
           <div className="text-center py-20 text-gray-400">Chargement...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">🔍</div>
+            <Search size={48} className="mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500 font-semibold">Aucune boutique trouvée</p>
           </div>
         ) : (

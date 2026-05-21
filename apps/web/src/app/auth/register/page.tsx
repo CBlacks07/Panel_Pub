@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { ChevronLeft } from "lucide-react";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 
 type Config = Record<string, string>;
@@ -158,7 +159,7 @@ export default function RegisterPage() {
                 {loading ? "Création..." : config["vendor_cta"] || "Créer ma boutique gratuitement"}
               </button>
               <button type="button" onClick={() => setStep(1)} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-                ← Retour
+                <ChevronLeft size={14} className="inline" /> Retour
               </button>
             </form>
           </>

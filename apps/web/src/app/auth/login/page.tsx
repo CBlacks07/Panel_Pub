@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Mail } from "lucide-react";
 
 type Config = Record<string, string>;
 
@@ -62,7 +63,7 @@ export default function LoginPage() {
 
         {resetSent ? (
           <div className="text-center">
-            <div className="text-4xl mb-3">📧</div>
+            <Mail size={40} className="mx-auto mb-3 text-gray-300" />
             <p className="font-semibold text-gray-900 mb-2">Email envoyé !</p>
             <p className="text-sm text-gray-400 mb-4">Vérifie ta boîte mail pour réinitialiser ton mot de passe.</p>
             <button onClick={() => setResetSent(false)} className="text-sm font-semibold" style={{ color: primary }}>

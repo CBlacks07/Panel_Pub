@@ -22,7 +22,15 @@
       "Bash(git commit *)",
       "Bash(git remote *)",
       "Bash(git branch *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npx eas-cli *)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\CCL\\\\Desktop\\\\panel_Pub\\\\apps\\\\mobile\\\\assets\\\\icons\")",
+      "Bash(xargs grep -l \"Ionicons\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\CCL\\\\.claude\\\\projects\\\\c--Users-CCL-Desktop-Panel-Pub\\\\9ec97860-6861-4caa-96a5-7f876bef9b7b\\\\tool-results\\\\toolu_019NLh17DejYcjWJyDRizddM.txt\")",
+      "Bash(sed -i 's/text-2xl animate-pulse\">⏳<\\\\/div>/text-2xl animate-spin text-gray-300\"><\\\\/div>/g' \"c:\\\\Users\\\\CCL\\\\Desktop\\\\panel_Pub\\\\apps\\\\web\\\\src\\\\app\\\\shop\\\\[shopId]\\\\page.tsx\" 2>/dev/null; echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\CCL\\Desktop\\panel_Pub\\apps\\web\\src\\app\\shop\\[shopId]"
     ]
   }
 }

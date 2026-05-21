@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { Eye, Package, Briefcase, Store, Smartphone, Trash2, Loader2 } from "lucide-react";
 
 type Product = { id: string; title: string; price: number; category: string; image_url: string | null; created_at: string };
 type Profile = { shop_name: string; plan: string; business_type: string | null };
@@ -50,7 +51,7 @@ export default function VendorDashboardPage() {
     router.refresh();
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-2xl animate-pulse">⏳</div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gray-400" size={32} /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,7 +70,7 @@ export default function VendorDashboardPage() {
           <div className="flex items-center gap-3">
             {userId && (
               <Link href={`/shop/${userId}`} target="_blank" className="text-sm font-semibold px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
-                👁️ Ma vitrine
+                <Eye size={14} className="mr-1 inline" /> Ma vitrine
               </Link>
             )}
             <button
@@ -86,12 +87,12 @@ export default function VendorDashboardPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Articles en ligne", value: products.length, icon: "📦" },
-            { label: "Plan actuel", value: profile?.plan || "free", icon: "💼" },
-            { label: "Boutique", value: profile?.shop_name || "—", icon: "🏪" },
+            { label: "Articles en ligne", value: products.length, icon: <Package size={22} /> },
+            { label: "Plan actuel", value: profile?.plan || "free", icon: <Briefcase size={22} /> },
+            { label: "Boutique", value: profile?.shop_name || "—", icon: <Store size={22} /> },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="text-2xl mb-1">{s.icon}</div>
+              <div className="mb-2 text-gray-400">{s.icon}</div>
               <div className="text-xl font-black text-gray-900 truncate">{s.value}</div>
               <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
             </div>
@@ -100,7 +101,7 @@ export default function VendorDashboardPage() {
 
         {/* Info mobile */}
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-8 flex items-start gap-4">
-          <div className="text-3xl flex-shrink-0">📱</div>
+          <div className="flex-shrink-0 p-2 bg-blue-50 rounded-xl"><Smartphone size={24} className="text-blue-500" /></div>
           <div>
             <p className="font-bold text-blue-900 mb-1">Gérer ta boutique depuis ton téléphone</p>
             <p className="text-sm text-blue-700">Pour ajouter des articles, modifier tes infos et gérer ton profil, utilise l&apos;app mobile {appName}. Le web te permet de consulter et supprimer tes articles.</p>
@@ -115,7 +116,7 @@ export default function VendorDashboardPage() {
 
           {products.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="text-4xl mb-3">📦</div>
+              <Package size={40} className="mx-auto mb-3 text-gray-300" />
               <p className="font-semibold text-gray-500">Aucun article pour l&apos;instant</p>
               <p className="text-sm text-gray-400 mt-1">Utilise l&apos;app mobile pour ajouter tes premiers articles</p>
             </div>
@@ -126,7 +127,7 @@ export default function VendorDashboardPage() {
                   <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
                     {product.image_url
                       ? <img src={product.image_url} className="w-full h-full object-cover" alt={product.title} />
-                      : <span className="text-xl">📦</span>
+                      : <Package size={20} className="text-gray-300" />
                     }
                   </div>
                   <div className="flex-1 min-w-0">
@@ -136,9 +137,9 @@ export default function VendorDashboardPage() {
                   <p className="font-black text-gray-900 flex-shrink-0">{product.price.toLocaleString("fr-FR")} FCFA</p>
                   <button
                     onClick={() => handleDelete(product.id, product.title)}
-                    className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                    className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 p-1"
                   >
-                    🗑️
+                    <Trash2 size={16} />
                   </button>
                 </div>
               ))}
@@ -149,3 +150,4 @@ export default function VendorDashboardPage() {
     </div>
   );
 }
+

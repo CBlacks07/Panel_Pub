@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function NotFound() {
@@ -19,7 +20,7 @@ export default function NotFound() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 text-center">
-      <div className="text-7xl mb-6">🔍</div>
+      <Search size={72} className="mb-6 text-gray-300" />
       <h1 className="text-4xl font-black text-gray-900 mb-3">Page introuvable</h1>
       <p className="text-gray-500 mb-8 max-w-sm">
         La page que tu cherches n&apos;existe pas ou a été déplacée.

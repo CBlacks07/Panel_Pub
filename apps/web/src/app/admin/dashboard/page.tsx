@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getPlanFeatures } from "@/lib/planFeatures";
+import { Upload, Store, Shirt, Star, Settings, Briefcase, CheckCircle, Eye, Key, Check, Ban, Trash2, Pencil, X, TrendingUp, Sparkles, Calendar, Tag, MousePointer } from "lucide-react";
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dmiuhdvmf";
 const UPLOAD_PRESET = "panel_pub_unsigned";
@@ -35,7 +36,7 @@ function UploadLogoBtn({ onUploaded }: { onUploaded: (url: string) => void }) {
         className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 text-white"
       style={{ backgroundColor: uploading ? "#aaa" : "#9333ea" }}
       >
-        {uploading ? "Upload en cours..." : "📤 Uploader une image"}
+        {uploading ? "Upload en cours..." : <><Upload size={14} className="inline mr-1" />Uploader une image</>}
       </button>
     </>
   );
@@ -277,9 +278,9 @@ export default function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Boutiques", value: stats.shops, icon: "🏪" },
-            { label: "Articles", value: stats.products, icon: "👗" },
-            { label: "Avis clients", value: stats.ratings, icon: "⭐" },
+            { label: "Boutiques", value: stats.shops, icon: <Store size={28} /> },
+            { label: "Articles", value: stats.products, icon: <Shirt size={28} /> },
+            { label: "Avis clients", value: stats.ratings, icon: <Star size={28} /> },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
               <span className="text-3xl">{s.icon}</span>
@@ -302,7 +303,7 @@ export default function AdminDashboard() {
               }`}
               style={tab === t ? { backgroundColor: primary } : {}}
             >
-              {t === "config" ? "⚙️ Configuration" : t === "shops" ? "🏪 Boutiques" : t === "plans" ? "💼 Forfaits" : "📊 Statistiques"}
+              {t === "config" ? <><Settings size={14} className="inline mr-1" />Configuration</> : t === "shops" ? <><Store size={14} className="inline mr-1" />Boutiques</> : t === "plans" ? <><Briefcase size={14} className="inline mr-1" />Forfaits</> : <><TrendingUp size={14} className="inline mr-1" />Statistiques</>}
             </button>
           ))}
         </div>
@@ -318,7 +319,7 @@ export default function AdminDashboard() {
                 className="disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-opacity"
                 style={{ backgroundColor: primary }}
               >
-                {saving ? "Enregistrement..." : saved ? "✅ Enregistré !" : "Enregistrer"}
+                {saving ? "Enregistrement..." : saved ? <><CheckCircle size={14} className="inline mr-1" />Enregistré !</> : "Enregistrer"}
               </button>
             </div>
 
@@ -418,7 +419,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="text-xs font-bold" style={{ color: primary }}>{shop.product_count} art.</div>
-                      <div className="text-xs text-yellow-500">{shop.avg_rating ? `⭐ ${shop.avg_rating.toFixed(1)}` : "—"}</div>
+                      <div className="text-xs text-yellow-500 flex items-center gap-1">{shop.avg_rating ? <><Star size={10} fill="currentColor" />{shop.avg_rating.toFixed(1)}</> : "—"}</div>
                     </div>
                   </div>
                 ))}
@@ -484,32 +485,32 @@ export default function AdminDashboard() {
                 {/* Actions */}
                 <div className="flex flex-col gap-2">
                   <a href={`/shop/${selectedShop.id}`} target="_blank" className="text-center py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: primary }}>
-                    👁️ Voir la vitrine
+                    <Eye size={14} className="inline mr-1" /> Voir la vitrine
                   </a>
                   <button
                     onClick={() => handleSendReset(selectedShop.email)}
                     className="py-2 rounded-xl text-sm font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                   >
-                    🔑 Envoyer reset mot de passe
+                    <Key size={14} className="inline mr-1" /> Envoyer reset mot de passe
                   </button>
                   <button
                     onClick={() => handleToggleSuspend(selectedShop)}
                     className={`py-2 rounded-xl text-sm font-semibold transition-colors ${selectedShop.suspended ? "bg-green-50 text-green-600 hover:bg-green-100" : "bg-orange-50 text-orange-600 hover:bg-orange-100"}`}
                   >
-                    {selectedShop.suspended ? "✅ Réactiver la boutique" : "⛔ Suspendre la boutique"}
+                    {selectedShop.suspended ? <><CheckCircle size={14} className="inline mr-1" />Réactiver la boutique</> : <><Ban size={14} className="inline mr-1" />Suspendre la boutique</>}
                   </button>
                   <button
                     onClick={() => handleDeleteShop(selectedShop.id, selectedShop.shop_name)}
                     className="py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                   >
-                    🗑️ Supprimer définitivement
+                    <Trash2 size={14} className="inline mr-1" /> Supprimer définitivement
                   </button>
                 </div>
               </div>
             ) : (
               <div className="w-80 bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-center text-gray-300 self-start">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">👆</div>
+                  <MousePointer size={36} className="mx-auto mb-2 text-gray-300" />
                   <div className="text-sm">Sélectionne une boutique</div>
                 </div>
               </div>
@@ -526,7 +527,7 @@ export default function AdminDashboard() {
                   style={plan.is_popular ? { borderColor: primary } : {}}>
                   {plan.is_popular && (
                     <div className="text-xs font-bold text-white px-3 py-1 rounded-full inline-block mb-3"
-                      style={{ backgroundColor: primary }}>⭐ Recommandé</div>
+                      style={{ backgroundColor: primary }}><Star size={10} className="inline mr-1" fill="white" />Recommandé</div>
                   )}
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -545,7 +546,7 @@ export default function AdminDashboard() {
                   <ul className="space-y-1.5 mb-5">
                     {getPlanFeatures(plan).map((f: string, i: number) => (
                       <li key={i} className={`flex items-center gap-2 text-sm ${i < 2 ? "font-semibold text-gray-800" : "text-gray-500"}`}>
-                        <span className="font-bold" style={{ color: primary }}>✓</span> {f}
+                        <Check size={12} style={{ color: primary }} className="inline mr-1 flex-shrink-0" /> {f}
                       </li>
                     ))}
                   </ul>
@@ -554,7 +555,7 @@ export default function AdminDashboard() {
                       onClick={() => setEditingPlan({ ...plan, features_text: (plan.features as string[]).join("\n") })}
                       className="flex-1 py-2 rounded-xl text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-colors"
                     >
-                      ✏️ Modifier
+                      <Pencil size={14} className="inline mr-1" />Modifier
                     </button>
                     <button
                       onClick={async () => {
@@ -576,7 +577,7 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-black text-gray-900">Modifier — {editingPlan.name}</h3>
-                    <button onClick={() => setEditingPlan(null)} className="text-gray-400 hover:text-gray-700">✕</button>
+                    <button onClick={() => setEditingPlan(null)} className="text-gray-400 hover:text-gray-700"><X size={16} /></button>
                   </div>
                   {[
                     { key: "name", label: "Nom du plan", type: "text" },
@@ -634,12 +635,12 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 gap-6">
             {/* Croissance */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4">📈 Croissance</h3>
+              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-green-500" />Croissance</h3>
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Nouvelles boutiques (7j)", value: stats.newShops7d, icon: "🆕" },
-                  { label: "Nouvelles boutiques (30j)", value: stats.newShops30d, icon: "📅" },
-                  { label: "Total boutiques", value: stats.shops, icon: "🏪" },
+                  { label: "Nouvelles boutiques (7j)", value: stats.newShops7d, icon: <Sparkles size={24} className="text-purple-400" /> },
+                  { label: "Nouvelles boutiques (30j)", value: stats.newShops30d, icon: <Calendar size={24} className="text-blue-400" /> },
+                  { label: "Total boutiques", value: stats.shops, icon: <Store size={24} className="text-gray-400" /> },
                 ].map((s) => (
                   <div key={s.label} className="bg-gray-50 rounded-xl p-4 text-center">
                     <div className="text-2xl mb-1">{s.icon}</div>
@@ -652,7 +653,7 @@ export default function AdminDashboard() {
 
             {/* Plans */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4">💼 Répartition par plan</h3>
+              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><Briefcase size={18} className="text-gray-500" />Répartition par plan</h3>
               <div className="flex gap-4">
                 {[
                   { key: "free", label: "Gratuit", color: "#6b7280" },
@@ -677,7 +678,7 @@ export default function AdminDashboard() {
 
             {/* Types de business */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4">🏷️ Types de boutiques</h3>
+              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><Tag size={18} className="text-gray-500" />Types de boutiques</h3>
               <div className="flex flex-col gap-3">
                 {Object.entries(stats.bizCount)
                   .sort((a, b) => b[1] - a[1])

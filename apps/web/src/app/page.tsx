@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getPlanFeatures } from "@/lib/planFeatures";
+import { Star, Check, ArrowRight } from "lucide-react";
 
 type Config = Record<string, string>;
 
@@ -100,7 +101,7 @@ export default function LandingPage() {
             href="/marketplace"
             className="hover-lift inline-block text-gray-700 font-bold px-8 py-4 rounded-2xl text-lg border-2 border-gray-200 hover:border-gray-300 transition-colors"
           >
-            Voir les boutiques →
+            Voir les boutiques <ArrowRight size={16} className="inline ml-1" />
           </Link>
         </div>
         <p className="animate-fade-up delay-400 text-sm text-gray-400 mt-4">Gratuit · Sans carte bancaire · Prêt en 30s</p>
@@ -135,7 +136,7 @@ export default function LandingPage() {
                   style={plan.is_popular ? { borderColor: primary } : {}}>
                   {plan.is_popular && (
                     <div className="absolute top-0 right-0 text-xs font-bold text-white px-4 py-2 rounded-bl-2xl"
-                      style={{ backgroundColor: primary }}>⭐ Recommandé</div>
+                      style={{ backgroundColor: primary }}><Star size={10} className="inline mr-1" fill="white" />Recommandé</div>
                   )}
                   <div className="mb-6">
                     <h3 className="text-xl font-black text-gray-900 mb-1">{plan.name}</h3>
@@ -162,7 +163,7 @@ export default function LandingPage() {
                   <ul className="space-y-3 mb-8 flex-1">
                     {getPlanFeatures(plan).map((f, i) => (
                       <li key={i} className={`flex items-center gap-3 text-sm ${i < 2 ? "font-semibold text-gray-800" : "text-gray-500"}`}>
-                        <span className="font-bold flex-shrink-0" style={{ color: primary }}>✓</span>
+                        <Check size={14} className="flex-shrink-0" style={{ color: primary }} />
                         {f}
                       </li>
                     ))}
@@ -179,7 +180,7 @@ export default function LandingPage() {
                       rel="noopener noreferrer"
                       className="text-center py-3 rounded-xl font-bold transition-opacity hover:opacity-90 text-white block"
                       style={{ backgroundColor: primary }}>
-                      Choisir {plan.name} →
+                      Choisir {plan.name} <ArrowRight size={14} className="inline ml-1" />
                     </a>
                   )}
                 </div>

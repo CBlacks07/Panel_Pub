@@ -5,6 +5,7 @@ import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 import { useCart } from "@/hooks/useCart";
+import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader } from "lucide-react";
 
 type Product = {
   id: string; title: string; price: number; description: string | null;
@@ -77,9 +78,9 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     window.open(`https://wa.me/${shop.phone_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-2xl animate-pulse">⏳</div></div>;
-  if (!shop) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><div className="text-5xl">🔍</div><p className="font-semibold text-gray-700">Boutique introuvable</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir toutes les boutiques</Link></div>;
-  if (shop.suspended) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><div className="text-5xl">⛔</div><p className="font-semibold text-gray-700">Boutique suspendue</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir d'autres boutiques</Link></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader size={32} className="animate-spin text-gray-300" /></div>;
+  if (!shop) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><Search size={48} className="text-gray-300" /><p className="font-semibold text-gray-700">Boutique introuvable</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir toutes les boutiques</Link></div>;
+  if (shop.suspended) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><Ban size={48} className="text-gray-300" /><p className="font-semibold text-gray-700">Boutique suspendue</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir d&apos;autres boutiques</Link></div>;
 
   return (
     <div className="min-h-screen bg-white">
@@ -88,7 +89,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link href="/marketplace" className="text-gray-400 hover:text-gray-700 text-sm font-semibold">← Marketplace</Link>
           <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-            🛒
+            <ShoppingCart size={22} />
             {cart.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-xs flex items-center justify-center font-black" style={{ backgroundColor: primary }}>{cart.length}</span>}
           </button>
         </div>
@@ -223,12 +224,12 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
               <h2 className="text-lg font-black">Mon panier</h2>
               <div className="flex gap-3 items-center">
                 {cart.length > 0 && <button onClick={cartClear} className="text-xs font-semibold text-red-400 hover:text-red-600">Vider</button>}
-                <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">✕</button>
+                <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><X size={14} /></button>
               </div>
             </div>
             {cart.length === 0 ? (
               <div className="py-16 text-center text-gray-400">
-                <div className="text-4xl mb-2">🛒</div>
+                <ShoppingCart size={40} className="mx-auto mb-2 text-gray-300" />
                 <p>Panier vide</p>
               </div>
             ) : (
@@ -242,7 +243,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                         <p className="text-xs text-gray-400">{[item.size, item.color].filter(Boolean).join(" · ")}</p>
                         <p className="text-sm font-bold" style={{ color: primary }}>{(item.price * item.qty).toLocaleString("fr-FR")} FCFA</p>
                       </div>
-                      <button onClick={() => cartRemove(i)} className="text-gray-300 hover:text-red-400 text-lg">🗑️</button>
+                      <button onClick={() => cartRemove(i)} className="text-gray-300 hover:text-red-400 p-1"><Trash2 size={14} /></button>
                     </div>
                   ))}
                 </div>
@@ -253,7 +254,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                   </div>
                   {shop.phone_whatsapp ? (
                     <button onClick={handleWhatsApp} className="w-full py-4 rounded-2xl font-bold text-white text-lg flex items-center justify-center gap-2" style={{ backgroundColor: "#25D366" }}>
-                      📲 Commander via WhatsApp
+                      <MessageCircle size={18} className="inline mr-2" />Commander via WhatsApp
                     </button>
                   ) : (
                     <div className="bg-yellow-50 rounded-xl p-4 text-sm text-yellow-700 text-center">
