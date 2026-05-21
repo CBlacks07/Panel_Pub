@@ -1,0 +1,20 @@
+# Env files — ne jamais committer
+**/.env
+**/.env.local
+**/.env.production
+**/.env*.local
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+
+# Expo
+apps/mobile/.expo/
+apps/mobile/dist/
+
+# Node
+**/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

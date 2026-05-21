@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(Move-Item src *)",
+      "Bash(Move-Item next.config.ts apps\\\\web\\\\next.config.ts)",
+      "Bash(Move-Item tailwind.config.ts apps\\\\web\\\\tailwind.config.ts)",
+      "Bash(Move-Item postcss.config.mjs apps\\\\web\\\\postcss.config.mjs)",
+      "Bash(Move-Item tsconfig.json apps\\\\web\\\\tsconfig.json)",
+      "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "Bash(npx create-expo-app@latest . --template blank-typescript)",
+      "Bash(npx expo *)",
+      "Bash(xargs grep -l \"SafeAreaView\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
