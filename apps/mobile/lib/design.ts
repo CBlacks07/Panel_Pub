@@ -3,49 +3,40 @@ import { StyleSheet, TextStyle, ViewStyle } from "react-native";
 // ─── TYPOGRAPHIE ─────────────────────────────
 export const typography: Record<string, TextStyle> = {
   display: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 36,
     lineHeight: 42,
     letterSpacing: -0.5,
   },
   h1: {
-    fontFamily: "PlusJakartaSans_800ExtraBold",
     fontSize: 24,
     lineHeight: 30,
     letterSpacing: -0.3,
   },
   h2: {
-    fontFamily: "PlusJakartaSans_700Bold",
     fontSize: 18,
     lineHeight: 24,
   },
   h3: {
-    fontFamily: "PlusJakartaSans_700Bold",
     fontSize: 15,
     lineHeight: 20,
   },
   bodyLg: {
-    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 16,
     lineHeight: 24,
   },
   body: {
-    fontFamily: "PlusJakartaSans_400Regular",
     fontSize: 14,
     lineHeight: 22,
   },
   bodySemibold: {
-    fontFamily: "PlusJakartaSans_600SemiBold",
     fontSize: 14,
     lineHeight: 22,
   },
   small: {
-    fontFamily: "PlusJakartaSans_500Medium",
     fontSize: 12,
     lineHeight: 17,
   },
   caption: {
-    fontFamily: "PlusJakartaSans_600SemiBold",
     fontSize: 11,
     lineHeight: 15,
     letterSpacing: 0.5,
@@ -94,7 +85,6 @@ export const buttonStyles = StyleSheet.create({
   },
   // Textes
   textBase: {
-    fontFamily: "PlusJakartaSans_700Bold",
     fontSize: 15,
   },
   textPrimary: {
@@ -102,16 +92,13 @@ export const buttonStyles = StyleSheet.create({
   },
   textSecondary: {
     color: "#374151",
-    fontFamily: "PlusJakartaSans_600SemiBold",
-  },
+    },
   textDestructive: {
     color: "#dc2626",
-    fontFamily: "PlusJakartaSans_600SemiBold",
-  },
+    },
   textGhost: {
     color: "#6b7280",
-    fontFamily: "PlusJakartaSans_600SemiBold",
-  },
+    },
   textSm: { fontSize: 13 },
   textLg: { fontSize: 16 },
 });

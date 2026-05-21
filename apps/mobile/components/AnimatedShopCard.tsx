@@ -4,6 +4,7 @@ import StarRating from "./StarRating";
 import { useConfig } from "../context/ConfigContext";
 import { getBusinessType } from "../lib/businessTypes";
 import { formatDistance } from "../lib/location";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
   item: {

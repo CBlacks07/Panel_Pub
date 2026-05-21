@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { getPlans, Plan } from "../lib/plans";
 
+// Valeurs par défaut qui correspondent au VRAI thème de l'app
+// pour éviter le flash de couleur au démarrage
 const DEFAULTS: AppConfig = {
   app_name: "Boutiki",
   logo_url: "",

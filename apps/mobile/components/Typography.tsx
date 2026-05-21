@@ -2,12 +2,12 @@ import { Text as RNText, TextStyle, TextProps } from "react-native";
 
 type Weight = "regular" | "medium" | "semibold" | "bold" | "extrabold";
 
-const FONT_MAP: Record<Weight, string> = {
-  regular:   "PlusJakartaSans_400Regular",
-  medium:    "PlusJakartaSans_500Medium",
-  semibold:  "PlusJakartaSans_600SemiBold",
-  bold:      "PlusJakartaSans_700Bold",
-  extrabold: "PlusJakartaSans_800ExtraBold",
+const WEIGHT_MAP: Record<Weight, TextStyle["fontWeight"]> = {
+  regular:   "400",
+  medium:    "500",
+  semibold:  "600",
+  bold:      "700",
+  extrabold: "800",
 };
 
 type TypographyProps = TextProps & {
@@ -18,19 +18,11 @@ type TypographyProps = TextProps & {
   style?: TextStyle | TextStyle[];
 };
 
-export function Text({
-  weight = "regular",
-  size,
-  color,
-  center,
-  style,
-  children,
-  ...props
-}: TypographyProps) {
+export function Text({ weight = "regular", size, color, center, style, children, ...props }: TypographyProps) {
   return (
     <RNText
       style={[
-        { fontFamily: FONT_MAP[weight] },
+        { fontWeight: WEIGHT_MAP[weight] },
         size && { fontSize: size },
         color && { color },
         center && { textAlign: "center" },
@@ -43,7 +35,6 @@ export function Text({
   );
 }
 
-// Shortcuts prêts à l'emploi
 export const Display = (p: Omit<TypographyProps, "weight" | "size">) =>
   <Text weight="extrabold" size={36} style={[{ letterSpacing: -0.5, lineHeight: 42 }, p.style as TextStyle]} {...p} />;
 
