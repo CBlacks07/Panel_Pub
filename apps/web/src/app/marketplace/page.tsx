@@ -82,7 +82,7 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {logoUrl ? (
               <img src={logoUrl} className="w-8 h-8 rounded-xl object-cover" />
@@ -102,9 +102,9 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Bannière */}
-        <div className="rounded-2xl p-8 mb-8 text-white" style={{ backgroundColor: primary }}>
+        <div className="rounded-2xl p-5 sm:p-8 mb-5 sm:mb-8 text-white" style={{ backgroundColor: primary }}>
           <h1 className="text-2xl font-black mb-2">{stripEmoji(config["marketplace_banner_title"] || "Les meilleures boutiques du moment")}</h1>
           <p className="opacity-80 mb-6">{config["marketplace_banner_subtitle"] || "Mode locale · Commande via WhatsApp"}</p>
           <Link href="/auth/register" className="inline-block bg-white font-bold px-5 py-2.5 rounded-xl text-sm hover:opacity-90 transition-opacity" style={{ color: primary }}>
@@ -158,11 +158,11 @@ export default function MarketplacePage() {
             <p className="text-gray-500 font-semibold">Aucune boutique trouvée</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {filtered.map((shop, i) => {
               const biz = BUSINESS_TYPES.find((b) => b.id === shop.business_type) || BUSINESS_TYPES[0];
               return (
-                <Link key={shop.id} href={`/shop/${shop.id}`} className={`hover-lift animate-scale-in delay-${Math.min(i * 75, 600)} bg-white rounded-2xl border border-gray-100 p-5 flex items-start gap-4`}>
+                <Link key={shop.id} href={`/shop/${shop.id}`} className={`hover-lift animate-scale-in delay-${Math.min(i * 75, 600)} bg-white rounded-2xl border border-gray-100 p-3 sm:p-5 flex items-start gap-3 sm:gap-4`}>
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-black flex-shrink-0 overflow-hidden" style={{ backgroundColor: primary }}>
                     {shop.shop_logo_url ? (
                       <img src={shop.shop_logo_url} className="w-full h-full object-cover" />

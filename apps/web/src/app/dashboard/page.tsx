@@ -83,15 +83,15 @@ export default function VendorDashboardPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
           {[
             { label: "Articles en ligne", value: products.length, icon: <Package size={22} /> },
             { label: "Plan actuel", value: profile?.plan || "free", icon: <Briefcase size={22} /> },
             { label: "Boutique", value: profile?.shop_name || "—", icon: <Store size={22} /> },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-5">
               <div className="mb-2 text-gray-400">{s.icon}</div>
               <div className="text-xl font-black text-gray-900 truncate">{s.value}</div>
               <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
@@ -123,8 +123,8 @@ export default function VendorDashboardPage() {
           ) : (
             <div className="divide-y divide-gray-50">
               {products.map((product) => (
-                <div key={product.id} className="px-6 py-4 flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                <div key={product.id} className="px-3 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
                     {product.image_url
                       ? <img src={product.image_url} className="w-full h-full object-cover" alt={product.title} />
                       : <Package size={20} className="text-gray-300" />

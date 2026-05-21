@@ -57,13 +57,13 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="animate-scale-in bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
+      <div className="animate-scale-in bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           {logoUrl ? (
-            <img src={logoUrl} className="w-24 h-24 rounded-3xl object-cover mb-3 shadow-lg" />
+            <img src={logoUrl} className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl object-cover mb-2 sm:mb-3 shadow-lg" />
           ) : (
-            <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-4xl font-black mb-3 shadow-lg" style={{ backgroundColor: primary }}>
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white text-3xl sm:text-4xl font-black mb-2 sm:mb-3 shadow-lg" style={{ backgroundColor: primary }}>
               {appName[0]}
             </div>
           )}

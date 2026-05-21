@@ -86,7 +86,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between">
           <Link href="/marketplace" className="text-gray-400 hover:text-gray-700 text-sm font-semibold">← Marketplace</Link>
           <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
             <ShoppingCart size={22} />
@@ -96,8 +96,8 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       </div>
 
       {/* Shop header */}
-      <div className="max-w-4xl mx-auto px-6 py-8 text-center border-b border-gray-100">
-        <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-2xl font-black overflow-hidden" style={{ backgroundColor: primary }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 text-center border-b border-gray-100">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-2 sm:mb-3 flex items-center justify-center text-white text-xl sm:text-2xl font-black overflow-hidden" style={{ backgroundColor: primary }}>
           {shop.shop_logo_url ? <img src={shop.shop_logo_url} className="w-full h-full object-cover" /> : shop.shop_name[0]}
         </div>
         <h1 className="text-2xl font-black text-gray-900">{shop.shop_name}</h1>
@@ -109,7 +109,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* État vide — aucun produit dans la boutique */}
       {products.length === 0 ? (
-        <div className="max-w-4xl mx-auto px-6 py-24 text-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-24 text-center">
           <div className="text-6xl mb-4">{biz.emoji}</div>
           <p className="text-xl font-black text-gray-700 mb-2">{biz.ui.emptyTitle}</p>
           <p className="text-sm text-gray-400">{biz.ui.emptySubtitle}</p>
@@ -117,7 +117,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       ) : (
         <>
       {/* Filtres catégories */}
-      <div className="max-w-4xl mx-auto px-6 py-4 flex gap-2 overflow-x-auto">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex gap-2 overflow-x-auto">
         {categories.map((cat) => (
           <button key={cat} onClick={() => filterCategory(cat)}
             className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all"
@@ -128,14 +128,14 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       </div>
 
       {/* Grille produits */}
-      <div className="max-w-4xl mx-auto px-6 pb-24">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 pb-24">
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-4xl mb-2">{biz.emoji}</div>
             <p>Aucun {biz.ui.itemLabel} dans cette catégorie</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
             {filtered.map((product, i) => (
               <button key={product.id} onClick={() => { setSelected(product); setSelectedSize(null); setSelectedColor(null); }}
                 className={`hover-lift animate-scale-in delay-${Math.min(i * 75, 600)} text-left bg-white rounded-2xl border border-gray-100 overflow-hidden`}>
@@ -162,7 +162,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       {/* Barre panier flottante */}
       {cart.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
-          <button onClick={() => setCartOpen(true)} className="flex items-center gap-4 text-white px-6 py-3 rounded-2xl shadow-lg font-semibold" style={{ backgroundColor: "#1a1a1a" }}>
+          <button onClick={() => setCartOpen(true)} className="flex items-center gap-2 sm:gap-4 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg font-semibold text-sm sm:text-base" style={{ backgroundColor: "#1a1a1a" }}>
             <span className="text-sm text-gray-400">{cart.length} {biz.ui.itemLabel}{cart.length > 1 ? "s" : ""}</span>
             <span className="font-black">{total.toLocaleString("fr-FR")} FCFA</span>
             <span className="text-sm">Voir le panier</span>
@@ -234,9 +234,9 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
               </div>
             ) : (
               <>
-                <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+                <div className="divide-y divide-gray-50 max-h-48 sm:max-h-64 overflow-y-auto">
                   {cart.map((item, i) => (
-                    <div key={i} className="px-6 py-4 flex items-center gap-3">
+                    <div key={i} className="px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
                       {item.image_url && <img src={item.image_url} className="w-12 h-12 rounded-xl object-cover" />}
                       <div className="flex-1">
                         <p className="font-semibold text-sm text-gray-900">{item.title}</p>

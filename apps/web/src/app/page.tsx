@@ -80,48 +80,48 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 py-24 text-center">
-        <div className="animate-fade-down inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 font-medium mb-8">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-24 text-center">
+        <div className="animate-fade-down inline-flex items-center gap-2 bg-gray-100 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 font-medium mb-6 sm:mb-8">
           <span style={{ color: primary }}>✦</span> {bannerTitle}
         </div>
-        <h1 className="animate-fade-up delay-100 text-5xl font-black text-gray-900 leading-tight mb-6">
+        <h1 className="animate-fade-up delay-100 text-3xl xs:text-4xl sm:text-5xl font-black text-gray-900 leading-tight mb-4 sm:mb-6">
           {tagline.split(".")[0]}.<br />
           <span style={{ color: primary }}>{tagline.split(".").slice(1).join(".").trim()}</span>
         </h1>
-        <p className="animate-fade-up delay-200 text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+        <p className="animate-fade-up delay-200 text-base sm:text-xl text-gray-500 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
           Crée ta boutique en ligne en 30 secondes. Partage ton catalogue. Reçois tes commandes directement sur WhatsApp.
         </p>
-        <div className="animate-fade-up delay-300 flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="animate-fade-up delay-300 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
           <Link
             href="/auth/register"
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary"
             style={{ backgroundColor: primary }}
           >
             {vendorCta}
           </Link>
           <Link
             href="/marketplace"
-            className="btn btn-secondary btn-lg hover-lift"
+            className="btn btn-secondary hover-lift"
           >
-            Voir les boutiques <ArrowRight size={16} className="inline ml-1" />
+            Voir les boutiques <ArrowRight size={14} className="inline ml-1" />
           </Link>
         </div>
-        <p className="animate-fade-up delay-400 text-sm text-gray-400 mt-4">Gratuit · Sans carte bancaire · Prêt en 30s</p>
+        <p className="animate-fade-up delay-400 text-xs sm:text-sm text-gray-400 mt-4">Gratuit · Sans carte bancaire · Prêt en 30s</p>
       </section>
 
       {/* Features */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="animate-fade-up text-3xl font-black text-gray-900 text-center mb-4">Tout ce dont tu as besoin</h2>
-          <p className="animate-fade-up delay-100 text-gray-500 text-center mb-12">Simple, rapide, efficace pour tous les commerçants</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <section className="bg-gray-50 py-12 sm:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="animate-fade-up text-2xl sm:text-3xl font-black text-gray-900 text-center mb-3 sm:mb-4">Tout ce dont tu as besoin</h2>
+          <p className="animate-fade-up delay-100 text-sm sm:text-base text-gray-500 text-center mb-8 sm:mb-12">Simple, rapide, efficace pour tous les commerçants</p>
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {FEATURES.map((f, i) => (
-              <div key={f.title} className={`hover-lift animate-scale-in delay-${(i + 1) * 75} bg-white rounded-2xl p-6 border border-gray-100`}>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: f.color + "18" }}>
-                  <f.icon size={22} style={{ color: f.color }} />
+              <div key={f.title} className={`hover-lift animate-scale-in delay-${(i + 1) * 75} bg-white rounded-2xl p-4 sm:p-6 border border-gray-100`}>
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4" style={{ backgroundColor: f.color + "18" }}>
+                  <f.icon size={20} style={{ color: f.color }} />
                 </div>
-                <h3 className="font-black text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 className="font-black text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">{f.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -130,13 +130,13 @@ export default function LandingPage() {
 
       {/* Tarifs */}
       {plans.length > 0 && (
-        <section className="py-20 bg-white">
-          <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl font-black text-gray-900 text-center mb-3">Nos forfaits</h2>
-            <p className="text-gray-500 text-center mb-12">Simple et transparent — sans surprise</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="py-12 sm:py-20 bg-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 text-center mb-2 sm:mb-3">Nos forfaits</h2>
+            <p className="text-sm sm:text-base text-gray-500 text-center mb-8 sm:mb-12">Simple et transparent — sans surprise</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {plans.map((plan, i) => (
-                <div key={plan.id} className={`hover-lift animate-scale-in delay-${(i + 1) * 150} rounded-2xl border-2 p-8 flex flex-col relative overflow-hidden ${plan.is_popular ? "border-2 shadow-lg" : "border-gray-100"}`}
+                <div key={plan.id} className={`hover-lift animate-scale-in delay-${(i + 1) * 150} rounded-2xl border-2 p-6 sm:p-8 flex flex-col relative overflow-hidden ${plan.is_popular ? "border-2 shadow-lg" : "border-gray-100"}`}
                   style={plan.is_popular ? { borderColor: primary } : {}}>
                   {plan.is_popular && (
                     <div className="absolute top-0 right-0 text-xs font-bold text-white px-4 py-2 rounded-bl-2xl"
@@ -195,7 +195,7 @@ export default function LandingPage() {
       )}
 
       {/* CTA final */}
-      <section className="py-20 text-center">
+      <section className="py-12 sm:py-20 text-center px-4">
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl font-black text-gray-900 mb-4">Prêt à lancer ta boutique ?</h2>
           <p className="text-gray-500 mb-8">Rejoins les vendeurs qui utilisent {appName} pour vendre plus facilement.</p>
