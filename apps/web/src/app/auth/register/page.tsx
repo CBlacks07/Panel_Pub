@@ -61,9 +61,9 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           {logoUrl ? (
-            <img src={logoUrl} className="w-14 h-14 rounded-2xl object-cover mb-2" />
+            <img src={logoUrl} className="w-24 h-24 rounded-3xl object-cover mb-3 shadow-lg" />
           ) : (
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-black mb-2" style={{ backgroundColor: primary }}>
+            <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-4xl font-black mb-3 shadow-lg" style={{ backgroundColor: primary }}>
               {appName[0]}
             </div>
           )}
