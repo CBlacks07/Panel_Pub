@@ -1,20 +1,13 @@
 import { Slot, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { ConfigProvider } from "../context/ConfigContext";
-import {
-  useFonts,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from "@expo-google-fonts/plus-jakarta-sans";
-import { View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import * as Font from "expo-font";
+import { useState } from "react";
 
-// Garder le splash screen visible pendant le chargement
+// Empêche le splash de se cacher automatiquement
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootLayoutNav() {
@@ -45,25 +38,31 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-  });
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    // Cacher le splash dès que les polices sont prêtes (ou en cas d'erreur)
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
+    async function prepare() {
+      try {
+        // Charger les polices — si ça échoue, continuer quand même
+        await Font.loadAsync({
+          PlusJakartaSans_400Regular: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_400Regular.ttf"),
+          PlusJakartaSans_500Medium: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_500Medium.ttf"),
+          PlusJakartaSans_600SemiBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_600SemiBold.ttf"),
+          PlusJakartaSans_700Bold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_700Bold.ttf"),
+          PlusJakartaSans_800ExtraBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_800ExtraBold.ttf"),
+        });
+      } catch (e) {
+        // Polices non chargées — l'app fonctionne avec les polices système
+        console.warn("Font loading failed, using system fonts:", e);
+      } finally {
+        setAppReady(true);
+        await SplashScreen.hideAsync().catch(() => {});
+      }
     }
-  }, [fontsLoaded, fontError]);
+    prepare();
+  }, []);
 
-  // Attendre que les polices chargent
-  if (!fontsLoaded && !fontError) {
-    return <View style={{ flex: 1, backgroundColor: "#34adea" }} />;
-  }
+  if (!appReady) return null;
 
   return (
     <SafeAreaProvider>
