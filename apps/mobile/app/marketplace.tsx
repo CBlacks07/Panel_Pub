@@ -366,10 +366,10 @@ const styles = StyleSheet.create({
   bannerBtnText: { fontWeight: "800", fontSize: 13 },
 
   searchWrap: {
-    flexDirection: "row", alignItems: "center", gap: 10,
+    flexDirection: "row", alignItems: "center", gap: 8,
     marginHorizontal: 16, marginBottom: 8,
-    paddingHorizontal: 14, paddingVertical: 10,
-    backgroundColor: "#fff", borderRadius: 14, borderWidth: 1, borderColor: "#eee",
+    paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: "#f3f4f6", borderRadius: 999, borderWidth: 0,
   },
   searchIcon: { fontSize: 16 },
   searchInput: { flex: 1, fontSize: 14, color: "#1a1a1a" },

@@ -321,7 +321,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: "600", color: "#444", marginBottom: 8, marginTop: 4 },
   input: {
     borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 12,
-    padding: 14, fontSize: 15, marginBottom: 16, backgroundColor: "#fafafa",
+    padding: 14, fontSize: 15, marginBottom: 16,
+    backgroundColor: "#fff", color: "#1a1a1a",
   },
   textarea: { height: 90, textAlignVertical: "top" },
 
