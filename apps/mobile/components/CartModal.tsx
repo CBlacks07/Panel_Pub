@@ -3,6 +3,7 @@ import {
   StyleSheet, Image, Dimensions, Platform, TextInput, Alert,
 } from "react-native";
 import { useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCartStore } from "../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../lib/whatsapp";
 import { useConfig } from "../context/ConfigContext";
@@ -21,6 +22,7 @@ type Props = {
 
 export default function CartModal({ visible, onClose, shopId, shopName, whatsappPhone, itemLabel = "article" }: Props) {
   const { primary } = useConfig();
+  const insets = useSafeAreaInsets();
   const cartStore = useCartStore();
   const items = cartStore.getItems(shopId);
   const removeItem = (id: string) => cartStore.removeItem(shopId, id);
@@ -115,7 +117,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
             />
 
             {/* Footer fixe */}
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + 12, 20) }]}>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Total</Text>
                 <Text style={styles.totalAmount}>{total().toLocaleString("fr-FR")} FCFA</Text>
@@ -139,7 +141,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
       {/* Formulaire livraison */}
       <Modal visible={showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
         <View style={styles.overlay}>
-          <View style={styles.deliveryForm}>
+          <View style={[styles.deliveryForm, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
             <View style={styles.deliveryHeader}>
               <Text style={styles.deliveryTitle}>Infos de livraison</Text>
               <TouchableOpacity onPress={() => setShowDeliveryForm(false)} style={styles.closeBtn}>
