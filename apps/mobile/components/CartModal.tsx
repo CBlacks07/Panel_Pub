@@ -1,7 +1,8 @@
 import {
   View, Text, Modal, TouchableOpacity, FlatList,
-  StyleSheet, Image, Dimensions, Platform,
+  StyleSheet, Image, Dimensions, Platform, TextInput, Alert,
 } from "react-native";
+import { useState } from "react";
 import { useCartStore } from "../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../lib/whatsapp";
 import { useConfig } from "../context/ConfigContext";
@@ -26,9 +27,30 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
   const clear = () => cartStore.clear(shopId);
   const total = () => cartStore.total(shopId);
 
-  const handleOrder = async () => {
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
+  const [quartier, setQuartier] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const handleOrderPress = () => {
     if (!whatsappPhone) return;
-    await openWhatsApp(whatsappPhone, buildWhatsAppMessage(items, shopName));
+    setShowDeliveryForm(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!quartier.trim()) {
+      Alert.alert("Champ manquant", "Indique ton quartier de livraison");
+      return;
+    }
+    if (!phone.trim()) {
+      Alert.alert("Champ manquant", "Indique un numéro à appeler");
+      return;
+    }
+    const deliveryInfo = `\n📍 Quartier : ${quartier.trim()}\n📞 Numéro à appeler : ${phone.trim()}`;
+    const message = buildWhatsAppMessage(items, shopName) + deliveryInfo;
+    setShowDeliveryForm(false);
+    setQuartier("");
+    setPhone("");
+    await openWhatsApp(whatsappPhone!, message);
   };
 
   return (
@@ -99,7 +121,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
                 <Text style={styles.totalAmount}>{total().toLocaleString("fr-FR")} FCFA</Text>
               </View>
               {whatsappPhone ? (
-                <TouchableOpacity style={styles.orderBtn} onPress={handleOrder} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.orderBtn} onPress={handleOrderPress} activeOpacity={0.8}>
                   <Ionicons name="logo-whatsapp" size={20} color="#fff" />
                   <Text style={styles.orderBtnText}>Commander via WhatsApp</Text>
                 </TouchableOpacity>
@@ -113,6 +135,51 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
         )}
       </View>
       </View>
+
+      {/* Formulaire livraison */}
+      <Modal visible={showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
+        <View style={styles.overlay}>
+          <View style={styles.deliveryForm}>
+            <View style={styles.deliveryHeader}>
+              <Text style={styles.deliveryTitle}>Infos de livraison</Text>
+              <TouchableOpacity onPress={() => setShowDeliveryForm(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={16} color="#555" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.deliverySubtitle}>Ces informations seront transmises au vendeur avec ta commande.</Text>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.fieldLabel}>📍 Quartier de livraison</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Ex: Adidogomé, Bè, Tokoin..."
+                placeholderTextColor="#bbb"
+                value={quartier}
+                onChangeText={setQuartier}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.fieldLabel}>📞 Numéro à appeler</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Ex: +228 90 00 00 00"
+                placeholderTextColor="#bbb"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: "#25D366" }]} onPress={handleConfirmOrder} activeOpacity={0.8}>
+              <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+              <Text style={styles.confirmBtnText}>Confirmer la commande</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }
@@ -179,4 +246,31 @@ const styles = StyleSheet.create({
   orderBtnText: { color: "#fff", fontSize: 16, fontWeight: "800" },
   noWhatsapp: { backgroundColor: "#fffbeb", borderRadius: 12, padding: 14 },
   noWhatsappText: { color: "#92400e", fontSize: 13, textAlign: "center" },
+
+  // Formulaire livraison
+  deliveryForm: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    gap: 16,
+  },
+  deliveryHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+  },
+  deliveryTitle: { fontSize: 18, fontWeight: "800", color: "#1a1a1a" },
+  deliverySubtitle: { fontSize: 13, color: "#888", lineHeight: 18, marginTop: -8 },
+  fieldWrap: { gap: 6 },
+  fieldLabel: { fontSize: 13, fontWeight: "700", color: "#444" },
+  fieldInput: {
+    borderWidth: 1.5, borderColor: "#e5e7eb", borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 13,
+    fontSize: 15, color: "#1a1a1a", backgroundColor: "#fafafa",
+  },
+  confirmBtn: {
+    borderRadius: 16, paddingVertical: 16,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
+    marginTop: 4,
+  },
+  confirmBtnText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 });
