@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, Image,
-  StyleSheet, Alert, ScrollView, ActivityIndicator, Platform,
+  StyleSheet, Alert, ScrollView, ActivityIndicator, Platform, KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
@@ -149,7 +149,8 @@ export default function AddProductScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <Text style={styles.pageTitle}>{bizType.ui.addBtn}</Text>
 
         {/* Photo */}
@@ -293,6 +294,7 @@ export default function AddProductScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
