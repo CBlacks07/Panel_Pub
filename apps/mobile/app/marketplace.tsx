@@ -114,22 +114,18 @@ export default function MarketplaceScreen() {
     ]).start();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadShops();
-      // Restaurer la position de scroll au retour
-      return () => {
-        // Sauvegarder la position quand on quitte
-      };
-    }, [])
-  );
+  // Charger une seule fois au montage — pas à chaque retour
+  useEffect(() => {
+    loadShops();
+  }, []);
 
-  // Restaurer le scroll après rechargement des données
+  // Restaurer le scroll quand les données rechargent
   useEffect(() => {
     if (!loading && scrollOffset.current > 0) {
+      const offset = scrollOffset.current;
       setTimeout(() => {
-        flatListRef.current?.scrollToOffset({ offset: scrollOffset.current, animated: false });
-      }, 100);
+        flatListRef.current?.scrollToOffset({ offset, animated: false });
+      }, 50);
     }
   }, [loading]);
 
