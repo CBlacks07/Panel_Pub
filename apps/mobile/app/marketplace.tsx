@@ -93,6 +93,8 @@ export default function MarketplaceScreen() {
   const headerAnim = useRef(new Animated.Value(0)).current;
   const bannerAnim = useRef(new Animated.Value(-30)).current;
   const bannerOpacity = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<any>(null);
+  const scrollOffset = useRef(0);
 
   useEffect(() => {
     getAppConfig().then(setConfig);
@@ -115,8 +117,21 @@ export default function MarketplaceScreen() {
   useFocusEffect(
     useCallback(() => {
       loadShops();
+      // Restaurer la position de scroll au retour
+      return () => {
+        // Sauvegarder la position quand on quitte
+      };
     }, [])
   );
+
+  // Restaurer le scroll après rechargement des données
+  useEffect(() => {
+    if (!loading && scrollOffset.current > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: scrollOffset.current, animated: false });
+      }, 100);
+    }
+  }, [loading]);
 
   const loadShops = async () => {
     setLoading(true);
@@ -297,12 +312,15 @@ export default function MarketplaceScreen() {
         </>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={<ListHeader />}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          onScroll={(e) => { scrollOffset.current = e.nativeEvent.contentOffset.y; }}
+          scrollEventThrottle={16}
           renderItem={({ item, index }) => (
             <AnimatedShopCard
               item={item}
