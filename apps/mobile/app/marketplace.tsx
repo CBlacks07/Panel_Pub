@@ -76,6 +76,9 @@ function PricingCard({ plan, primary, index, onPress }: { plan: any; primary: st
   );
 }
 
+// Variable GLOBALE — survit à la destruction/recréation du composant
+let savedScrollOffset = 0;
+
 export default function MarketplaceScreen() {
   const router = useRouter();
   const { session } = useAuth();
@@ -94,7 +97,6 @@ export default function MarketplaceScreen() {
   const bannerAnim = useRef(new Animated.Value(-30)).current;
   const bannerOpacity = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<any>(null);
-  const scrollOffset = useRef(0);
 
   useEffect(() => {
     getAppConfig().then(setConfig);
@@ -119,13 +121,13 @@ export default function MarketplaceScreen() {
     loadShops();
   }, []);
 
-  // Restaurer le scroll quand les données rechargent
+  // Restaurer le scroll quand les données sont prêtes
   useEffect(() => {
-    if (!loading && scrollOffset.current > 0) {
-      const offset = scrollOffset.current;
+    if (!loading && savedScrollOffset > 0) {
+      const offset = savedScrollOffset;
       setTimeout(() => {
         flatListRef.current?.scrollToOffset({ offset, animated: false });
-      }, 50);
+      }, 100);
     }
   }, [loading]);
 
@@ -315,7 +317,7 @@ export default function MarketplaceScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={<ListHeader />}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          onScroll={(e) => { scrollOffset.current = e.nativeEvent.contentOffset.y; }}
+          onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
           scrollEventThrottle={16}
           renderItem={({ item, index }) => (
             <AnimatedShopCard
