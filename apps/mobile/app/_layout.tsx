@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { ConfigProvider } from "../context/ConfigContext";
 import * as SplashScreen from "expo-splash-screen";
+import * as Font from "expo-font";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -38,12 +39,23 @@ export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Cacher le splash après un court délai — polices chargées via CSS/native
-    const timer = setTimeout(async () => {
-      setReady(true);
-      await SplashScreen.hideAsync().catch(() => {});
-    }, 300);
-    return () => clearTimeout(timer);
+    async function prepare() {
+      try {
+        await Font.loadAsync({
+          PlusJakartaSans_400Regular: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_400Regular.ttf"),
+          PlusJakartaSans_500Medium: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_500Medium.ttf"),
+          PlusJakartaSans_600SemiBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_600SemiBold.ttf"),
+          PlusJakartaSans_700Bold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_700Bold.ttf"),
+          PlusJakartaSans_800ExtraBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_800ExtraBold.ttf"),
+        });
+      } catch (e) {
+        console.warn("Font loading failed, using system fonts");
+      } finally {
+        setReady(true);
+        await SplashScreen.hideAsync().catch(() => {});
+      }
+    }
+    prepare();
   }, []);
 
   if (!ready) return null;

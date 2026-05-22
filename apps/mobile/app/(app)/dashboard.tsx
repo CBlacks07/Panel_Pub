@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 20, fontWeight: "800", color: "#1a1a1a", marginBottom: 8 },
   emptySubtitle: { fontSize: 14, color: "#888", textAlign: "center", marginBottom: 28, lineHeight: 22 },
   addBtn: { backgroundColor: "#9333ea", borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14 },
-  addBtnText: { fontWeight: "700", color: "#fff", fontSize: 15 },
+  addBtnText: { fontFamily: "PlusJakartaSans_700Bold", color: "#fff", fontSize: 15 },
   editsCounter: { fontSize: 11, fontWeight: "500", marginTop: 1 },
   upsellBanner: { paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   upsellTitle: { color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 2 },

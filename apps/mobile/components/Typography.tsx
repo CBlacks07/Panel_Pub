@@ -2,12 +2,12 @@ import { Text as RNText, TextStyle, TextProps } from "react-native";
 
 type Weight = "regular" | "medium" | "semibold" | "bold" | "extrabold";
 
-const WEIGHT_MAP: Record<Weight, TextStyle["fontWeight"]> = {
-  regular:   "400",
-  medium:    "500",
-  semibold:  "600",
-  bold:      "700",
-  extrabold: "800",
+const FONT_MAP: Record<Weight, string> = {
+  regular:   "PlusJakartaSans_400Regular",
+  medium:    "PlusJakartaSans_500Medium",
+  semibold:  "PlusJakartaSans_600SemiBold",
+  bold:      "PlusJakartaSans_700Bold",
+  extrabold: "PlusJakartaSans_800ExtraBold",
 };
 
 type TypographyProps = TextProps & {
@@ -22,7 +22,7 @@ export function Text({ weight = "regular", size, color, center, style, children,
   return (
     <RNText
       style={[
-        { fontWeight: WEIGHT_MAP[weight] },
+        { fontFamily: FONT_MAP[weight] },
         size && { fontSize: size },
         color && { color },
         center && { textAlign: "center" },
