@@ -1,6 +1,6 @@
 import {
   View, Text, Modal, TouchableOpacity, FlatList,
-  StyleSheet, Image, Dimensions, Platform, TextInput, Alert,
+  StyleSheet, Image, Dimensions, Platform, TextInput, Alert, KeyboardAvoidingView,
 } from "react-native";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -140,6 +140,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
 
       {/* Formulaire livraison */}
       <Modal visible={showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <View style={styles.overlay}>
           <View style={[styles.deliveryForm, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
             <View style={styles.deliveryHeader}>
@@ -181,6 +182,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </Modal>
   );

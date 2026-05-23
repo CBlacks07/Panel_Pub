@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Share, Alert, TextInput, KeyboardAvoidingView, Platform, ScrollView, Image, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Share, Alert, TextInput, ScrollView, Image, ActivityIndicator } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -158,7 +159,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <View style={styles.header}>
           <Text style={styles.title}>Mon profil</Text>
           <TouchableOpacity onPress={() => setEditing(!editing)} style={[styles.editToggle, { borderColor: primary }]}>
@@ -166,7 +167,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
           {/* Avatar / Logo */}
           <View style={styles.avatarSection}>
             <TouchableOpacity onPress={editing ? handlePickLogo : undefined} style={[styles.avatar, { backgroundColor: primary }]}>
@@ -383,8 +384,8 @@ export default function ProfileScreen() {
               <Text style={styles.logoutText}>Se déconnecter</Text>
             </View>
           </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
+      </View>
 
       <ChangePasswordModal
         visible={pwdModalVisible}

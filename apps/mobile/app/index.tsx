@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated, Dimensions, Image } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { getAppConfig, AppConfig } from "../lib/config";
@@ -59,7 +60,11 @@ export default function SplashScreen() {
   const hasLogo = config?.logo_url && config.logo_url.trim().length > 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: primaryColor }]}>
+    <LinearGradient
+      colors={["#ffffff", "#5ec8f5", primaryColor]}
+      locations={[0, 0.3, 1]}
+      style={styles.container}
+    >
       <Animated.View style={[styles.circle1, { transform: [{ scale: bgScale }] }]} />
       <Animated.View style={[styles.circle2, { transform: [{ scale: bgScale }] }]} />
 
@@ -80,7 +85,7 @@ export default function SplashScreen() {
       <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
         {subtitle}
       </Animated.Text>
-    </View>
+    </LinearGradient>
   );
 }
 

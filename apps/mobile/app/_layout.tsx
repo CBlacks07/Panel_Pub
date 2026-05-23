@@ -42,11 +42,11 @@ export default function RootLayout() {
     async function prepare() {
       try {
         await Font.loadAsync({
-          PlusJakartaSans_400Regular: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_400Regular.ttf"),
-          PlusJakartaSans_500Medium: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_500Medium.ttf"),
-          PlusJakartaSans_600SemiBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_600SemiBold.ttf"),
-          PlusJakartaSans_700Bold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_700Bold.ttf"),
-          PlusJakartaSans_800ExtraBold: require("@expo-google-fonts/plus-jakarta-sans/PlusJakartaSans_800ExtraBold.ttf"),
+          PlusJakartaSans_400Regular: require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf"),
+          PlusJakartaSans_500Medium: require("@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf"),
+          PlusJakartaSans_600SemiBold: require("@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf"),
+          PlusJakartaSans_700Bold: require("@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf"),
+          PlusJakartaSans_800ExtraBold: require("@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf"),
         });
       } catch (e) {
         console.warn("Font loading failed, using system fonts");

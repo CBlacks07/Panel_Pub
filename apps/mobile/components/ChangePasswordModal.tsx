@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   View, Text, Modal, TouchableOpacity, TextInput,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import { useConfig } from "../context/ConfigContext";
@@ -70,6 +70,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
           </TouchableOpacity>
         </View>
 
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <View style={styles.content}>
           {/* Indicateur d'étape */}
           <View style={styles.steps}>
@@ -149,6 +150,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             </>
           )}
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
