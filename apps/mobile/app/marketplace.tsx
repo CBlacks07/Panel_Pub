@@ -76,8 +76,10 @@ function PricingCard({ plan, primary, index, onPress }: { plan: any; primary: st
   );
 }
 
-// Variable GLOBALE — survit à la destruction/recréation du composant
+// Variables GLOBALES — survivent à la destruction/recréation du composant
 let savedScrollOffset = 0;
+let cachedLocation: { lat: number; lon: number } | null = null;
+let locationRequested = false;
 
 export default function MarketplaceScreen() {
   const router = useRouter();
@@ -101,14 +103,23 @@ export default function MarketplaceScreen() {
   useEffect(() => {
     getAppConfig().then(setConfig);
     supabase.from("plans").select("*").eq("active", true).order("sort_order").then(({ data }) => { if (data) setPlans(data); });
-    // Demander la géolocalisation silencieusement
-    ExpoLocation.requestForegroundPermissionsAsync().then(({ status }) => {
-      if (status === "granted") {
-        ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Balanced })
-          .then((loc) => setUserLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude }))
-          .catch(() => {});
-      }
-    });
+    // Géolocalisation — une seule demande par session d'appli
+    if (cachedLocation) {
+      setUserLocation(cachedLocation);
+    } else if (!locationRequested) {
+      locationRequested = true;
+      ExpoLocation.requestForegroundPermissionsAsync().then(({ status }) => {
+        if (status === "granted") {
+          ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Balanced })
+            .then((loc) => {
+              const loc2d = { lat: loc.coords.latitude, lon: loc.coords.longitude };
+              cachedLocation = loc2d;
+              setUserLocation(loc2d);
+            })
+            .catch(() => {});
+        }
+      });
+    }
     Animated.parallel([
       Animated.timing(headerAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.timing(bannerAnim, { toValue: 0, duration: 500, delay: 100, useNativeDriver: true }),
@@ -257,13 +268,6 @@ export default function MarketplaceScreen() {
         ))}
       </ScrollView>
 
-      {/* Recherche */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={16} color="#bbb" />
-        <TextInput style={styles.searchInput} placeholder="Rechercher une boutique..." placeholderTextColor="#bbb" value={search} onChangeText={handleSearch} />
-        {search.length > 0 && <TouchableOpacity onPress={() => handleSearch("")}><Ionicons name="close-circle" size={18} color="#ccc" /></TouchableOpacity>}
-      </View>
-
       <Text style={styles.sectionTitle}>
         {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
         {filtered[0]?.avg_rating > 0 ? " · triées par note" : ""}
@@ -296,6 +300,25 @@ export default function MarketplaceScreen() {
         )}
       </Animated.View>
 
+      {/* Barre de recherche — HORS du FlatList pour éviter le remontage à chaque frappe */}
+      <View style={styles.searchWrap}>
+        <Ionicons name="search-outline" size={16} color="#bbb" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher une boutique..."
+          placeholderTextColor="#bbb"
+          value={search}
+          onChangeText={handleSearch}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => handleSearch("")}>
+            <Ionicons name="close-circle" size={18} color="#ccc" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={primary} />
@@ -315,6 +338,8 @@ export default function MarketplaceScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           ListHeaderComponent={<ListHeader />}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
@@ -367,8 +392,8 @@ const styles = StyleSheet.create({
 
   searchWrap: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    marginHorizontal: 16, marginBottom: 8,
-    paddingHorizontal: 14, paddingVertical: 8,
+    marginHorizontal: 16, marginTop: 10, marginBottom: 4,
+    paddingHorizontal: 14, paddingVertical: 10,
     backgroundColor: "#f3f4f6", borderRadius: 999, borderWidth: 0,
   },
   searchIcon: { fontSize: 16 },
