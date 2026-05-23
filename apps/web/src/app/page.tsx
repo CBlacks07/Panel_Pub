@@ -583,7 +583,7 @@ export default function LandingPage() {
 
           <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <p>© {new Date().getFullYear()} {appName}. Tous droits réservés.</p>
-            <p>Fait avec ❤️ pour les commerçants africains</p>
+            <p>OPS CORPORATION</p>
           </div>
         </div>
       </footer>
