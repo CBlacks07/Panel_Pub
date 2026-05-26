@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Share, Alert, TextInput, ScrollView, Image, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
@@ -34,12 +35,28 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pwdModalVisible, setPwdModalVisible] = useState(false);
+  const [bizCooldownHours, setBizCooldownHours] = useState(0);
 
-  useEffect(() => { loadProfile(); }, []);
+  useEffect(() => {
+    loadProfile();
+    // Vérifier le cooldown restant pour le changement de catégorie
+    const isFreePlan = getPlanById(profile?.plan || "free").id === "free";
+    if (isFreePlan && user?.id) {
+      AsyncStorage.getItem(`biz_type_changed_at_${user.id}`).then((str) => {
+        if (str) {
+          const elapsed = Date.now() - parseInt(str, 10);
+          const cooldownMs = 24 * 60 * 60 * 1000;
+          if (elapsed < cooldownMs) {
+            setBizCooldownHours(Math.ceil((cooldownMs - elapsed) / (60 * 60 * 1000)));
+          }
+        }
+      });
+    }
+  }, []);
 
   const loadProfile = async () => {
     const [{ data }, { count: productCount }, { data: ratingsData }] = await Promise.all([
-      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url").eq("id", user!.id).single(),
+      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, city, business_type").eq("id", user!.id).single(),
       supabase.from("products").select("id", { count: "exact" }).eq("user_id", user!.id),
       supabase.from("shop_ratings").select("rating").eq("shop_id", user!.id),
     ]);
@@ -50,6 +67,7 @@ export default function ProfileScreen() {
       setDescription(data.description ?? "");
       setShopLogoUrl(data.shop_logo_url ?? "");
       setCity((data as any).city ?? "");
+      if ((data as any).business_type) setSelectedBizType((data as any).business_type);
     }
     const avg = ratingsData && ratingsData.length > 0
       ? ratingsData.reduce((s, r) => s + r.rating, 0) / ratingsData.length
@@ -65,13 +83,32 @@ export default function ProfileScreen() {
         .select("id", { count: "exact", head: true })
         .eq("phone_whatsapp", whatsapp.trim())
         .neq("id", user!.id);
-
       if ((count || 0) >= 3) {
-        Alert.alert(
-          "Numéro déjà utilisé",
-          "Ce numéro WhatsApp est déjà associé à 3 boutiques (maximum autorisé). Utilise un autre numéro."
-        );
+        Alert.alert("Numéro déjà utilisé", "Ce numéro WhatsApp est déjà associé à 3 boutiques (maximum autorisé). Utilise un autre numéro.");
         return;
+      }
+    }
+
+    // Cooldown changement de catégorie — plan gratuit : 1 fois toutes les 24h
+    const bizTypeChanged = selectedBizType !== bizType.id;
+    if (bizTypeChanged) {
+      const isFreePlan = getPlanById(profile?.plan || "free").id === "free";
+      if (isFreePlan) {
+        const storageKey = `biz_type_changed_at_${user!.id}`;
+        const lastChangeStr = await AsyncStorage.getItem(storageKey);
+        if (lastChangeStr) {
+          const elapsed = Date.now() - parseInt(lastChangeStr, 10);
+          const cooldownMs = 24 * 60 * 60 * 1000;
+          if (elapsed < cooldownMs) {
+            const remaining = Math.ceil((cooldownMs - elapsed) / (60 * 60 * 1000));
+            Alert.alert(
+              "Limite atteinte",
+              `Plan gratuit : tu peux changer de catégorie 1 fois par 24h.\nProchaine modification disponible dans ${remaining}h.`,
+              [{ text: "OK" }]
+            );
+            return;
+          }
+        }
       }
     }
 
@@ -85,6 +122,12 @@ export default function ProfileScreen() {
       business_type: selectedBizType,
       city: city || null,
     }).eq("id", user!.id);
+
+    // Enregistrer le timestamp du changement de catégorie
+    if (bizTypeChanged) {
+      await AsyncStorage.setItem(`biz_type_changed_at_${user!.id}`, Date.now().toString());
+    }
+
     setSaving(false);
     setEditing(false);
     refreshProfile();
@@ -219,13 +262,27 @@ export default function ProfileScreen() {
           {/* Type de business en mode édition */}
           {editing && (
             <View style={styles.bizSection}>
-              <Text style={styles.bizSectionTitle}>Type de boutique</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <Text style={styles.bizSectionTitle}>Type de boutique</Text>
+                {bizCooldownHours > 0 && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Ionicons name="time-outline" size={12} color="#f59e0b" />
+                    <Text style={{ fontSize: 11, color: "#f59e0b", fontWeight: "600" }}>
+                      Modifiable dans {bizCooldownHours}h
+                    </Text>
+                  </View>
+                )}
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
                 {BUSINESS_TYPES.map((b) => (
                   <TouchableOpacity
                     key={b.id}
-                    onPress={() => setSelectedBizType(b.id)}
-                    style={[styles.bizChip, selectedBizType === b.id && { backgroundColor: primary, borderColor: primary }]}
+                    onPress={() => bizCooldownHours > 0 ? null : setSelectedBizType(b.id)}
+                    style={[
+                      styles.bizChip,
+                      selectedBizType === b.id && { backgroundColor: primary, borderColor: primary },
+                      bizCooldownHours > 0 && b.id !== selectedBizType && { opacity: 0.4 },
+                    ]}
                   >
                     <Text style={styles.bizChipEmoji}>{b.emoji}</Text>
                     <Text style={[styles.bizChipLabel, selectedBizType === b.id && { color: "#fff" }]}>{b.label}</Text>
