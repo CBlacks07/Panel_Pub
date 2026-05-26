@@ -582,8 +582,11 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p>© {new Date().getFullYear()} {appName}. Tous droits réservés.</p>
-            <p>OPS CORPORATION</p>
+            <p>© {new Date().getFullYear()} {appName}. Tous droits réservés. — <span className="text-white font-semibold">OPS CORPORATION</span></p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-white transition-colors">Confidentialité</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Conditions</Link>
+            </div>
           </div>
         </div>
       </footer>

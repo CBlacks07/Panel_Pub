@@ -6,6 +6,8 @@ import { ConfigProvider } from "../context/ConfigContext";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
 import * as Updates from "expo-updates";
+import ErrorBoundary from "../components/ErrorBoundary";
+import OfflineBanner from "../components/OfflineBanner";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -77,11 +79,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ConfigProvider>
-        <AuthProvider>
-          <RootLayoutNav />
-        </AuthProvider>
-      </ConfigProvider>
+      <ErrorBoundary>
+        <ConfigProvider>
+          <AuthProvider>
+            <RootLayoutNav />
+            <OfflineBanner />
+          </AuthProvider>
+        </ConfigProvider>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 16.0.0"
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -26,8 +27,9 @@
     },
     "production": {
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
       },
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://elmyhvgpnxdvqssyrskx.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVsbXlodmdwbnhkdnFzc3lyc2t4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzIzOTUsImV4cCI6MjA5NDg0ODM5NX0.Nxsc4eibaKN77hnV_B9IpCjugDeN2PyA06GPmx3UkqY",
@@ -36,6 +38,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
   }
 }

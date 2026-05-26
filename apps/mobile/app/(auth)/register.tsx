@@ -180,6 +180,9 @@ export default function RegisterScreen() {
                 <Text style={styles.linkText}>Déjà un compte ? <Text style={[styles.linkTextBold, { color: primary }]}>Se connecter</Text></Text>
               </TouchableOpacity>
             </Link>
+            <TouchableOpacity onPress={() => require("react-native").Linking.openURL("https://panel-pub-web.vercel.app/privacy")} style={styles.privacyBtn}>
+              <Text style={styles.privacyText}>En créant un compte, tu acceptes nos{"\n"}Politique de confidentialité · Conditions d'utilisation</Text>
+            </TouchableOpacity>
           </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
@@ -229,4 +232,6 @@ const styles = StyleSheet.create({
   linkBtn: { alignItems: "center", padding: 8, marginTop: 8 },
   linkText: { color: "#888", fontSize: 14 },
   linkTextBold: { fontWeight: "700" },
+  privacyBtn: { alignItems: "center", paddingVertical: 8 },
+  privacyText: { color: "#ccc", fontSize: 11, textAlign: "center", lineHeight: 16 },
 });

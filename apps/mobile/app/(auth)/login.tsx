@@ -102,6 +102,9 @@ export default function LoginScreen() {
                 <Text style={styles.linkText}>Pas encore de compte ? <Text style={[styles.linkTextBold, { color: primary }]}>Créer un compte</Text></Text>
               </TouchableOpacity>
             </Link>
+            <TouchableOpacity onPress={() => require("react-native").Linking.openURL("https://panel-pub-web.vercel.app/privacy")} style={styles.privacyBtn}>
+              <Text style={styles.privacyText}>Politique de confidentialité · Conditions d'utilisation</Text>
+            </TouchableOpacity>
             </FadeSlide>
           </View>
       </KeyboardAwareScrollView>
@@ -146,4 +149,6 @@ const styles = StyleSheet.create({
   linkBtn: { alignItems: "center", padding: 8 },
   linkText: { color: "#888", fontSize: 14 },
   linkTextBold: { fontWeight: "700" },
+  privacyBtn: { alignItems: "center", paddingVertical: 8 },
+  privacyText: { color: "#ccc", fontSize: 11, textAlign: "center" },
 });
