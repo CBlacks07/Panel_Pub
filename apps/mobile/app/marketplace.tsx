@@ -310,13 +310,17 @@ export default function MarketplaceScreen() {
           value={search}
           onChangeText={handleSearch}
           returnKeyType="search"
-          clearButtonMode="while-editing"
+          autoCorrect={false}
+          autoCapitalize="none"
         />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => handleSearch("")}>
-            <Ionicons name="close-circle" size={18} color="#ccc" />
-          </TouchableOpacity>
-        )}
+        {/* Toujours rendu (opacity) — évite le changement de structure qui fait perdre le focus sur Android */}
+        <TouchableOpacity
+          onPress={() => handleSearch("")}
+          disabled={search.length === 0}
+          style={{ opacity: search.length > 0 ? 1 : 0 }}
+        >
+          <Ionicons name="close-circle" size={18} color="#ccc" />
+        </TouchableOpacity>
       </View>
 
       {loading ? (
