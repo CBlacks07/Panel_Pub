@@ -280,8 +280,8 @@ export default function ProfileScreen() {
                     onPress={() => bizCooldownHours > 0 ? null : setSelectedBizType(b.id)}
                     style={[
                       styles.bizChip,
-                      selectedBizType === b.id && { backgroundColor: primary, borderColor: primary },
-                      bizCooldownHours > 0 && b.id !== selectedBizType && { opacity: 0.4 },
+                      selectedBizType === b.id ? { backgroundColor: primary, borderColor: primary } : null,
+                      (bizCooldownHours > 0 && b.id !== selectedBizType) ? { opacity: 0.4 } : null,
                     ]}
                   >
                     <Text style={styles.bizChipEmoji}>{b.emoji}</Text>

@@ -327,15 +327,8 @@ export default function MarketplaceScreen() {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={primary} />
         </View>
-      ) : filtered.length === 0 && search.length > 0 ? (
-        <>
-          <ListHeader />
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔍</Text>
-            <Text style={styles.emptyTitle}>Aucune boutique trouvée</Text>
-          </View>
-        </>
       ) : (
+        /* FlatList TOUJOURS rendu — évite le swap de layout qui fait perdre le focus du TextInput */
         <FlatList
           ref={flatListRef}
           data={filtered}
@@ -345,6 +338,14 @@ export default function MarketplaceScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListHeaderComponent={<ListHeader />}
+          ListEmptyComponent={
+            search.length > 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyTitle}>Aucune boutique trouvée</Text>
+              </View>
+            ) : null
+          }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
           scrollEventThrottle={16}

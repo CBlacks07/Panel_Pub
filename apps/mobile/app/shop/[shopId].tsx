@@ -19,6 +19,56 @@ import { Ionicons } from "@expo/vector-icons";
 const { width: screenWidth } = Dimensions.get("window");
 const MAX_WIDTH = Math.min(screenWidth, 680);
 const CARD_SIZE = (MAX_WIDTH - 48) / 2;
+const IMG_HEIGHT = CARD_SIZE * 1.15;
+
+/* ── Image produit avec shimmer + fallback ─────── */
+function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: number; fallbackEmoji: string }) {
+  const [loading, setLoading] = useState(!!uri);
+  const [error, setError] = useState(false);
+  const shimmer = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    if (!uri) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+
+  if (!uri || error) {
+    return (
+      <View style={[productImageStyles.placeholder, { width: size, height: IMG_HEIGHT }]}>
+        <Text style={{ fontSize: size * 0.28 }}>{fallbackEmoji}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ width: size, height: IMG_HEIGHT }}>
+      {loading && (
+        <Animated.View
+          style={[productImageStyles.shimmer, { width: size, height: IMG_HEIGHT, opacity: shimmer }]}
+        />
+      )}
+      <Image
+        source={{ uri }}
+        style={{ width: size, height: IMG_HEIGHT }}
+        resizeMode="cover"
+        onLoad={() => setLoading(false)}
+        onError={() => { setLoading(false); setError(true); }}
+      />
+    </View>
+  );
+}
+
+const productImageStyles = StyleSheet.create({
+  placeholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },
+  shimmer: { position: "absolute", backgroundColor: "#e8e8e8", zIndex: 1 },
+});
 
 type Variation = { type: string; value: string };
 type Product = {
@@ -283,21 +333,14 @@ export default function ShopScreen() {
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.9}>
-              {item.image_url ? (
-                <Image source={{ uri: item.image_url }} style={styles.cardImage} />
-              ) : (
-                <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
-                  <Text style={{ fontSize: 40 }}>{shopBizType.emoji}</Text>
-                </View>
-              )}
-              {/* Overlay prix */}
-              <View style={styles.cardOverlay}>
-                <Text style={styles.cardOverlayPrice}>{item.price.toLocaleString("fr-FR")} FCFA</Text>
-              </View>
+            <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.88}>
+              <ProductImage uri={item.image_url} size={CARD_SIZE} fallbackEmoji={shopBizType.emoji} />
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={[styles.cardCategory, { color: primary }]}>{item.category}</Text>
+                <View style={styles.cardBottom}>
+                  <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
+                  <Text style={styles.cardCategory} numberOfLines={1}>{item.category}</Text>
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -471,18 +514,17 @@ const styles = StyleSheet.create({
   grid: { padding: 16, gap: 12 },
   row: { gap: 12 },
 
-  card: { width: CARD_SIZE, borderRadius: 16, overflow: "hidden", backgroundColor: "#f5f5f5" },
-  cardImage: { width: CARD_SIZE, height: CARD_SIZE * 1.2 },
-  cardImagePlaceholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f3e8ff" },
-  cardOverlay: {
-    position: "absolute", bottom: 48, left: 0, right: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    paddingHorizontal: 10, paddingVertical: 5,
+  card: {
+    width: CARD_SIZE, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
   },
-  cardOverlayPrice: { color: "#fff", fontSize: 13, fontWeight: "800" },
+  cardImagePlaceholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },
   cardInfo: { padding: 10, backgroundColor: "#fff" },
-  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", marginBottom: 2 },
-  cardCategory: { fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", marginBottom: 5 },
+  cardBottom: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
+  cardPrice: { fontSize: 13, fontWeight: "800" },
+  cardCategory: { fontSize: 10, fontWeight: "600", color: "#aaa", textTransform: "uppercase", flexShrink: 1 },
 
   empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
   emptyIcon: { fontSize: 56, marginBottom: 12 },
