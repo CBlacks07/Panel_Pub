@@ -32,47 +32,35 @@ type Shop = {
   distance?: number;
 };
 
-function PricingCard({ plan, primary, index, onPress }: { plan: any; primary: string; index: number; onPress: () => void }) {
-  const slideAnim = useRef(new Animated.Value(40)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay: index * 120, useNativeDriver: true }),
-      Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: index * 120, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
+function PricingCard({ plan, primary, onPress }: { plan: any; primary: string; index: number; onPress: () => void }) {
   return (
-    <Animated.View style={{ transform: [{ translateX: slideAnim }], opacity: opacityAnim }}>
-      <TouchableOpacity
-        style={[styles.pricingCard, plan.is_popular && { borderColor: primary, borderWidth: 2 }]}
-        onPress={onPress}
-        activeOpacity={0.85}
-      >
-        {plan.is_popular && (
-          <View style={[styles.popularTag, { backgroundColor: primary }]}>
-            <Text style={styles.popularTagText}>⭐ Recommandé</Text>
-          </View>
-        )}
-        <Text style={styles.pricingName}>{plan.name}</Text>
-        <Text style={[styles.pricingPrice, { color: primary }]}>
-          {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} ${plan.currency}`}
-        </Text>
-        <Text style={styles.pricingBilling}>
-          {plan.price === 0 ? "pour toujours" : `/${plan.billing}`}
-        </Text>
-        <View style={styles.pricingDivider} />
-        {getPlanFeatures(plan).map((f: string, i: number) => (
-          <Text key={i} style={[styles.pricingFeature, i < 2 && { fontWeight: "700", color: "#333" }]}>✓ {f}</Text>
-        ))}
-        <View style={[styles.pricingBtn, { backgroundColor: plan.is_popular ? primary : "#f3f4f6" }]}>
-          <Text style={[styles.pricingBtnText, { color: plan.is_popular ? "#fff" : "#555" }]}>
-            {plan.price === 0 ? "Commencer" : `Choisir ${plan.name}`}
-          </Text>
+    <TouchableOpacity
+      style={[styles.pricingCard, plan.is_popular && { borderColor: primary, borderWidth: 2 }]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      {plan.is_popular && (
+        <View style={[styles.popularTag, { backgroundColor: primary }]}>
+          <Text style={styles.popularTagText}>⭐ Recommandé</Text>
         </View>
-      </TouchableOpacity>
-    </Animated.View>
+      )}
+      <Text style={styles.pricingName}>{plan.name}</Text>
+      <Text style={[styles.pricingPrice, { color: primary }]}>
+        {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} ${plan.currency}`}
+      </Text>
+      <Text style={styles.pricingBilling}>
+        {plan.price === 0 ? "pour toujours" : `/${plan.billing}`}
+      </Text>
+      <View style={styles.pricingDivider} />
+      {getPlanFeatures(plan).map((f: string, i: number) => (
+        <Text key={i} style={[styles.pricingFeature, i < 2 && { fontWeight: "700", color: "#333" }]}>✓ {f}</Text>
+      ))}
+      <View style={[styles.pricingBtn, { backgroundColor: plan.is_popular ? primary : "#f3f4f6" }]}>
+        <Text style={[styles.pricingBtnText, { color: plan.is_popular ? "#fff" : "#555" }]}>
+          {plan.price === 0 ? "Commencer" : `Choisir ${plan.name}`}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
