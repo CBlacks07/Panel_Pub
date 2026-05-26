@@ -237,82 +237,89 @@ export default function ShopScreen() {
     );
   }
 
-  // shop est garanti non-null ici
   const shopBizType = getBusinessType(shop.business_type || "mode");
+  const hasLogo = !!(shop.shop_logo_url && shop.shop_logo_url.trim().length > 0);
 
   return (
     <View style={styles.outerContainer}>
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor={primary} />
 
-      {/* Header boutique */}
-      <View style={styles.shopHeader}>
+      {/* ── HEADER avec bandeau gradient ── */}
+      <View style={[styles.shopHeader, { backgroundColor: primary }]}>
+        {/* Décoration fond */}
+        <View style={styles.headerCircle1} />
+        <View style={styles.headerCircle2} />
+
+        {/* Boutons flottants */}
         <TouchableOpacity onPress={() => router.canGoBack() && router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
-
-        <View style={styles.shopHeaderCenter}>
-          {/* Avatar initiale */}
-          <View style={[styles.shopAvatar, { backgroundColor: primary }]}>
-            {shop.shop_logo_url && shop.shop_logo_url.trim().length > 0 ? (
-              <Image source={{ uri: shop.shop_logo_url }} style={{ width: 64, height: 64 }} resizeMode="cover" />
-            ) : (
-              <Text style={styles.shopAvatarText}>{shop.shop_name[0].toUpperCase()}</Text>
-            )}
-          </View>
-          <Text style={styles.shopName}>{shop.shop_name}</Text>
-          {shop.slogan ? (
-            <Text style={[styles.shopSlogan, { color: primary }]}>"{shop.slogan}"</Text>
-          ) : null}
-          {shop.description ? (
-            <Text style={styles.shopDescription}>{shop.description}</Text>
-          ) : null}
-          {shopRating.count > 0 ? (
-            <StarRating rating={shopRating.avg} count={shopRating.count} size="sm" />
-          ) : null}
-          <View style={styles.shopMeta}>
-            <Text style={styles.productCount}>{products.length} {shopBizType.ui.itemLabel}{products.length > 1 ? "s" : ""}</Text>
-            <TouchableOpacity style={styles.rateBtn} onPress={() => setRatingVisible(true)}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name="star-outline" size={12} color="#92400e" />
-                <Text style={styles.rateBtnText}>Noter</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Bouton panier */}
         <TouchableOpacity style={styles.cartBtn} onPress={() => setCartVisible(true)}>
-          <Ionicons name="bag-handle-outline" size={24} color="#1a1a1a" />
+          <Ionicons name="bag-handle-outline" size={22} color="#fff" />
           {items.length > 0 && (
-            <View style={[styles.cartBadge, { backgroundColor: primary }]}>
+            <View style={styles.cartBadge}>
               <Text style={styles.cartBadgeText}>{items.length}</Text>
             </View>
           )}
         </TouchableOpacity>
+
+        {/* Logo + infos */}
+        <View style={styles.shopHeaderCenter}>
+          <View style={[styles.shopAvatar, { borderColor: primary + "60" }]}>
+            <View style={[styles.shopAvatarInner, { backgroundColor: hasLogo ? "#fff" : primary + "cc" }]}>
+              {hasLogo ? (
+                <Image source={{ uri: shop.shop_logo_url! }} style={styles.shopAvatarImg} resizeMode="cover" />
+              ) : (
+                <Text style={styles.shopAvatarText}>{shop.shop_name[0].toUpperCase()}</Text>
+              )}
+            </View>
+          </View>
+          <Text style={styles.shopName}>{shop.shop_name}</Text>
+          {shop.slogan ? (
+            <Text style={styles.shopSlogan}>"{shop.slogan}"</Text>
+          ) : null}
+          {shopRating.count > 0 && (
+            <StarRating rating={shopRating.avg} count={shopRating.count} size="sm" />
+          )}
+          <View style={styles.shopMetaRow}>
+            <View style={styles.shopMetaChip}>
+              <Text style={styles.shopMetaChipText}>{shopBizType.emoji} {shopBizType.label}</Text>
+            </View>
+            <View style={styles.shopMetaChip}>
+              <Text style={styles.shopMetaChipText}>{products.length} {shopBizType.ui.itemLabel}{products.length > 1 ? "s" : ""}</Text>
+            </View>
+            <TouchableOpacity style={[styles.shopMetaChip, styles.rateChip]} onPress={() => setRatingVisible(true)}>
+              <Ionicons name="star-outline" size={11} color="#f59e0b" />
+              <Text style={[styles.shopMetaChipText, { color: "#f59e0b" }]}>Noter</Text>
+            </TouchableOpacity>
+          </View>
+          {shop.description ? (
+            <Text style={styles.shopDescription} numberOfLines={2}>{shop.description}</Text>
+          ) : null}
+        </View>
       </View>
 
-      {/* Catégories */}
+      {/* ── FILTRES CATÉGORIES ── */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
+        horizontal showsHorizontalScrollIndicator={false}
         style={styles.categoriesBar}
         contentContainerStyle={styles.categoriesContent}
       >
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat}
-            style={[styles.categoryPill, activeCategory === cat && styles.categoryPillActive]}
+            style={[styles.categoryPill, activeCategory === cat && { backgroundColor: primary, borderColor: primary }]}
             onPress={() => filterByCategory(cat)}
           >
-            <Text style={[styles.categoryPillText, activeCategory === cat && styles.categoryPillTextActive]}>
+            <Text style={[styles.categoryPillText, activeCategory === cat && { color: "#fff" }]}>
               {cat}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Grille */}
+      {/* ── GRILLE PRODUITS ── */}
       {products.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>{shopBizType.emoji}</Text>
@@ -333,83 +340,73 @@ export default function ShopScreen() {
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.88}>
-              <ProductImage uri={item.image_url} size={CARD_SIZE} fallbackEmoji={shopBizType.emoji} />
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                <View style={styles.cardBottom}>
-                  <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
-                  <Text style={styles.cardCategory} numberOfLines={1}>{item.category}</Text>
+            <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.9}>
+              {/* Image */}
+              <View style={styles.cardImageWrap}>
+                <ProductImage uri={item.image_url} size={CARD_SIZE} fallbackEmoji={shopBizType.emoji} />
+                {/* Badge prix */}
+                <View style={[styles.priceBadge, { backgroundColor: primary }]}>
+                  <Text style={styles.priceBadgeText}>{item.price.toLocaleString("fr-FR")} F</Text>
                 </View>
+              </View>
+              {/* Infos */}
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                <Text style={[styles.cardCategory, { color: primary + "99" }]}>{item.category}</Text>
               </View>
             </TouchableOpacity>
           )}
         />
       )}
 
-      {/* Barre panier flottante */}
-      <Animated.View style={[
-        styles.cartBar,
-        { bottom: insets.bottom + 16, transform: [{ translateY: cartTranslateY }] }
-      ]}>
+      {/* ── BARRE PANIER FLOTTANTE ── */}
+      <Animated.View style={[styles.cartBar, { bottom: insets.bottom + 16, transform: [{ translateY: cartTranslateY }] }]}>
         <TouchableOpacity style={styles.cartBarInner} onPress={() => setCartVisible(true)}>
           <View style={styles.cartBarLeft}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Ionicons name="bag-handle" size={16} color="#aaa" />
-              <Text style={styles.cartBarCount}>{items.length} {shopBizType.ui.itemLabel}{items.length > 1 ? "s" : ""}</Text>
-            </View>
+            <Text style={styles.cartBarCount}>{items.length} article{items.length > 1 ? "s" : ""}</Text>
             <Text style={styles.cartBarTotal}>{total().toLocaleString("fr-FR")} FCFA</Text>
           </View>
           <Animated.View style={[styles.whatsappBtn, { transform: [{ scale: whatsappPulse }] }]}>
-            <Ionicons name="chevron-forward" size={14} color="#fff" />
-            <Text style={styles.whatsappBtnText}>Voir le panier</Text>
+            <Ionicons name="logo-whatsapp" size={16} color="#fff" />
+            <Text style={styles.whatsappBtnText}>Commander</Text>
           </Animated.View>
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Modal panier */}
-      <CartModal
-        visible={cartVisible}
-        onClose={() => setCartVisible(false)}
-        shopId={shopId as string}
-        shopName={shop.shop_name}
-        whatsappPhone={shop.phone_whatsapp}
-        itemLabel={shopBizType.ui.itemLabel}
-      />
+      <CartModal visible={cartVisible} onClose={() => setCartVisible(false)} shopId={shopId as string} shopName={shop.shop_name} whatsappPhone={shop.phone_whatsapp} itemLabel={shopBizType.ui.itemLabel} />
+      <RatingModal visible={ratingVisible} onClose={() => setRatingVisible(false)} shopId={shopId as string} shopName={shop.shop_name} onRated={() => loadShop()} />
 
-      {/* Modal notation */}
-      <RatingModal
-        visible={ratingVisible}
-        onClose={() => setRatingVisible(false)}
-        shopId={shopId as string}
-        shopName={shop.shop_name}
-        onRated={() => loadShop()}
-      />
-
-      {/* Modal produit */}
+      {/* ── MODAL PRODUIT ── */}
       <Modal visible={!!selected} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
         {selected && (
           <View style={styles.modal}>
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-              {/* Image grande */}
+              {/* Image plein écran */}
               <View style={styles.modalImageWrap}>
                 {selected.image_url ? (
                   <Image source={{ uri: selected.image_url }} style={styles.modalImage} resizeMode="cover" />
                 ) : (
-                  <View style={[styles.modalImage, styles.cardImagePlaceholder]}>
+                  <View style={[styles.modalImage, { backgroundColor: primary + "15", justifyContent: "center", alignItems: "center" }]}>
                     <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
                   </View>
                 )}
+                {/* Gradient overlay bas */}
+                <View style={styles.modalImageGradient} />
                 <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
-                  <Ionicons name="close" size={16} color="#fff" />
+                  <Ionicons name="close" size={18} color="#fff" />
                 </TouchableOpacity>
-                <View style={[styles.modalPriceTag, { backgroundColor: primary }]}>
-                  <Text style={styles.modalPriceTagText}>{selected.price.toLocaleString("fr-FR")} FCFA</Text>
+                {/* Prix sur l'image */}
+                <View style={[styles.modalPriceBadge, { backgroundColor: primary }]}>
+                  <Text style={styles.modalPriceBadgeText}>{selected.price.toLocaleString("fr-FR")} FCFA</Text>
                 </View>
               </View>
 
+              {/* Contenu */}
               <View style={styles.modalContent}>
-                <Text style={[styles.modalCategoryLabel, { color: primary }]}>{selected.category}</Text>
+                {/* Catégorie + titre */}
+                <View style={[styles.modalCatBadge, { backgroundColor: primary + "15" }]}>
+                  <Text style={[styles.modalCatText, { color: primary }]}>{selected.category}</Text>
+                </View>
                 <Text style={styles.modalTitle}>{selected.title}</Text>
 
                 {selected.description ? (
@@ -427,7 +424,7 @@ export default function ShopScreen() {
                           style={[styles.varChip, selectedSize === v.value && { backgroundColor: primary, borderColor: primary }]}
                           onPress={() => setSelectedSize(v.value)}
                         >
-                          <Text style={[styles.varChipText, selectedSize === v.value && styles.varChipTextActive]}>{v.value}</Text>
+                          <Text style={[styles.varChipText, selectedSize === v.value && { color: "#fff" }]}>{v.value}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -445,7 +442,7 @@ export default function ShopScreen() {
                           style={[styles.varChip, selectedColor === v.value && { backgroundColor: primary, borderColor: primary }]}
                           onPress={() => setSelectedColor(v.value)}
                         >
-                          <Text style={[styles.varChipText, selectedColor === v.value && styles.varChipTextActive]}>{v.value}</Text>
+                          <Text style={[styles.varChipText, selectedColor === v.value && { color: "#fff" }]}>{v.value}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -453,7 +450,10 @@ export default function ShopScreen() {
                 )}
 
                 <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: primary, shadowColor: primary }]} onPress={handleAddToCart}>
-                  <Text style={styles.addToCartBtnText}>+ Ajouter {shopBizType.id === "alimentation" ? "à ma commande" : "au panier"}</Text>
+                  <Ionicons name="bag-add-outline" size={20} color="#fff" />
+                  <Text style={styles.addToCartBtnText}>
+                    {shopBizType.id === "alimentation" ? "Ajouter à ma commande" : "Ajouter au panier"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -466,126 +466,155 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  outerContainer: { flex: 1, backgroundColor: "#f0f0f0", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#fff", width: "100%", maxWidth: 680 },
+  outerContainer: { flex: 1, backgroundColor: "#f0f2f5", alignItems: "center" },
+  container: { flex: 1, backgroundColor: "#f0f2f5", width: "100%", maxWidth: 680 },
   loadingScreen: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
-  notFoundText: { fontSize: 16, color: "#999" },
 
+  // Header
   shopHeader: {
-    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: "#f0f0f0",
-    backgroundColor: "#fff", alignItems: "center",
+    paddingBottom: 20, paddingHorizontal: 16,
+    alignItems: "center", overflow: "hidden", position: "relative",
   },
-  backBtn: { position: "absolute", top: 12, left: 16, width: 36, height: 36, justifyContent: "center" },
-  backBtnText: { fontSize: 22, color: "#1a1a1a" },
-  shopHeaderCenter: { alignItems: "center", gap: 4, paddingHorizontal: 48 },
-  shopAvatar: {
-    width: 64, height: 64, borderRadius: 32,
-    justifyContent: "center", alignItems: "center",
-    marginBottom: 8, overflow: "hidden",
+  headerCircle1: {
+    position: "absolute", width: 200, height: 200, borderRadius: 100,
+    backgroundColor: "rgba(255,255,255,0.08)", top: -60, right: -40,
   },
-  shopAvatarText: { fontSize: 28, fontWeight: "800", color: "#fff" },
-  shopName: { fontSize: 18, fontWeight: "800", color: "#1a1a1a" },
-  shopSlogan: { fontSize: 13, fontStyle: "italic", fontWeight: "600", textAlign: "center" },
-  shopDescription: { fontSize: 12, color: "#888", textAlign: "center", lineHeight: 18, marginTop: 2 },
-  shopMeta: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 4 },
-  productCount: { fontSize: 11, color: "#aaa" },
-  rateBtn: { backgroundColor: "#fef3c7", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  rateBtnText: { fontSize: 12, color: "#92400e", fontWeight: "700" },
-  cartBtn: { position: "absolute", top: 12, right: 16, width: 40, height: 40, justifyContent: "center", alignItems: "center" },
-  cartBtnIcon: { fontSize: 24 },
+  headerCircle2: {
+    position: "absolute", width: 140, height: 140, borderRadius: 70,
+    backgroundColor: "rgba(255,255,255,0.06)", top: -20, left: -30,
+  },
+  backBtn: {
+    position: "absolute", top: 12, left: 12, zIndex: 10,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.2)", justifyContent: "center", alignItems: "center",
+  },
+  cartBtn: {
+    position: "absolute", top: 12, right: 12, zIndex: 10,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.2)", justifyContent: "center", alignItems: "center",
+  },
   cartBadge: {
-    position: "absolute", top: 0, right: 0,
-    borderRadius: 8,
+    position: "absolute", top: 0, right: 0, borderRadius: 8,
+    backgroundColor: "#ef4444",
     minWidth: 18, height: 18, justifyContent: "center", alignItems: "center", paddingHorizontal: 3,
   },
   cartBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
-
-  categoriesBar: { maxHeight: 50, backgroundColor: "#fff" },
-  categoriesContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  categoryPill: {
-    paddingHorizontal: 16, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1.5, borderColor: "#eee", backgroundColor: "#fafafa",
+  shopHeaderCenter: { alignItems: "center", gap: 6, paddingTop: 44, width: "100%" },
+  shopAvatar: {
+    width: 88, height: 88, borderRadius: 28, overflow: "hidden",
+    borderWidth: 3, borderColor: "rgba(255,255,255,0.5)",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 12, elevation: 8,
   },
-  categoryPillActive: { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" },
-  categoryPillText: { fontSize: 13, color: "#666", fontWeight: "600" },
-  categoryPillTextActive: { color: "#fff" },
+  shopAvatarInner: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
+  shopAvatarImg: { width: 88, height: 88 },
+  shopAvatarText: { fontSize: 36, fontWeight: "900", color: "#fff" },
+  shopName: { fontSize: 20, fontWeight: "900", color: "#fff", textAlign: "center" },
+  shopSlogan: { fontSize: 13, fontStyle: "italic", color: "rgba(255,255,255,0.85)", textAlign: "center" },
+  shopDescription: { fontSize: 12, color: "rgba(255,255,255,0.7)", textAlign: "center", lineHeight: 18, paddingHorizontal: 24 },
+  shopMetaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" },
+  shopMetaChip: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  rateChip: { backgroundColor: "rgba(245,158,11,0.2)" },
+  shopMetaChipText: { fontSize: 11, color: "#fff", fontWeight: "600" },
 
-  grid: { padding: 16, gap: 12 },
+  // Catégories
+  categoriesBar: { maxHeight: 52, backgroundColor: "#fff" },
+  categoriesContent: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
+  categoryPill: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+    borderWidth: 1.5, borderColor: "#e5e7eb", backgroundColor: "#fff",
+  },
+  categoryPillText: { fontSize: 13, color: "#555", fontWeight: "600" },
+
+  // Grille produits
+  grid: { padding: 12, gap: 12 },
   row: { gap: 12 },
 
   card: {
-    width: CARD_SIZE, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
+    width: CARD_SIZE, borderRadius: 18, overflow: "hidden", backgroundColor: "#fff",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, shadowRadius: 12, elevation: 5,
   },
+  cardImageWrap: { position: "relative" },
   cardImagePlaceholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },
-  cardInfo: { padding: 10, backgroundColor: "#fff" },
-  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", marginBottom: 5 },
-  cardBottom: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  cardPrice: { fontSize: 13, fontWeight: "800" },
-  cardCategory: { fontSize: 10, fontWeight: "600", color: "#aaa", textTransform: "uppercase", flexShrink: 1 },
+  priceBadge: {
+    position: "absolute", bottom: 8, right: 8,
+    borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4,
+  },
+  priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  cardInfo: { padding: 10 },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", lineHeight: 18, marginBottom: 3 },
+  cardCategory: { fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
 
+  // Vide
   empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
   emptyIcon: { fontSize: 56, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1a1a1a", marginBottom: 8, textAlign: "center" },
   emptyText: { fontSize: 14, color: "#aaa", textAlign: "center" },
 
+  // Barre panier
   cartBar: {
     position: "absolute", left: 16, right: 16,
-    backgroundColor: "#1a1a1a", borderRadius: 20,
+    backgroundColor: "#1a1a1a", borderRadius: 22,
     shadowColor: "#000", shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25, shadowRadius: 16, elevation: 12,
+    shadowOpacity: 0.3, shadowRadius: 20, elevation: 14,
     overflow: "hidden",
   },
   cartBarInner: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingLeft: 18, paddingRight: 8, paddingVertical: 10,
+    paddingLeft: 20, paddingRight: 8, paddingVertical: 12,
   },
   cartBarLeft: { gap: 2 },
-  cartBarCount: { fontSize: 12, color: "#aaa" },
-  cartBarTotal: { fontSize: 16, fontWeight: "800", color: "#fff" },
+  cartBarCount: { fontSize: 11, color: "#aaa", fontWeight: "500" },
+  cartBarTotal: { fontSize: 17, fontWeight: "900", color: "#fff" },
   whatsappBtn: {
-    borderRadius: 14,
+    backgroundColor: "#25D366", borderRadius: 16,
     paddingHorizontal: 16, paddingVertical: 10,
+    flexDirection: "row", alignItems: "center", gap: 6,
   },
   whatsappBtnText: { color: "#fff", fontWeight: "800", fontSize: 13 },
 
+  // Modal produit
   modal: { flex: 1, backgroundColor: "#fff" },
   modalImageWrap: { position: "relative" },
-  modalImage: { width: "100%", height: MAX_WIDTH * 1.1 },
+  modalImage: { width: "100%", height: MAX_WIDTH * 1.05 },
+  modalImageGradient: {
+    position: "absolute", bottom: 0, left: 0, right: 0, height: 80,
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
   modalCloseBtn: {
     position: "absolute", top: 16, right: 16,
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center", alignItems: "center",
   },
-  modalCloseBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  modalPriceTag: {
+  modalPriceBadge: {
     position: "absolute", bottom: 16, left: 16,
-    borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 8,
   },
-  modalPriceTagText: { color: "#fff", fontSize: 16, fontWeight: "800" },
+  modalPriceBadgeText: { color: "#fff", fontSize: 18, fontWeight: "900" },
   modalContent: { padding: 20, gap: 12 },
-  modalCategoryLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
-  modalTitle: { fontSize: 22, fontWeight: "800", color: "#1a1a1a", lineHeight: 28 },
+  modalCatBadge: { alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
+  modalCatText: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  modalTitle: { fontSize: 24, fontWeight: "900", color: "#1a1a1a", lineHeight: 30 },
   modalDescription: { fontSize: 14, color: "#666", lineHeight: 22 },
   varSection: { gap: 10 },
-  varLabel: { fontSize: 13, fontWeight: "700", color: "#444" },
+  varLabel: { fontSize: 13, fontWeight: "700", color: "#333" },
   varChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   varChip: {
-    borderWidth: 1.5, borderColor: "#e5e7eb", borderRadius: 8,
+    borderWidth: 1.5, borderColor: "#e5e7eb", borderRadius: 10,
     paddingHorizontal: 16, paddingVertical: 10,
     backgroundColor: "#fff", minWidth: 48, alignItems: "center",
   },
-  varChipActive: { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" },
   varChipText: { fontSize: 13, color: "#555", fontWeight: "600" },
-  varChipTextActive: { color: "#fff" },
   addToCartBtn: {
-    borderRadius: 16,
-    paddingVertical: 16, alignItems: "center", marginTop: 8, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35, shadowRadius: 10, elevation: 6,
+    borderRadius: 18, paddingVertical: 16, alignItems: "center", marginTop: 8,
+    flexDirection: "row", justifyContent: "center", gap: 8,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6,
   },
   addToCartBtnText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 });
