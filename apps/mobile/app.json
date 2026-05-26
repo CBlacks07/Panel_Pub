@@ -33,7 +33,10 @@
       "favicon": "./assets/favicon.png"
     },
     "updates": {
-      "url": "https://u.expo.dev/d65b7d35-2f2d-49fa-83b1-f596e721e429"
+      "url": "https://u.expo.dev/d65b7d35-2f2d-49fa-83b1-f596e721e429",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "runtimeVersion": {
       "policy": "appVersion"

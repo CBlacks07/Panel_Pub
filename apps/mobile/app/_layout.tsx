@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import { ConfigProvider } from "../context/ConfigContext";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
+import * as Updates from "expo-updates";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -40,6 +41,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function prepare() {
+      // Vérifier et appliquer les mises à jour OTA au démarrage
+      if (!__DEV__) {
+        try {
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            await Updates.fetchUpdateAsync();
+            await Updates.reloadAsync();
+            return; // reloadAsync redémarre l'app
+          }
+        } catch (_) {
+          // Silencieux si hors ligne ou erreur réseau
+        }
+      }
+
       try {
         await Font.loadAsync({
           PlusJakartaSans_400Regular: require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf"),
