@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, ScrollView,
-  StyleSheet, ActivityIndicator, TextInput, Animated, Image,
+  StyleSheet, TextInput, Animated, Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import AnimatedShopCard from "../components/AnimatedShopCard";
+import { MarketplaceSkeleton } from "../components/Skeleton";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
@@ -312,9 +313,7 @@ export default function MarketplaceScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={primary} />
-        </View>
+        <MarketplaceSkeleton />
       ) : (
         /* FlatList TOUJOURS rendu — évite le swap de layout qui fait perdre le focus du TextInput */
         <FlatList

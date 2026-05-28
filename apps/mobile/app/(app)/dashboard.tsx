@@ -1,30 +1,61 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Image, TextInput, Share,
+  View, Text, TouchableOpacity, StyleSheet, Alert, Image,
+  TextInput, Dimensions, FlatList, Animated,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
 import OnboardingModal from "../../components/OnboardingModal";
-import { fonts } from "../../lib/fonts";
-import FadeSlide from "../../components/Animated/FadeSlide";
-import ScalePress from "../../components/Animated/ScalePress";
+import { DashboardSkeleton } from "../../components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
+import { LinearGradient } from "expo-linear-gradient";
+
+const { width: SW } = Dimensions.get("window");
+const MAX_W = Math.min(SW, 680);
+const CARD_W = (MAX_W - 48) / 2;
+const IMG_H = CARD_W * 1.1;
 
 type Product = {
-  id: string;
-  title: string;
-  price: number;
-  last_edited_at?: string | null;
-  views?: number;
-  category: string;
-  description: string | null;
-  image_url: string | null;
+  id: string; title: string; price: number;
+  last_edited_at?: string | null; views: number;
+  category: string; description: string | null; image_url: string | null;
 };
+
+/* ── Mini image produit avec shimmer ── */
+function ProductThumb({ uri, emoji }: { uri: string | null; emoji: string }) {
+  const [err, setErr] = useState(false);
+  if (!uri || err) {
+    return (
+      <View style={[thumb.wrap, { backgroundColor: "#f5f6fa", justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ fontSize: CARD_W * 0.28 }}>{emoji}</Text>
+      </View>
+    );
+  }
+  return (
+    <Image source={{ uri }} style={thumb.wrap} resizeMode="cover" onError={() => setErr(true)} />
+  );
+}
+const thumb = StyleSheet.create({ wrap: { width: CARD_W, height: IMG_H } });
+
+/* ── Carte stat ── */
+function StatCard({ icon, value, label, color, onPress }: {
+  icon: string; value: string | number; label: string; color: string; onPress?: () => void;
+}) {
+  return (
+    <TouchableOpacity style={[styles.statCard, { borderTopColor: color, borderTopWidth: 3 }]} onPress={onPress} activeOpacity={onPress ? 0.8 : 1}>
+      <View style={[styles.statIcon, { backgroundColor: color + "18" }]}>
+        <Ionicons name={icon as any} size={18} color={color} />
+      </View>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function DashboardScreen() {
   const { user, bizType, profile } = useAuth();
@@ -35,36 +66,46 @@ export default function DashboardScreen() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem("onboarding_done").then((done) => {
-      if (!done) setShowOnboarding(true);
-    });
-  }, []);
+  const [totalViews, setTotalViews] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
+  const searchClearScale = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
     useCallback(() => {
-      fetchProducts();
+      AsyncStorage.getItem("onboarding_done").then((done) => {
+        if (!done) setShowOnboarding(true);
+      });
+      fetchAll();
     }, [])
   );
 
-  const fetchProducts = async () => {
+  const fetchAll = async () => {
     if (!user?.id) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, title, price, category, description, image_url, last_edited_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      // Récupérer les vues par produit
-      const { data: viewsData } = await supabase
-        .from("product_views")
-        .select("product_id");
-      const viewMap: Record<string, number> = {};
-      viewsData?.forEach((v) => { viewMap[v.product_id] = (viewMap[v.product_id] || 0) + 1; });
-      const withViews = data.map((p) => ({ ...p, views: viewMap[p.id] || 0 }));
+    const [{ data: prods }, { data: viewsData }, { data: ratingsData }] = await Promise.all([
+      supabase.from("products")
+        .select("id, title, price, category, description, image_url, last_edited_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase.from("product_views").select("product_id").in(
+        "product_id",
+        (await supabase.from("products").select("id").eq("user_id", user.id)).data?.map(p => p.id) ?? []
+      ),
+      supabase.from("shop_ratings").select("rating").eq("shop_id", user.id),
+    ]);
+
+    const viewMap: Record<string, number> = {};
+    viewsData?.forEach((v) => { viewMap[v.product_id] = (viewMap[v.product_id] || 0) + 1; });
+    const total = viewsData?.length ?? 0;
+    setTotalViews(total);
+
+    const avg = ratingsData && ratingsData.length > 0
+      ? ratingsData.reduce((s, r) => s + r.rating, 0) / ratingsData.length : 0;
+    setAvgRating(avg);
+
+    if (prods) {
+      const withViews = prods.map((p) => ({ ...p, views: viewMap[p.id] || 0 }));
       setProducts(withViews);
       setFiltered(withViews);
     }
@@ -73,279 +114,352 @@ export default function DashboardScreen() {
 
   const handleSearch = (text: string) => {
     setSearch(text);
+    Animated.spring(searchClearScale, { toValue: text.length > 0 ? 1 : 0, useNativeDriver: true, speed: 50 }).start();
     setFiltered(!text.trim() ? products : products.filter((p) =>
       p.title.toLowerCase().includes(text.toLowerCase()) ||
       p.category.toLowerCase().includes(text.toLowerCase())
     ));
   };
 
-  const shareProduct = async (item: Product) => {
-    const url = `https://panel-pub-web.vercel.app/shop/${user?.id}?product=${item.id}`;
-    await Share.share({
-      message: `Découvre "${item.title}" — ${item.price.toLocaleString("fr-FR")} FCFA 🛍️\n${url}`,
-      url,
-    });
-  };
-
   const confirmDelete = (id: string, title: string) => {
-    Alert.alert(
-      "Supprimer l'article",
-      `Tu veux vraiment supprimer "${title}" ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            await supabase.from("products").delete().eq("id", id);
-            setProducts((prev) => prev.filter((p) => p.id !== id));
-          },
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert("Supprimer l'article", `Supprimer "${title}" ?`, [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Supprimer", style: "destructive",
+        onPress: async () => {
+          await supabase.from("products").delete().eq("id", id);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setProducts((prev) => { const n = prev.filter((p) => p.id !== id); return n; });
+          setFiltered((prev) => prev.filter((p) => p.id !== id));
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color={primary} />
-      </SafeAreaView>
-    );
-  }
-
-  // Valeurs calculées (pas des hooks — ok ici)
   const currentPlan = getPlanById(profile?.plan || "free");
   const isFreePlan = currentPlan.id === "free";
-  const articleCount = products.length; // articles actifs
-  // total_articles_created vient du profil (compteur cumulé)
-  const totalCreated = (profile as any)?.total_articles_created ?? articleCount;
+  const totalCreated = (profile as any)?.total_articles_created ?? products.length;
   const PLAN_LIMIT = currentPlan.article_limit;
-  const usagePct = Math.min(Math.round((totalCreated / PLAN_LIMIT) * 100), 100);
+  const usagePct = Math.min((totalCreated / PLAN_LIMIT) * 100, 100);
+  const shopName = (profile as any)?.shop_name || user?.email?.split("@")[0] || "Ma boutique";
+  const shopLogo = (profile as any)?.shop_logo_url || null;
+
+  if (loading) return (
+    <SafeAreaView style={styles.safeArea}>
+      <DashboardSkeleton />
+    </SafeAreaView>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Banner upsell plan gratuit */}
-      {isFreePlan && totalCreated >= Math.max(PLAN_LIMIT - 3, 0) && (
-        <TouchableOpacity
-          style={[styles.upsellBanner, { backgroundColor: articleCount >= PLAN_LIMIT ? "#dc2626" : primary }]}
-          onPress={() => router.push("/(app)/plans")}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.upsellTitle}>
-              {totalCreated >= PLAN_LIMIT ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Ionicons name="lock-closed" size={13} color="#fff" />
-                  <Text style={styles.upsellTitle}>Limite atteinte — Passe au Pro !</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
+        columnWrapperStyle={styles.row}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          <>
+            {/* ── HEADER ── */}
+            <View style={styles.header}>
+              <LinearGradient colors={[primary, primary + "cc"]} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <View style={styles.headerCircle1} />
+                <View style={styles.headerCircle2} />
+
+                <View style={styles.headerTop}>
+                  <View style={styles.headerLeft}>
+                    <Text style={styles.headerGreeting}>Bonjour 👋</Text>
+                    <Text style={styles.headerShopName} numberOfLines={1}>{shopName}</Text>
+                    <View style={styles.planBadge}>
+                      <Text style={styles.planBadgeText}>Plan {currentPlan.name}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={() => router.push(`/shop/${user?.id}`)} style={styles.headerAvatar}>
+                    {shopLogo ? (
+                      <Image source={{ uri: shopLogo }} style={styles.headerAvatarImg} resizeMode="cover" />
+                    ) : (
+                      <Text style={styles.headerAvatarText}>{shopName[0].toUpperCase()}</Text>
+                    )}
+                    <View style={styles.headerAvatarBadge}>
+                      <Ionicons name="eye-outline" size={10} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Ionicons name="warning-outline" size={13} color="#fff" />
-                  <Text style={styles.upsellTitle}>{totalCreated}/{PLAN_LIMIT} articles créés</Text>
-                </View>
-              )}
-            </Text>
-            <Text style={styles.upsellSub}>
-              {articleCount >= PLAN_LIMIT
-                ? "Tu ne peux plus ajouter d'articles en plan gratuit."
-                : `Il te reste ${PLAN_LIMIT - totalCreated} création${PLAN_LIMIT - totalCreated > 1 ? "s" : ""} disponible${PLAN_LIMIT - totalCreated > 1 ? "s" : ""}. Les articles supprimés comptent.`}
-            </Text>
-            {articleCount < PLAN_LIMIT && (
-              <View style={styles.upsellBar}>
-                <View style={[styles.upsellBarFill, { width: `${usagePct}%` as any }]} />
+
+                {/* Barre de progression plan */}
+                {isFreePlan && (
+                  <TouchableOpacity style={styles.planProgress} onPress={() => router.push("/(app)/plans")} activeOpacity={0.8}>
+                    <View style={styles.planProgressTop}>
+                      <Text style={styles.planProgressLabel}>{totalCreated}/{PLAN_LIMIT} articles créés</Text>
+                      <Text style={styles.planProgressLink}>Upgrader →</Text>
+                    </View>
+                    <View style={styles.planProgressBar}>
+                      <View style={[styles.planProgressFill, { width: `${usagePct}%` as any, backgroundColor: usagePct >= 90 ? "#ef4444" : "#fff" }]} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </LinearGradient>
+            </View>
+
+            {/* ── STATS ── */}
+            <View style={styles.statsRow}>
+              <StatCard
+                icon="cube-outline"
+                value={products.length}
+                label="Articles"
+                color={primary}
+                onPress={() => {}}
+              />
+              <StatCard
+                icon="eye-outline"
+                value={totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews}
+                label="Vues totales"
+                color="#3b82f6"
+              />
+              <StatCard
+                icon="star-outline"
+                value={avgRating > 0 ? avgRating.toFixed(1) : "—"}
+                label="Note moy."
+                color="#f59e0b"
+              />
+            </View>
+
+            {/* ── SEARCH ── */}
+            {products.length > 0 && (
+              <View style={styles.searchWrap}>
+                <Ionicons name="search-outline" size={16} color="#9ca3af" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder={`Rechercher dans ${products.length} article${products.length > 1 ? "s" : ""}...`}
+                  placeholderTextColor="#c4c4c4"
+                  value={search}
+                  onChangeText={handleSearch}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                />
+                <Animated.View style={{ transform: [{ scale: searchClearScale }] }}>
+                  <TouchableOpacity onPress={() => handleSearch("")} disabled={search.length === 0} style={{ opacity: search.length > 0 ? 1 : 0 }}>
+                    <Ionicons name="close-circle" size={18} color="#c4c4c4" />
+                  </TouchableOpacity>
+                </Animated.View>
               </View>
             )}
-          </View>
-          <Text style={styles.upsellArrow}>Voir les forfaits &gt;</Text>
-        </TouchableOpacity>
-      )}
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Ma boutique</Text>
-          <Text style={styles.subtitle}>{products.length} {bizType.ui.itemLabel}{products.length > 1 ? "s" : ""} en ligne</Text>
-          {isFreePlan && currentPlan.edit_cooldown_hours > 0 && (
-            <Text style={[styles.editsCounter, { color: "#f59e0b" }]}>
-              <Ionicons name="time-outline" size={11} color="#f59e0b" /> Plan gratuit — délai {currentPlan.edit_cooldown_hours}h entre chaque modif
-            </Text>
-          )}
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[styles.previewBtn, { borderColor: primary }]}
-            onPress={() => router.push("/marketplace")}
-          >
-            <Ionicons name="storefront-outline" size={14} color={primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Barre de recherche */}
-      {products.length > 0 && (
-        <View style={styles.searchWrap}>
-          <Ionicons name="search-outline" size={16} color="#aaa" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Rechercher un article..."
-            placeholderTextColor="#bbb"
-            value={search}
-            onChangeText={handleSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch("")}>
-              <Ionicons name="close-circle" size={18} color="#ccc" />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>{bizType.emoji}</Text>
-          <Text style={styles.emptyTitle}>{bizType.ui.emptyTitle}</Text>
-          <Text style={styles.emptySubtitle}>{bizType.ui.emptySubtitle}</Text>
-          <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: primary }]}
-            onPress={() => router.push("/(app)/add-product")}
-          >
-            <Text style={styles.addBtnText}>{bizType.ui.addBtn}</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <FadeSlide delay={index * 60} direction="up" distance={20}>
-            <View style={styles.card}>
-              {item.image_url ? (
-                <Image source={{ uri: item.image_url }} style={styles.cardImage} />
-              ) : (
-                <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
-                  <Text style={{ fontSize: 28 }}>{bizType.emoji}</Text>
-                </View>
-              )}
-              <View style={styles.cardBody}>
-                <View style={styles.cardTop}>
-                  <Text style={[styles.cardCategory, { color: primary }]}>{item.category}</Text>
-                </View>
-                <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                {item.description ? (
-                  <Text style={styles.cardDescription} numberOfLines={2}>{item.description}</Text>
-                ) : null}
-                <View style={styles.cardPriceRow}>
-                  <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} FCFA</Text>
-                  {item.views !== undefined && item.views > 0 && (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                      <Ionicons name="eye-outline" size={11} color="#aaa" />
-                      <Text style={styles.cardViews}>{item.views}</Text>
-                    </View>
-                  )}
-                </View>
+            {/* Titre section */}
+            {products.length > 0 && (
+              <View style={styles.sectionTitle}>
+                <Text style={styles.sectionTitleText}>
+                  {search ? `${filtered.length} résultat${filtered.length > 1 ? "s" : ""}` : "Mes articles"}
+                </Text>
               </View>
+            )}
+          </>
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <View style={[styles.emptyIconWrap, { backgroundColor: primary + "15" }]}>
+              <Text style={styles.emptyEmoji}>{bizType.emoji}</Text>
+            </View>
+            <Text style={styles.emptyTitle}>
+              {search ? "Aucun article trouvé" : bizType.ui.emptyTitle}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {search
+                ? `Aucun article ne correspond à "${search}"`
+                : bizType.ui.emptySubtitle}
+            </Text>
+            {!search && (
+              <TouchableOpacity
+                style={[styles.emptyBtn, { backgroundColor: primary }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/(app)/add-product");
+                }}
+              >
+                <Ionicons name="add-circle-outline" size={18} color="#fff" />
+                <Text style={styles.emptyBtnText}>{bizType.ui.addBtn}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+        renderItem={({ item }) => {
+          const canEdit = !item.last_edited_at || currentPlan.edit_cooldown_hours === 0 ||
+            (Date.now() - new Date(item.last_edited_at).getTime()) >= currentPlan.edit_cooldown_hours * 3600000;
+
+          return (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push(`/(app)/edit-product?id=${item.id}`);
+              }}
+              activeOpacity={0.9}
+            >
+              {/* Image */}
+              <View style={styles.cardImageWrap}>
+                <ProductThumb uri={item.image_url} emoji={bizType.emoji} />
+                {/* Badge vues */}
+                {item.views > 0 && (
+                  <View style={styles.viewsBadge}>
+                    <Ionicons name="eye" size={10} color="#fff" />
+                    <Text style={styles.viewsBadgeText}>{item.views}</Text>
+                  </View>
+                )}
+                {/* Badge cooldown */}
+                {!canEdit && (
+                  <View style={styles.cooldownBadge}>
+                    <Ionicons name="time-outline" size={10} color="#f59e0b" />
+                  </View>
+                )}
+              </View>
+
+              {/* Info */}
+              <View style={styles.cardInfo}>
+                <Text style={[styles.cardCat, { color: primary + "99" }]}>{item.category}</Text>
+                <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
+              </View>
+
+              {/* Actions rapides */}
               <View style={styles.cardActions}>
-                <TouchableOpacity onPress={() => shareProduct(item)} style={styles.shareBtn}>
-                  <Ionicons name="share-social-outline" size={18} color="#0ea5e9" />
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: "#f0f9ff" }]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push(`/(app)/edit-product?id=${item.id}`);
+                  }}
+                >
+                  <Ionicons name={canEdit ? "create-outline" : "time-outline"} size={14} color={canEdit ? primary : "#f59e0b"} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => router.push(`/(app)/edit-product?id=${item.id}`)}
-                  style={styles.editBtn}
+                  style={[styles.actionBtn, { backgroundColor: "#fff5f5" }]}
+                  onPress={(e) => { e.stopPropagation(); confirmDelete(item.id, item.title); }}
                 >
-                  {(() => {
-                    if (!item.last_edited_at || currentPlan.edit_cooldown_hours === 0)
-                      return <Ionicons name="create-outline" size={18} color="#a855f7" />;
-                    const elapsed = Date.now() - new Date(item.last_edited_at).getTime();
-                    const cooldownMs = currentPlan.edit_cooldown_hours * 3600000;
-                    if (elapsed < cooldownMs)
-                      return <Ionicons name="time-outline" size={18} color="#f59e0b" />;
-                    return <Ionicons name="create-outline" size={18} color="#a855f7" />;
-                  })()}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => confirmDelete(item.id, item.title)} style={styles.deleteBtn}>
-                  <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                  <Ionicons name="trash-outline" size={14} color="#ef4444" />
                 </TouchableOpacity>
               </View>
-            </View>
-            </FadeSlide>
-          )}
-        />
-      )}
-
-      <OnboardingModal
-        visible={showOnboarding}
-        onClose={() => setShowOnboarding(false)}
+            </TouchableOpacity>
+          );
+        }}
       />
+
+      <OnboardingModal visible={showOnboarding} onClose={() => setShowOnboarding(false)} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9fb" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f7f9fb" },
+  safeArea: { flex: 1, backgroundColor: "#f5f6fa" },
+  listContent: { paddingHorizontal: 16, paddingTop: 0 },
+  row: { gap: 12, marginBottom: 12 },
 
-  header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 20, paddingVertical: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1, borderBottomColor: "#f0f0f0",
+  // Header gradient
+  header: { marginBottom: 16, marginHorizontal: -16 },
+  headerGradient: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, overflow: "hidden" },
+  headerCircle1: {
+    position: "absolute", width: 200, height: 200, borderRadius: 100,
+    backgroundColor: "rgba(255,255,255,0.08)", top: -60, right: -40,
   },
-  title: { ...fonts.h1, color: "#1a1a1a" },
-  subtitle: { fontSize: 13, color: "#999", marginTop: 2 },
-  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
-  previewBtn: {
-    borderWidth: 1.5, borderColor: "#9333ea", borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 8,
+  headerCircle2: {
+    position: "absolute", width: 120, height: 120, borderRadius: 60,
+    backgroundColor: "rgba(255,255,255,0.06)", bottom: -20, left: -20,
   },
-  previewBtnText: { color: "#9333ea", fontWeight: "700", fontSize: 13 },
-  addHeaderBtn: {
-    borderRadius: 20, flexDirection: "row",
+  headerTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  headerLeft: { gap: 4 },
+  headerGreeting: { fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: "500" },
+  headerShopName: { fontSize: 22, fontWeight: "900", color: "#fff", maxWidth: SW * 0.6 },
+  planBadge: {
+    alignSelf: "flex-start", backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, marginTop: 2,
+  },
+  planBadgeText: { fontSize: 11, color: "#fff", fontWeight: "700" },
+  headerAvatar: {
+    width: 52, height: 52, borderRadius: 20, overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.25)", justifyContent: "center", alignItems: "center",
+    borderWidth: 2, borderColor: "rgba(255,255,255,0.4)", position: "relative",
+  },
+  headerAvatarImg: { width: 52, height: 52 },
+  headerAvatarText: { fontSize: 22, fontWeight: "900", color: "#fff" },
+  headerAvatarBadge: {
+    position: "absolute", bottom: 0, right: 0, width: 18, height: 18,
+    borderRadius: 9, backgroundColor: "#22c55e", justifyContent: "center", alignItems: "center",
+    borderWidth: 1.5, borderColor: "#fff",
+  },
+  planProgress: {
+    marginTop: 14, backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 12, padding: 10, gap: 6,
+  },
+  planProgressTop: { flexDirection: "row", justifyContent: "space-between" },
+  planProgressLabel: { fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: "600" },
+  planProgressLink: { fontSize: 11, color: "#fff", fontWeight: "800" },
+  planProgressBar: { height: 4, backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 2, overflow: "hidden" },
+  planProgressFill: { height: 4, borderRadius: 2 },
+
+  // Stats
+  statsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  statCard: {
+    flex: 1, backgroundColor: "#fff", borderRadius: 18, padding: 12,
     alignItems: "center", gap: 4,
-    paddingHorizontal: 14, paddingVertical: 8,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  addHeaderBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  statIcon: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
+  statValue: { fontSize: 18, fontWeight: "900" },
+  statLabel: { fontSize: 10, color: "#9ca3af", fontWeight: "500", textAlign: "center" },
 
-  list: { padding: 16, gap: 12, paddingBottom: 100 },
-
-  card: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#fff", borderRadius: 16,
-    padding: 12, gap: 12,
+  // Search
+  searchWrap: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#fff", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12,
+    marginBottom: 12,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
-  cardImage: { width: 72, height: 72, borderRadius: 12 },
-  cardImagePlaceholder: { backgroundColor: "#f3e8ff", justifyContent: "center", alignItems: "center" },
-  cardBody: { flex: 1, gap: 2 },
-  cardTop: { flexDirection: "row", alignItems: "center" },
-  cardCategory: { fontSize: 10, color: "#9333ea", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  cardTitle: { ...fonts.bold, color: "#1a1a1a" },
-  cardDescription: { fontSize: 12, color: "#888", lineHeight: 17 },
-  cardPrice: { fontSize: 14, fontWeight: "800", color: "#9333ea", marginTop: 2 },
-  cardActions: { gap: 4 },
-  cardPriceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 2 },
-  cardViews: { fontSize: 11, color: "#aaa" },
-  shareBtn: { padding: 6, backgroundColor: "#f0f9ff", borderRadius: 8, alignItems: "center" },
-  editBtn: { padding: 6, backgroundColor: "#f3e8ff", borderRadius: 8, alignItems: "center" },
-  deleteBtn: { padding: 6, backgroundColor: "#fff5f5", borderRadius: 8, alignItems: "center" },
-  actionIcon: { fontSize: 16 },
-
-  empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 32 },
-  emptyIcon: { fontSize: 72, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: "800", color: "#1a1a1a", marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: "#888", textAlign: "center", marginBottom: 28, lineHeight: 22 },
-  addBtn: { backgroundColor: "#9333ea", borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14 },
-  addBtnText: { fontFamily: "PlusJakartaSans_700Bold", color: "#fff", fontSize: 15 },
-  editsCounter: { fontSize: 11, fontWeight: "500", marginTop: 1 },
-  upsellBanner: { paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 10 },
-  upsellTitle: { color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 2 },
-  upsellSub: { color: "rgba(255,255,255,0.8)", fontSize: 11 },
-  upsellBar: { height: 4, backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 2, marginTop: 6, overflow: "hidden" },
-  upsellBarFill: { height: 4, backgroundColor: "#fff", borderRadius: 2 },
-  upsellArrow: { color: "#fff", fontSize: 11, fontWeight: "700", flexShrink: 0 },
-  searchWrap: { flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 16, marginTop: 12, marginBottom: 4, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#fff", borderRadius: 14, borderWidth: 1, borderColor: "#eee" },
-  searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, fontSize: 14, color: "#1a1a1a" },
-});
 
+  // Section title
+  sectionTitle: { marginBottom: 8 },
+  sectionTitleText: { fontSize: 14, fontWeight: "700", color: "#6b7280" },
+
+  // Product card
+  card: {
+    width: CARD_W, backgroundColor: "#fff", borderRadius: 20, overflow: "hidden",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07, shadowRadius: 10, elevation: 4,
+  },
+  cardImageWrap: { position: "relative" },
+  viewsBadge: {
+    position: "absolute", top: 8, left: 8,
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 10,
+    paddingHorizontal: 6, paddingVertical: 3,
+  },
+  viewsBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
+  cooldownBadge: {
+    position: "absolute", top: 8, right: 8,
+    backgroundColor: "rgba(245,158,11,0.9)", borderRadius: 10,
+    width: 22, height: 22, justifyContent: "center", alignItems: "center",
+  },
+  cardInfo: { padding: 10, gap: 2 },
+  cardCat: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3 },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", lineHeight: 18 },
+  cardPrice: { fontSize: 14, fontWeight: "900", marginTop: 3 },
+  cardActions: { flexDirection: "row", gap: 6, paddingHorizontal: 10, paddingBottom: 10 },
+  actionBtn: { flex: 1, borderRadius: 10, paddingVertical: 7, alignItems: "center" },
+
+  // Empty
+  empty: { alignItems: "center", paddingTop: 40, paddingHorizontal: 32, gap: 12 },
+  emptyIconWrap: { width: 100, height: 100, borderRadius: 50, justifyContent: "center", alignItems: "center" },
+  emptyEmoji: { fontSize: 48 },
+  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#1a1a1a", textAlign: "center" },
+  emptySubtitle: { fontSize: 14, color: "#9ca3af", textAlign: "center", lineHeight: 22 },
+  emptyBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    borderRadius: 16, paddingHorizontal: 24, paddingVertical: 14, marginTop: 8,
+  },
+  emptyBtnText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+});

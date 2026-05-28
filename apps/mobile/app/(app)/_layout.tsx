@@ -1,29 +1,50 @@
 import { Tabs } from "expo-router";
-import { View, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated, Platform } from "react-native";
 import { useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
+import { LinearGradient } from "expo-linear-gradient";
 
-function TabIcon({ name, focused, primary }: { name: any; focused: boolean; primary: string }) {
+function TabIcon({
+  name, nameActive, label, focused, primary,
+}: { name: any; nameActive: any; label: string; focused: boolean; primary: string }) {
   const scale = useRef(new Animated.Value(1)).current;
 
   if (focused) {
-    Animated.spring(scale, { toValue: 1.15, useNativeDriver: true, speed: 50, bounciness: 8 }).start();
+    Animated.spring(scale, { toValue: 1.1, useNativeDriver: true, speed: 60, bounciness: 10 }).start();
   } else {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 60 }).start();
   }
 
   return (
-    <Animated.View style={[styles.iconWrap, focused && styles.iconWrapActive, { transform: [{ scale }] }]}>
-      <Ionicons name={name} size={22} color={focused ? primary : "#aaa"} />
+    <Animated.View style={[styles.tabItem, { transform: [{ scale }] }]}>
+      {focused && (
+        <View style={[styles.activeIndicator, { backgroundColor: primary + "20" }]} />
+      )}
+      <Ionicons
+        name={focused ? nameActive : name}
+        size={22}
+        color={focused ? primary : "#9ca3af"}
+      />
+      <Text style={[styles.tabLabel, { color: focused ? primary : "#9ca3af", fontWeight: focused ? "700" : "500" }]}>
+        {label}
+      </Text>
     </Animated.View>
   );
 }
 
 function AddTabIcon({ primary }: { primary: string }) {
   return (
-    <View style={[styles.addBtn, { backgroundColor: primary }]}>
-      <Ionicons name="add" size={28} color="#fff" />
+    <View style={styles.addTabWrap}>
+      <LinearGradient
+        colors={[primary, primary + "cc"]}
+        style={styles.addBtn}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Ionicons name="add" size={30} color="#fff" />
+      </LinearGradient>
+      <Text style={[styles.tabLabel, { color: primary, fontWeight: "700" }]}>Ajouter</Text>
     </View>
   );
 }
@@ -38,18 +59,19 @@ export default function AppLayout() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: 12,
-          left: 24,
-          right: 24,
-          height: 64,
-          borderRadius: 22,
+          bottom: Platform.OS === "ios" ? 20 : 12,
+          left: 16,
+          right: 16,
+          height: 72,
+          borderRadius: 24,
           backgroundColor: "#fff",
           borderTopWidth: 0,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 20,
-          elevation: 12,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.15,
+          shadowRadius: 24,
+          elevation: 16,
+          paddingBottom: 0,
         },
       }}
     >
@@ -57,7 +79,13 @@ export default function AppLayout() {
         name="dashboard"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? "storefront" : "storefront-outline"} focused={focused} primary={primary} />
+            <TabIcon
+              name="storefront-outline"
+              nameActive="storefront"
+              label="Boutique"
+              focused={focused}
+              primary={primary}
+            />
           ),
         }}
       />
@@ -71,7 +99,13 @@ export default function AppLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? "person" : "person-outline"} focused={focused} primary={primary} />
+            <TabIcon
+              name="person-outline"
+              nameActive="person"
+              label="Profil"
+              focused={focused}
+              primary={primary}
+            />
           ),
         }}
       />
@@ -82,18 +116,21 @@ export default function AppLayout() {
 }
 
 const styles = StyleSheet.create({
-  iconWrap: {
-    width: 42, height: 42, borderRadius: 14,
-    justifyContent: "center", alignItems: "center",
+  tabItem: {
+    alignItems: "center", justifyContent: "center",
+    gap: 3, paddingTop: 10, position: "relative",
   },
-  iconWrapActive: {
-    backgroundColor: "rgba(0,0,0,0.05)",
+  activeIndicator: {
+    position: "absolute", top: 8, width: 48, height: 32,
+    borderRadius: 16,
   },
+  tabLabel: { fontSize: 10, letterSpacing: 0.2 },
+  addTabWrap: { alignItems: "center", justifyContent: "center", gap: 3 },
   addBtn: {
-    width: 50, height: 50, borderRadius: 16,
+    width: 52, height: 52, borderRadius: 18,
     justifyContent: "center", alignItems: "center",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8, elevation: 6,
-    marginTop: -8,
+    marginTop: -18,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25, shadowRadius: 10, elevation: 8,
   },
 });
