@@ -82,18 +82,21 @@ export default function DashboardScreen() {
   const fetchAll = async () => {
     if (!user?.id) return;
     setLoading(true);
-
-    const [{ data: prods }, { data: viewsData }, { data: ratingsData }] = await Promise.all([
+    try {
+    // TECH-03 fix : charger les produits d'abord, puis les vues avec les IDs déjà connus
+    const [{ data: prods, error: prodsErr }, { data: ratingsData }] = await Promise.all([
       supabase.from("products")
         .select("id, title, price, category, description, image_url, last_edited_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      supabase.from("product_views").select("product_id").in(
-        "product_id",
-        (await supabase.from("products").select("id").eq("user_id", user.id)).data?.map(p => p.id) ?? []
-      ),
       supabase.from("shop_ratings").select("rating").eq("shop_id", user.id),
     ]);
+    if (prodsErr) throw prodsErr;
+
+    const productIds = prods?.map(p => p.id) ?? [];
+    const { data: viewsData } = productIds.length > 0
+      ? await supabase.from("product_views").select("product_id").in("product_id", productIds)
+      : { data: [] };
 
     const viewMap: Record<string, number> = {};
     viewsData?.forEach((v) => { viewMap[v.product_id] = (viewMap[v.product_id] || 0) + 1; });
@@ -109,7 +112,11 @@ export default function DashboardScreen() {
       setProducts(withViews);
       setFiltered(withViews);
     }
-    setLoading(false);
+    } catch (e) {
+      console.warn("[Dashboard] fetchAll error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (text: string) => {
@@ -128,9 +135,10 @@ export default function DashboardScreen() {
       {
         text: "Supprimer", style: "destructive",
         onPress: async () => {
-          await supabase.from("products").delete().eq("id", id);
+          const { error } = await supabase.from("products").delete().eq("id", id).eq("user_id", user!.id);
+          if (error) { Alert.alert("Erreur", "Impossible de supprimer cet article"); return; }
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          setProducts((prev) => { const n = prev.filter((p) => p.id !== id); return n; });
+          setProducts((prev) => prev.filter((p) => p.id !== id));
           setFiltered((prev) => prev.filter((p) => p.id !== id));
         },
       },

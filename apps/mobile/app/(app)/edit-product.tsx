@@ -42,6 +42,7 @@ export default function EditProductScreen() {
       .from("products")
       .select("*, product_variations(type, value)")
       .eq("id", id)
+      .eq("user_id", user!.id) // SEC-03 : vérification propriétaire
       .single();
     if (data) {
       setTitle(data.title);
@@ -117,7 +118,7 @@ export default function EditProductScreen() {
         title: title.trim(), price: Number(price),
         description: description.trim() || null, category, image_url,
         last_edited_at: new Date().toISOString(),
-      }).eq("id", id);
+      }).eq("id", id).eq("user_id", user!.id); // SEC-03 : double vérification
 
       await supabase.from("product_variations").delete().eq("product_id", id);
       if (variations.length > 0) {

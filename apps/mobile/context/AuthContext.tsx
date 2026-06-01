@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { getBusinessType, BusinessType } from "../lib/businessTypes";
@@ -9,6 +9,8 @@ type UserProfile = {
   plan: string;
   phone_whatsapp: string | null;
   total_articles_created: number;
+  shop_logo_url: string | null;
+  shop_name_display?: string;
 };
 
 type AuthContextType = {
@@ -24,52 +26,65 @@ type AuthContextType = {
 const DEFAULT_BIZ = getBusinessType("mode");
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  profile: null,
-  bizType: DEFAULT_BIZ,
-  loading: true,
-  signOut: async () => {},
-  refreshProfile: async () => {},
+  session: null, user: null, profile: null,
+  bizType: DEFAULT_BIZ, loading: true,
+  signOut: async () => {}, refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  // Flag pour éviter la race condition getSession + onAuthStateChange
+  const profileLoadedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) loadProfile(session.user.id);
-      else setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) loadProfile(session.user.id);
-      else { setProfile(null); setLoading(false); }
+    // Utiliser uniquement onAuthStateChange comme source de vérité
+    // getSession() déclenche AUSSI onAuthStateChange → on n'appelle loadProfile qu'une fois
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (newSession?.user) {
+        // Éviter le double chargement si déjà chargé pour ce userId
+        if (profileLoadedRef.current !== newSession.user.id) {
+          profileLoadedRef.current = newSession.user.id;
+          loadProfile(newSession.user.id);
+        }
+      } else {
+        profileLoadedRef.current = null;
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("users")
-      .select("shop_name, business_type, plan, phone_whatsapp, total_articles_created")
-      .eq("id", userId)
-      .single();
-    if (data) setProfile(data);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("shop_name, business_type, plan, phone_whatsapp, total_articles_created, shop_logo_url")
+        .eq("id", userId)
+        .single();
+      if (error) throw error;
+      if (data) setProfile(data);
+    } catch (e) {
+      console.warn("[AuthContext] loadProfile error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const refreshProfile = async () => {
-    if (session?.user) await loadProfile(session.user.id);
+    if (session?.user) {
+      profileLoadedRef.current = null; // forcer le rechargement
+      await loadProfile(session.user.id);
+    }
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    profileLoadedRef.current = null;
     setProfile(null);
   };
 
