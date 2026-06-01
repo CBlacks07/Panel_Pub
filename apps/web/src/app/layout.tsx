@@ -12,6 +12,10 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Boutiki — Vendez via WhatsApp",
   description: "Créez votre boutique en ligne en 30 secondes. Partagez-la. Recevez vos commandes sur WhatsApp.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
