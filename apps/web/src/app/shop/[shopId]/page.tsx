@@ -5,7 +5,7 @@ import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 import { useCart } from "@/hooks/useCart";
-import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader } from "lucide-react";
+import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, Star, Package } from "lucide-react";
 
 type Product = {
   id: string; title: string; price: number; description: string | null;
@@ -16,6 +16,7 @@ type Shop = {
   shop_name: string; slogan: string | null; description: string | null;
   phone_whatsapp: string | null; shop_logo_url: string | null;
   business_type: string | null; suspended?: boolean;
+  avg_rating?: number; rating_count?: number;
 };
 type Config = Record<string, string>;
 
@@ -33,20 +34,24 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   const { items: cart, addItem: cartAdd, removeItem: cartRemove, clear: cartClear, total, count: cartCount } = useCart(shopId);
   const [cartOpen, setCartOpen] = useState(false);
   const [config, setConfig] = useState<Config>({});
+  const [needsVariant, setNeedsVariant] = useState(false);
 
   useEffect(() => {
     Promise.all([
       supabase.from("app_config").select("key, value"),
       supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, business_type, suspended").eq("id", shopId).single(),
       supabase.from("products").select("id, title, price, description, category, image_url, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
-    ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }]) => {
+      supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
+    ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }, { data: ratingsData }]) => {
       if (cfg) { const map: Config = {}; cfg.forEach((r) => { map[r.key] = r.value; }); setConfig(map); }
-      if (shopData) setShop(shopData);
+      if (shopData) {
+        const avg = ratingsData && ratingsData.length > 0
+          ? ratingsData.reduce((s, r) => s + r.rating, 0) / ratingsData.length : 0;
+        setShop({ ...shopData, avg_rating: avg, rating_count: ratingsData?.length ?? 0 });
+      }
       if (productsData) {
         setProducts(productsData); setFiltered(productsData);
         setCategories(["Tout", ...Array.from(new Set(productsData.map((p) => p.category)))]);
-        // Tracker vue boutique
-        supabase.from("product_views").insert(productsData.map((p) => ({ product_id: p.id }))).then(() => {});
       }
       setLoading(false);
     });
@@ -65,128 +70,222 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     if (!selected) return;
     const sizes = selected.product_variations.filter((v) => v.type === "size");
     const colors = selected.product_variations.filter((v) => v.type === "color");
-    if (sizes.length > 0 && !selectedSize) return;
-    if (colors.length > 0 && !selectedColor) return;
+    if ((sizes.length > 0 && !selectedSize) || (colors.length > 0 && !selectedColor)) {
+      setNeedsVariant(true); return;
+    }
+    setNeedsVariant(false);
     cartAdd({ id: selected.id, title: selected.title, price: selected.price, image_url: selected.image_url, size: selectedSize || undefined, color: selectedColor || undefined });
     setSelected(null);
   };
 
   const handleWhatsApp = () => {
     if (!shop?.phone_whatsapp) return;
-    const lines = cart.map((i) => `• ${i.title}${i.size ? ` - ${i.size}` : ""}${i.color ? ` - ${i.color}` : ""} x${i.qty} = ${(i.price * i.qty).toLocaleString("fr-FR")} FCFA`);
-    const msg = `Bonjour ${shop.shop_name} ! 👋\nJe souhaite commander :\n\n${lines.join("\n")}\n\nTotal : ${total.toLocaleString("fr-FR")} FCFA`;
+    const lines = cart.map((i) => `• ${i.title}${i.size ? ` (${i.size})` : ""}${i.color ? ` - ${i.color}` : ""} x${i.qty} = ${(i.price * i.qty).toLocaleString("fr-FR")} FCFA`);
+    const msg = `Bonjour ${shop.shop_name} ! 👋\nJe souhaite commander :\n\n${lines.join("\n")}\n\n💰 Total : *${total.toLocaleString("fr-FR")} FCFA*`;
     window.open(`https://wa.me/${shop.phone_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader size={32} className="animate-spin text-gray-300" /></div>;
-  if (!shop) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><Search size={48} className="text-gray-300" /><p className="font-semibold text-gray-700">Boutique introuvable</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir toutes les boutiques</Link></div>;
-  if (shop.suspended) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><Ban size={48} className="text-gray-300" /><p className="font-semibold text-gray-700">Boutique suspendue</p><Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>Voir d&apos;autres boutiques</Link></div>;
+  if (loading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+      <Loader size={32} className="animate-spin" style={{ color: primary }} />
+      <p className="text-sm text-gray-400">Chargement de la boutique...</p>
+    </div>
+  );
+  if (!shop) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <Search size={48} className="text-gray-300" />
+      <p className="font-bold text-gray-700">Boutique introuvable</p>
+      <Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>← Voir toutes les boutiques</Link>
+    </div>
+  );
+  if (shop.suspended) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <Ban size={48} className="text-red-300" />
+      <p className="font-bold text-gray-700">Boutique suspendue</p>
+      <Link href="/marketplace" className="text-sm font-semibold" style={{ color: primary }}>← Voir d&apos;autres boutiques</Link>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between">
-          <Link href="/marketplace" className="text-gray-400 hover:text-gray-700 text-sm font-semibold">← Marketplace</Link>
-          <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-            <ShoppingCart size={22} />
-            {cart.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-xs flex items-center justify-center font-black" style={{ backgroundColor: primary }}>{cart.length}</span>}
+    <div className="min-h-screen bg-gray-50">
+
+      {/* ── NAV ── */}
+      <nav className="bg-white/90 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          <Link href="/marketplace" className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">
+            <ChevronLeft size={16} /> Marketplace
+          </Link>
+          <Link href="/" className="font-black text-gray-900 text-sm">{appName}</Link>
+          <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <div className="relative">
+              <ShoppingCart size={22} />
+              {cart.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-white text-xs flex items-center justify-center font-black" style={{ backgroundColor: primary }}>
+                  {cart.length}
+                </span>
+              )}
+            </div>
+            {cart.length > 0 && <span className="hidden sm:block">{total.toLocaleString("fr-FR")} FCFA</span>}
           </button>
         </div>
-      </div>
+      </nav>
 
-      {/* Shop header */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 text-center border-b border-gray-100">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-2 sm:mb-3 flex items-center justify-center text-white text-xl sm:text-2xl font-black overflow-hidden" style={{ backgroundColor: primary }}>
-          {shop.shop_logo_url ? <img src={shop.shop_logo_url} className="w-full h-full object-cover" /> : shop.shop_name[0]}
+      {/* ── HERO HEADER ── */}
+      <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary} 0%, ${primary}cc 100%)` }}>
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/08" />
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            {/* Logo */}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl border-4 border-white/40 flex items-center justify-center text-white font-black text-3xl overflow-hidden flex-shrink-0 shadow-xl"
+              style={{ backgroundColor: "rgba(255,255,255,0.25)" }}>
+              {shop.shop_logo_url
+                ? <img src={shop.shop_logo_url} className="w-full h-full object-cover" alt={shop.shop_name} />
+                : shop.shop_name[0].toUpperCase()}
+            </div>
+
+            {/* Infos */}
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-black text-white mb-1">{shop.shop_name}</h1>
+              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-2">
+                <span className="text-xs font-bold text-white/90 bg-white/20 px-3 py-1 rounded-full">
+                  {biz.emoji} {biz.label}
+                </span>
+                <span className="text-xs font-medium text-white/80 bg-white/15 px-3 py-1 rounded-full">
+                  {products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}
+                </span>
+                {shop.avg_rating !== undefined && shop.avg_rating > 0 && (
+                  <span className="text-xs font-bold text-yellow-200 bg-white/15 px-3 py-1 rounded-full flex items-center gap-1">
+                    <Star size={11} fill="currentColor" /> {shop.avg_rating.toFixed(1)} ({shop.rating_count})
+                  </span>
+                )}
+              </div>
+              {shop.slogan && <p className="text-white/85 italic text-sm mb-1">&quot;{shop.slogan}&quot;</p>}
+              {shop.description && <p className="text-white/70 text-sm max-w-lg">{shop.description}</p>}
+            </div>
+          </div>
         </div>
-        <h1 className="text-2xl font-black text-gray-900">{shop.shop_name}</h1>
-        <p className="text-sm mt-1">{biz.emoji} {biz.label}</p>
-        {shop.slogan && <p className="text-sm italic mt-1" style={{ color: primary }}>&quot;{shop.slogan}&quot;</p>}
-        {shop.description && <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">{shop.description}</p>}
-        <p className="text-xs text-gray-400 mt-2">{products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}</p>
       </div>
 
-      {/* État vide — aucun produit dans la boutique */}
-      {products.length === 0 ? (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-24 text-center">
-          <div className="text-6xl mb-4">{biz.emoji}</div>
-          <p className="text-xl font-black text-gray-700 mb-2">{biz.ui.emptyTitle}</p>
-          <p className="text-sm text-gray-400">{biz.ui.emptySubtitle}</p>
-        </div>
-      ) : (
-        <>
-      {/* Filtres catégories */}
-      <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex gap-2 overflow-x-auto">
-        {categories.map((cat) => (
-          <button key={cat} onClick={() => filterCategory(cat)}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all"
-            style={{ backgroundColor: activeCategory === cat ? "#1a1a1a" : "white", borderColor: activeCategory === cat ? "#1a1a1a" : "#e5e7eb", color: activeCategory === cat ? "white" : "#555" }}>
-            {cat}
-          </button>
-        ))}
-      </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
-      {/* Grille produits */}
-      <div className="max-w-4xl mx-auto px-3 sm:px-6 pb-24">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+        {/* Filtres */}
+        {categories.length > 2 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+            {categories.map((cat) => (
+              <button key={cat} onClick={() => filterCategory(cat)}
+                className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all"
+                style={{
+                  backgroundColor: activeCategory === cat ? "#1a1a1a" : "white",
+                  borderColor: activeCategory === cat ? "#1a1a1a" : "#e5e7eb",
+                  color: activeCategory === cat ? "white" : "#555",
+                }}>
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Résultats */}
+        <p className="text-sm text-gray-400 mb-4 font-medium">
+          <span className="text-gray-700 font-bold">{filtered.length}</span> {biz.ui.itemLabel}{filtered.length > 1 ? "s" : ""}
+          {activeCategory !== "Tout" && <span className="ml-1">· {activeCategory}</span>}
+        </p>
+
+        {/* Grille produits */}
+        {products.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="text-6xl mb-4">{biz.emoji}</div>
+            <p className="text-xl font-black text-gray-700 mb-2">{biz.ui.emptyTitle}</p>
+            <p className="text-sm text-gray-400">{biz.ui.emptySubtitle}</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
             <div className="text-4xl mb-2">{biz.emoji}</div>
-            <p>Aucun {biz.ui.itemLabel} dans cette catégorie</p>
+            <p className="text-gray-500">Aucun {biz.ui.itemLabel} dans cette catégorie</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-            {filtered.map((product, i) => (
-              <button key={product.id} onClick={() => { setSelected(product); setSelectedSize(null); setSelectedColor(null); }}
-                className={`hover-lift animate-scale-in delay-${Math.min(i * 75, 600)} text-left bg-white rounded-2xl border border-gray-100 overflow-hidden`}>
-                <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+            {filtered.map((product) => (
+              <button key={product.id} onClick={() => { setSelected(product); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
+                className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all group">
+                <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative">
                   {product.image_url ? (
-                    <img src={product.image_url} className="w-full h-full object-cover" />
+                    <img src={product.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} />
                   ) : (
                     <span className="text-4xl">{biz.emoji}</span>
                   )}
+                  {/* Price badge */}
+                  <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl text-white text-xs font-black shadow-md" style={{ backgroundColor: primary }}>
+                    {product.price.toLocaleString("fr-FR")} F
+                  </div>
                 </div>
                 <div className="p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: primary }}>{product.category}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-0.5 truncate" style={{ color: primary + "99" }}>{product.category}</p>
                   <p className="text-sm font-bold text-gray-900 truncate">{product.title}</p>
-                  <p className="text-sm font-black mt-1" style={{ color: primary }}>{product.price.toLocaleString("fr-FR")} FCFA</p>
                 </div>
               </button>
             ))}
           </div>
         )}
       </div>
-      </>
-      )}
 
-      {/* Barre panier flottante */}
+      {/* ── BARRE PANIER FLOTTANTE ── */}
       {cart.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
-          <button onClick={() => setCartOpen(true)} className="flex items-center gap-2 sm:gap-4 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg font-semibold text-sm sm:text-base" style={{ backgroundColor: "#1a1a1a" }}>
-            <span className="text-sm text-gray-400">{cart.length} {biz.ui.itemLabel}{cart.length > 1 ? "s" : ""}</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 w-full max-w-sm px-4">
+          <button onClick={() => setCartOpen(true)}
+            className="w-full flex items-center gap-3 text-white px-5 py-3.5 rounded-2xl shadow-2xl font-semibold"
+            style={{ backgroundColor: "#1a1a1a" }}>
+            <ShoppingCart size={18} className="flex-shrink-0" />
+            <span className="flex-1 text-sm text-left">{cart.length} article{cart.length > 1 ? "s" : ""}</span>
             <span className="font-black">{total.toLocaleString("fr-FR")} FCFA</span>
-            <span className="text-sm">Voir le panier</span>
+            <span className="text-sm text-gray-400">→</span>
           </button>
         </div>
       )}
 
-      {/* Modal produit */}
+      {/* ── MODAL PRODUIT ── */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end md:items-center justify-center" onClick={() => setSelected(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            {selected.image_url && <img src={selected.image_url} className="w-full aspect-square object-cover" />}
-            <div className="p-6">
-              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: primary }}>{selected.category}</p>
+        <div className="fixed inset-0 bg-black/60 z-30 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setSelected(null)}>
+          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
+            <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+              {selected.image_url ? (
+                <img src={selected.image_url} className="w-full h-full object-cover" alt={selected.title} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: primary + "15" }}>
+                  <span className="text-7xl">{biz.emoji}</span>
+                </div>
+              )}
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              {/* Price */}
+              <div className="absolute bottom-4 left-4 px-4 py-2 rounded-2xl text-white font-black text-xl shadow-lg" style={{ backgroundColor: primary }}>
+                {selected.price.toLocaleString("fr-FR")} FCFA
+              </div>
+              {/* Close */}
+              <button onClick={() => setSelected(null)}
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white hover:bg-black/60 transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-3" style={{ backgroundColor: primary + "15", color: primary }}>
+                {selected.category}
+              </div>
               <h2 className="text-xl font-black text-gray-900 mb-1">{selected.title}</h2>
-              <p className="text-xl font-black mb-4" style={{ color: primary }}>{selected.price.toLocaleString("fr-FR")} FCFA</p>
               {selected.description && <p className="text-sm text-gray-500 mb-4 leading-relaxed">{selected.description}</p>}
+
+              {/* Sizes */}
               {selected.product_variations.filter((v) => v.type === "size").length > 0 && (
                 <div className="mb-4">
                   <p className="text-sm font-bold text-gray-700 mb-2">{biz.variationTypes.sizes?.label || "Taille"}</p>
                   <div className="flex flex-wrap gap-2">
                     {selected.product_variations.filter((v) => v.type === "size").map((v) => (
                       <button key={v.value} onClick={() => setSelectedSize(v.value)}
-                        className="px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all"
+                        className="px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all"
                         style={{ backgroundColor: selectedSize === v.value ? "#1a1a1a" : "white", borderColor: selectedSize === v.value ? "#1a1a1a" : "#e5e7eb", color: selectedSize === v.value ? "white" : "#555" }}>
                         {v.value}
                       </button>
@@ -194,13 +293,15 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                   </div>
                 </div>
               )}
+
+              {/* Colors */}
               {selected.product_variations.filter((v) => v.type === "color").length > 0 && (
                 <div className="mb-4">
                   <p className="text-sm font-bold text-gray-700 mb-2">{biz.variationTypes.colors?.label || "Couleur"}</p>
                   <div className="flex flex-wrap gap-2">
                     {selected.product_variations.filter((v) => v.type === "color").map((v) => (
                       <button key={v.value} onClick={() => setSelectedColor(v.value)}
-                        className="px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all"
+                        className="px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all"
                         style={{ backgroundColor: selectedColor === v.value ? "#1a1a1a" : "white", borderColor: selectedColor === v.value ? "#1a1a1a" : "#e5e7eb", color: selectedColor === v.value ? "white" : "#555" }}>
                         {v.value}
                       </button>
@@ -208,56 +309,79 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                   </div>
                 </div>
               )}
-              <button onClick={addToCart} className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-opacity hover:opacity-90" style={{ backgroundColor: primary }}>
-                + {biz.id === "alimentation" ? "Ajouter à ma commande" : "Ajouter au panier"}
+
+              {needsVariant && <p className="text-sm text-red-500 mb-3 font-medium">Sélectionne une option avant d&apos;ajouter au panier</p>}
+
+              <button onClick={addToCart}
+                className="w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                style={{ backgroundColor: primary }}>
+                <Package size={18} />
+                {biz.id === "alimentation" ? "Ajouter à ma commande" : "Ajouter au panier"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal panier */}
+      {/* ── MODAL PANIER ── */}
       {cartOpen && (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end md:items-center justify-center" onClick={() => setCartOpen(false)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-black">Mon panier</h2>
-              <div className="flex gap-3 items-center">
-                {cart.length > 0 && <button onClick={cartClear} className="text-xs font-semibold text-red-400 hover:text-red-600">Vider</button>}
-                <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><X size={14} /></button>
+        <div className="fixed inset-0 bg-black/60 z-30 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setCartOpen(false)}>
+          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-black">Mon panier <span className="text-gray-400 font-normal text-sm ml-1">({cart.length})</span></h2>
+              <div className="flex items-center gap-3">
+                {cart.length > 0 && <button onClick={cartClear} className="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Vider</button>}
+                <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                  <X size={14} />
+                </button>
               </div>
             </div>
+
             {cart.length === 0 ? (
-              <div className="py-16 text-center text-gray-400">
-                <ShoppingCart size={40} className="mx-auto mb-2 text-gray-300" />
-                <p>Panier vide</p>
+              <div className="py-16 text-center flex-1">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <ShoppingCart size={28} className="text-gray-300" />
+                </div>
+                <p className="font-semibold text-gray-500">Ton panier est vide</p>
+                <button onClick={() => setCartOpen(false)} className="mt-4 text-sm font-semibold" style={{ color: primary }}>
+                  Continuer les achats
+                </button>
               </div>
             ) : (
               <>
-                <div className="divide-y divide-gray-50 max-h-48 sm:max-h-64 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
                   {cart.map((item, i) => (
-                    <div key={i} className="px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
-                      {item.image_url && <img src={item.image_url} className="w-12 h-12 rounded-xl object-cover" />}
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm text-gray-900">{item.title}</p>
-                        <p className="text-xs text-gray-400">{[item.size, item.color].filter(Boolean).join(" · ")}</p>
-                        <p className="text-sm font-bold" style={{ color: primary }}>{(item.price * item.qty).toLocaleString("fr-FR")} FCFA</p>
+                    <div key={i} className="px-5 py-4 flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                        {item.image_url
+                          ? <img src={item.image_url} className="w-full h-full object-cover" alt={item.title} />
+                          : <span className="text-2xl">{biz.emoji}</span>}
                       </div>
-                      <button onClick={() => cartRemove(i)} className="text-gray-300 hover:text-red-400 p-1"><Trash2 size={14} /></button>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-gray-900 truncate">{item.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{[item.size, item.color].filter(Boolean).join(" · ")}</p>
+                        <p className="text-sm font-black mt-0.5" style={{ color: primary }}>{(item.price * item.qty).toLocaleString("fr-FR")} FCFA</p>
+                      </div>
+                      <button onClick={() => cartRemove(i)} className="p-2 text-gray-300 hover:text-red-400 transition-colors rounded-xl hover:bg-red-50">
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   ))}
                 </div>
-                <div className="p-6 border-t border-gray-100">
+
+                <div className="p-5 border-t border-gray-100 flex-shrink-0">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-500 font-semibold">Total</span>
-                    <span className="text-xl font-black text-gray-900">{total.toLocaleString("fr-FR")} FCFA</span>
+                    <span className="text-2xl font-black text-gray-900">{total.toLocaleString("fr-FR")} FCFA</span>
                   </div>
                   {shop.phone_whatsapp ? (
-                    <button onClick={handleWhatsApp} className="w-full py-4 rounded-2xl font-bold text-white text-lg flex items-center justify-center gap-2" style={{ backgroundColor: "#25D366" }}>
-                      <MessageCircle size={18} className="inline mr-2" />Commander via WhatsApp
+                    <button onClick={handleWhatsApp}
+                      className="w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: "#25D366" }}>
+                      <MessageCircle size={20} /> Commander via WhatsApp
                     </button>
                   ) : (
-                    <div className="bg-yellow-50 rounded-xl p-4 text-sm text-yellow-700 text-center">
+                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-sm text-amber-700 text-center">
                       Le vendeur n&apos;a pas encore renseigné son numéro WhatsApp.
                     </div>
                   )}
