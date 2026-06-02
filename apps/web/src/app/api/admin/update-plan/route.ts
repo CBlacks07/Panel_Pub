@@ -1,14 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "panelpub2026";
+function isAdminAuthenticated(request: NextRequest): boolean {
+  const sessionSecret = process.env.ADMIN_SESSION_SECRET || "boutiki-admin-secret-2026";
+  return request.cookies.get("admin_session")?.value === sessionSecret;
+}
 
 export async function POST(req: NextRequest) {
-  const { userId, plan, adminPassword } = await req.json();
-
-  if (adminPassword !== ADMIN_PASSWORD) {
+  if (!isAdminAuthenticated(req)) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
+  const { userId, plan } = await req.json();
 
   if (!["free", "pro", "annual"].includes(plan)) {
     return NextResponse.json({ error: "Plan invalide" }, { status: 400 });
@@ -20,14 +23,8 @@ export async function POST(req: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { error } = await supabaseAdmin
-    .from("users")
-    .update({ plan })
-    .eq("id", userId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const { error } = await supabaseAdmin.from("users").update({ plan }).eq("id", userId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true });
 }

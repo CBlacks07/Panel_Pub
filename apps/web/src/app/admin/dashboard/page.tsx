@@ -92,10 +92,8 @@ export default function AdminDashboard() {
   const [editingPlan, setEditingPlan] = useState<any | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !sessionStorage.getItem("admin_auth")) {
-      router.replace("/admin");
-      return;
-    }
+    // La protection est assurée par le middleware Next.js (cookie httpOnly)
+    // Plus de vérification sessionStorage côté client
     loadAll();
   }, []);
 
@@ -148,9 +146,10 @@ export default function AdminDashboard() {
 
   const handleSave = async () => {
     setSaving(true);
-    for (const [key, value] of Object.entries(config)) {
-      await supabase.from("app_config").upsert({ key, value, updated_at: new Date().toISOString() });
-    }
+    // Batch upsert — une seule requête au lieu de N séquentielles
+    await supabase.from("app_config").upsert(
+      Object.entries(config).map(([key, value]) => ({ key, value }))
+    );
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -162,7 +161,7 @@ export default function AdminDashboard() {
     const res = await fetch("/api/admin/delete-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: id, adminPassword: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "panelpub2026" }),
+      body: JSON.stringify({ userId: id }),
     });
 
     if (!res.ok) {
@@ -182,11 +181,7 @@ export default function AdminDashboard() {
     const res = await fetch("/api/admin/update-shop", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: shop.id,
-        data: { suspended: newStatus },
-        adminPassword: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "panelpub2026",
-      }),
+      body: JSON.stringify({ userId: shop.id, data: { suspended: newStatus } }),
     });
     if (!res.ok) { alert("Erreur lors de la suspension"); return; }
     const updated = (s: Shop) => s.id === shop.id ? { ...s, suspended: newStatus } : s;
@@ -199,11 +194,7 @@ export default function AdminDashboard() {
     const res = await fetch("/api/admin/update-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: shop.id,
-        plan,
-        adminPassword: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "panelpub2026",
-      }),
+      body: JSON.stringify({ userId: shop.id, plan }),
     });
 
     if (!res.ok) {
@@ -261,9 +252,9 @@ export default function AdminDashboard() {
             </div>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (confirm("Tu veux vraiment te déconnecter du panel admin ?")) {
-                sessionStorage.removeItem("admin_auth");
+                await fetch("/api/admin/logout", { method: "POST" });
                 router.push("/admin");
               }
             }}
