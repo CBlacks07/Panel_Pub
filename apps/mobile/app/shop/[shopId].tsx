@@ -57,7 +57,7 @@ function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: 
       <Image
         source={{ uri }}
         style={{ width: size, height: IMG_HEIGHT }}
-        resizeMode="cover"
+        resizeMode="contain"
         onLoad={() => setLoading(false)}
         onError={() => { setLoading(false); setError(true); }}
       />
@@ -586,15 +586,16 @@ const styles = StyleSheet.create({
 
   // Modal produit
   modal: { flex: 1, backgroundColor: "#fff" },
-  modalImageWrap: { position: "relative", backgroundColor: "#f5f6fa" },
+  modalImageWrap: { position: "relative", backgroundColor: "#f8f8f8" },
   modalImageContainer: {
-    width: "100%",
-    aspectRatio: 1, // Carré — pas de recadrage
-    backgroundColor: "#f5f6fa",
+    width: MAX_WIDTH,
+    height: MAX_WIDTH, // Carré fixe basé sur la largeur écran
+    backgroundColor: "#f8f8f8",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
-  modalImage: { width: "100%", height: "100%" },
+  modalImage: { width: MAX_WIDTH, height: MAX_WIDTH },
   modalImagePlaceholder: { justifyContent: "center", alignItems: "center" },
   modalCloseBtn: {
     position: "absolute", top: 14, right: 14,
