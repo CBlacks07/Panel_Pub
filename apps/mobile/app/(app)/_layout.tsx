@@ -1,50 +1,37 @@
 import { Tabs } from "expo-router";
-import { View, Text, StyleSheet, Animated, Platform } from "react-native";
-import { useRef } from "react";
+import { View, Text, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
-import { LinearGradient } from "expo-linear-gradient";
 
 function TabIcon({
   name, nameActive, label, focused, primary,
 }: { name: any; nameActive: any; label: string; focused: boolean; primary: string }) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  if (focused) {
-    Animated.spring(scale, { toValue: 1.1, useNativeDriver: true, speed: 60, bounciness: 10 }).start();
-  } else {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 60 }).start();
-  }
-
   return (
-    <Animated.View style={[styles.tabItem, { transform: [{ scale }] }]}>
-      {focused && (
-        <View style={[styles.activeIndicator, { backgroundColor: primary + "20" }]} />
+    <View style={styles.tabItem}>
+      {focused ? (
+        /* Onglet actif : pill colorée avec icône + label côte à côte */
+        <View style={[styles.activePill, { backgroundColor: primary + "18" }]}>
+          <Ionicons name={nameActive} size={18} color={primary} />
+          <Text style={[styles.activeLabel, { color: primary }]} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+      ) : (
+        /* Onglet inactif : juste l'icône */
+        <View style={styles.inactiveWrap}>
+          <Ionicons name={name} size={22} color="#9ca3af" />
+        </View>
       )}
-      <Ionicons
-        name={focused ? nameActive : name}
-        size={22}
-        color={focused ? primary : "#9ca3af"}
-      />
-      <Text style={[styles.tabLabel, { color: focused ? primary : "#9ca3af", fontWeight: focused ? "700" : "500" }]}>
-        {label}
-      </Text>
-    </Animated.View>
+    </View>
   );
 }
 
 function AddTabIcon({ primary }: { primary: string }) {
   return (
-    <View style={styles.addTabWrap}>
-      <LinearGradient
-        colors={[primary, primary + "cc"]}
-        style={styles.addBtn}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Ionicons name="add" size={30} color="#fff" />
-      </LinearGradient>
-      <Text style={[styles.tabLabel, { color: primary, fontWeight: "700" }]}>Ajouter</Text>
+    <View style={styles.addWrap}>
+      <View style={[styles.addBtn, { backgroundColor: primary }]}>
+        <Ionicons name="add" size={28} color="#fff" />
+      </View>
     </View>
   );
 }
@@ -59,19 +46,18 @@ export default function AppLayout() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? 20 : 12,
-          left: 16,
-          right: 16,
-          height: 72,
-          borderRadius: 24,
+          bottom: Platform.OS === "ios" ? 24 : 14,
+          left: 20,
+          right: 20,
+          height: 64,
+          borderRadius: 32,
           backgroundColor: "#fff",
           borderTopWidth: 0,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.15,
-          shadowRadius: 24,
-          elevation: 16,
-          paddingBottom: 0,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.12,
+          shadowRadius: 20,
+          elevation: 14,
         },
       }}
     >
@@ -79,13 +65,7 @@ export default function AppLayout() {
         name="dashboard"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name="storefront-outline"
-              nameActive="storefront"
-              label="Boutique"
-              focused={focused}
-              primary={primary}
-            />
+            <TabIcon name="storefront-outline" nameActive="storefront" label="Boutique" focused={focused} primary={primary} />
           ),
         }}
       />
@@ -99,13 +79,7 @@ export default function AppLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name="person-outline"
-              nameActive="person"
-              label="Profil"
-              focused={focused}
-              primary={primary}
-            />
+            <TabIcon name="person-outline" nameActive="person" label="Profil" focused={focused} primary={primary} />
           ),
         }}
       />
@@ -117,20 +91,48 @@ export default function AppLayout() {
 
 const styles = StyleSheet.create({
   tabItem: {
-    alignItems: "center", justifyContent: "center",
-    gap: 3, paddingTop: 10, position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
   },
-  activeIndicator: {
-    position: "absolute", top: 8, width: 48, height: 32,
-    borderRadius: 16,
+
+  // Onglet actif : pill horizontale icône + texte
+  activePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  tabLabel: { fontSize: 10, letterSpacing: 0.2 },
-  addTabWrap: { alignItems: "center", justifyContent: "center", gap: 3 },
+  activeLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
+
+  // Onglet inactif : juste l'icône centrée
+  inactiveWrap: {
+    padding: 8,
+  },
+
+  // Bouton Ajouter central
+  addWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
   addBtn: {
-    width: 52, height: 52, borderRadius: 18,
-    justifyContent: "center", alignItems: "center",
-    marginTop: -18,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25, shadowRadius: 10, elevation: 8,
+    width: 50,
+    height: 50,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
