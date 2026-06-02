@@ -9,28 +9,31 @@ function TabIcon({
 }: { name: any; nameActive: any; label: string; focused: boolean; primary: string }) {
   return (
     <View style={styles.tabItem}>
-      {focused ? (
-        <View style={[styles.activePill, { backgroundColor: primary + "18" }]}>
-          <Ionicons name={nameActive} size={19} color={primary} />
-          <Text style={[styles.activeLabel, { color: primary }]} numberOfLines={1}>
-            {label}
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.inactiveWrap}>
-          <Ionicons name={name} size={22} color="#9ca3af" />
-        </View>
-      )}
+      <Ionicons
+        name={focused ? nameActive : name}
+        size={22}
+        color={focused ? primary : "#9ca3af"}
+      />
+      <Text
+        style={[styles.tabLabel, { color: focused ? primary : "#9ca3af", fontWeight: focused ? "700" : "500" }]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+      {focused && <View style={[styles.activeDot, { backgroundColor: primary }]} />}
     </View>
   );
 }
 
-function AddTabIcon({ primary, bottomInset }: { primary: string; bottomInset: number }) {
+function AddTabIcon({ primary }: { primary: string }) {
   return (
-    <View style={[styles.addWrap, { marginBottom: bottomInset > 0 ? 8 : 0 }]}>
+    <View style={styles.addWrap}>
       <View style={[styles.addBtn, { backgroundColor: primary }]}>
         <Ionicons name="add" size={28} color="#fff" />
       </View>
+      <Text style={[styles.tabLabel, { color: primary, fontWeight: "700" }]} numberOfLines={1}>
+        Ajouter
+      </Text>
     </View>
   );
 }
@@ -48,7 +51,7 @@ export default function AppLayout() {
           backgroundColor: "#fff",
           borderTopWidth: 1,
           borderTopColor: "#f0f0f0",
-          height: 56 + insets.bottom,
+          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 6,
           shadowColor: "#000",
@@ -70,7 +73,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="add-product"
         options={{
-          tabBarIcon: () => <AddTabIcon primary={primary} bottomInset={insets.bottom} />,
+          tabBarIcon: () => <AddTabIcon primary={primary} />,
         }}
       />
       <Tabs.Screen
@@ -89,36 +92,35 @@ export default function AppLayout() {
 
 const styles = StyleSheet.create({
   tabItem: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
+    paddingTop: 2,
+    position: "relative",
   },
-  activePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+  tabLabel: {
+    fontSize: 11,
+    letterSpacing: 0.1,
   },
-  activeLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  inactiveWrap: {
-    padding: 8,
+  activeDot: {
+    position: "absolute",
+    bottom: -6,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   addWrap: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 3,
   },
   addBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 18,
+    width: 46,
+    height: 46,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: -16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
