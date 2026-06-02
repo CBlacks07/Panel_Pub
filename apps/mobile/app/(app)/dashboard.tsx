@@ -216,11 +216,14 @@ export default function DashboardScreen() {
             <View style={styles.shortcutsRow}>
               <TouchableOpacity
                 style={[styles.shortcutBtn, { borderColor: primary + "40", backgroundColor: primary + "08" }]}
-                onPress={() => router.push(`/shop/${user?.id}`)}
+                onPress={async () => {
+                  const { Share } = require("react-native");
+                  await Share.share({ message: `Découvrez ma boutique 🛍️\nhttps://panel-pub-web.vercel.app/shop/${user?.id}` });
+                }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="storefront-outline" size={16} color={primary} />
-                <Text style={[styles.shortcutText, { color: primary }]}>Ma boutique</Text>
+                <Ionicons name="share-social-outline" size={16} color={primary} />
+                <Text style={[styles.shortcutText, { color: primary }]}>Partager</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shortcutBtn}
