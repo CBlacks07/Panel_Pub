@@ -11,16 +11,13 @@ function TabIcon({
     <View style={styles.tabItem}>
       <Ionicons
         name={focused ? nameActive : name}
-        size={22}
-        color={focused ? primary : "#9ca3af"}
+        size={24}
+        color={focused ? primary : "#b0b8c1"}
       />
-      <Text
-        style={[styles.tabLabel, { color: focused ? primary : "#9ca3af", fontWeight: focused ? "700" : "500" }]}
-        numberOfLines={1}
-      >
+      <Text style={[styles.tabLabel, { color: focused ? primary : "#b0b8c1" }]}
+        numberOfLines={1}>
         {label}
       </Text>
-      {focused && <View style={[styles.activeDot, { backgroundColor: primary }]} />}
     </View>
   );
 }
@@ -29,9 +26,9 @@ function AddTabIcon({ primary }: { primary: string }) {
   return (
     <View style={styles.addWrap}>
       <View style={[styles.addBtn, { backgroundColor: primary }]}>
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={30} color="#fff" />
       </View>
-      <Text style={[styles.tabLabel, { color: primary, fontWeight: "700" }]} numberOfLines={1}>
+      <Text style={[styles.tabLabel, { color: primary }]} numberOfLines={1}>
         Ajouter
       </Text>
     </View>
@@ -50,14 +47,14 @@ export default function AppLayout() {
         tabBarStyle: {
           backgroundColor: "#fff",
           borderTopWidth: 1,
-          borderTopColor: "#f0f0f0",
-          height: 60 + insets.bottom,
-          paddingBottom: insets.bottom,
-          paddingTop: 6,
+          borderTopColor: "#ebebeb",
+          height: 68 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
+          paddingTop: 8,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
+          shadowOffset: { width: 0, height: -3 },
           shadowOpacity: 0.06,
-          shadowRadius: 12,
+          shadowRadius: 10,
           elevation: 10,
         },
       }}
@@ -66,7 +63,8 @@ export default function AppLayout() {
         name="dashboard"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="storefront-outline" nameActive="storefront" label="Boutique" focused={focused} primary={primary} />
+            <TabIcon name="storefront-outline" nameActive="storefront"
+              label="Boutique" focused={focused} primary={primary} />
           ),
         }}
       />
@@ -80,7 +78,8 @@ export default function AppLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="person-outline" nameActive="person" label="Profil" focused={focused} primary={primary} />
+            <TabIcon name="person-outline" nameActive="person"
+              label="Profil" focused={focused} primary={primary} />
           ),
         }}
       />
@@ -94,36 +93,29 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: 4,
     paddingTop: 2,
-    position: "relative",
   },
   tabLabel: {
     fontSize: 11,
+    fontWeight: "600",
     letterSpacing: 0.1,
-  },
-  activeDot: {
-    position: "absolute",
-    bottom: -6,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
   },
   addWrap: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
+    gap: 4,
   },
   addBtn: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -16,
+    marginTop: -14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.22,
     shadowRadius: 8,
     elevation: 8,
   },
