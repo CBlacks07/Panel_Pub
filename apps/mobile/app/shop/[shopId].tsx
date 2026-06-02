@@ -379,7 +379,7 @@ export default function ShopScreen() {
       {/* ── MODAL PRODUIT ── */}
       <Modal visible={!!selected} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
         {selected && (
-          <View style={styles.modal}>
+          <View style={[styles.modal, { paddingTop: insets.top }]}>
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
               {/* Image — contain pour afficher entière sans recadrage */}
               <View style={styles.modalImageWrap}>
