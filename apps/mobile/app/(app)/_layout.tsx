@@ -1,36 +1,13 @@
 import { Tabs } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function TabIcon({
-  name, nameActive, label, focused, primary,
-}: { name: any; nameActive: any; label: string; focused: boolean; primary: string }) {
-  return (
-    <View style={styles.tabItem}>
-      <Ionicons
-        name={focused ? nameActive : name}
-        size={24}
-        color={focused ? primary : "#b0b8c1"}
-      />
-      <Text style={[styles.tabLabel, { color: focused ? primary : "#b0b8c1" }]}
-        numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 function AddTabIcon({ primary }: { primary: string }) {
   return (
-    <View style={styles.addWrap}>
-      <View style={[styles.addBtn, { backgroundColor: primary }]}>
-        <Ionicons name="add" size={30} color="#fff" />
-      </View>
-      <Text style={[styles.tabLabel, { color: primary }]} numberOfLines={1}>
-        Ajouter
-      </Text>
+    <View style={[styles.addBtn, { backgroundColor: primary }]}>
+      <Ionicons name="add" size={30} color="#fff" />
     </View>
   );
 }
@@ -43,7 +20,16 @@ export default function AppLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: primary,
+        tabBarInactiveTintColor: "#b0b8c1",
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginBottom: -2,
+        },
         tabBarStyle: {
           backgroundColor: "#fff",
           borderTopWidth: 1,
@@ -62,24 +48,33 @@ export default function AppLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
+          tabBarLabel: "Boutique",
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="storefront-outline" nameActive="storefront"
-              label="Boutique" focused={focused} primary={primary} />
+            <Ionicons
+              name={focused ? "storefront" : "storefront-outline"}
+              size={24}
+              color={focused ? primary : "#b0b8c1"}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="add-product"
         options={{
+          tabBarLabel: "Ajouter",
           tabBarIcon: () => <AddTabIcon primary={primary} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
+          tabBarLabel: "Profil",
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="person-outline" nameActive="person"
-              label="Profil" focused={focused} primary={primary} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={24}
+              color={focused ? primary : "#b0b8c1"}
+            />
           ),
         }}
       />
@@ -90,22 +85,6 @@ export default function AppLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingTop: 2,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.1,
-  },
-  addWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-  },
   addBtn: {
     width: 48,
     height: 48,
