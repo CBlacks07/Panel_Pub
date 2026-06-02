@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, ScrollView,
-  StyleSheet, TextInput, Animated, Image,
+  StyleSheet, TextInput, Animated, Image, Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -334,7 +334,7 @@ export default function MarketplaceScreen() {
             ) : null
           }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
+          onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; Keyboard.dismiss(); }}
           scrollEventThrottle={16}
           renderItem={({ item, index }) => (
             <AnimatedShopCard
@@ -384,9 +384,14 @@ const styles = StyleSheet.create({
 
   searchWrap: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    marginHorizontal: 16, marginTop: 10, marginBottom: 4,
+    marginHorizontal: 32, marginTop: 10, marginBottom: 4,
     paddingHorizontal: 14, paddingVertical: 10,
-    backgroundColor: "#f3f4f6", borderRadius: 999, borderWidth: 0,
+    backgroundColor: "#fff",
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#e0e4ea",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   searchIcon: { fontSize: 16 },
   searchInput: { flex: 1, fontSize: 14, color: "#1a1a1a" },
