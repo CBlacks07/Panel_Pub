@@ -1,7 +1,8 @@
 import { Tabs } from "expo-router";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function TabIcon({
   name, nameActive, label, focused, primary,
@@ -9,15 +10,13 @@ function TabIcon({
   return (
     <View style={styles.tabItem}>
       {focused ? (
-        /* Onglet actif : pill colorée avec icône + label côte à côte */
         <View style={[styles.activePill, { backgroundColor: primary + "18" }]}>
-          <Ionicons name={nameActive} size={18} color={primary} />
+          <Ionicons name={nameActive} size={19} color={primary} />
           <Text style={[styles.activeLabel, { color: primary }]} numberOfLines={1}>
             {label}
           </Text>
         </View>
       ) : (
-        /* Onglet inactif : juste l'icône */
         <View style={styles.inactiveWrap}>
           <Ionicons name={name} size={22} color="#9ca3af" />
         </View>
@@ -26,9 +25,9 @@ function TabIcon({
   );
 }
 
-function AddTabIcon({ primary }: { primary: string }) {
+function AddTabIcon({ primary, bottomInset }: { primary: string; bottomInset: number }) {
   return (
-    <View style={styles.addWrap}>
+    <View style={[styles.addWrap, { marginBottom: bottomInset > 0 ? 8 : 0 }]}>
       <View style={[styles.addBtn, { backgroundColor: primary }]}>
         <Ionicons name="add" size={28} color="#fff" />
       </View>
@@ -38,6 +37,7 @@ function AddTabIcon({ primary }: { primary: string }) {
 
 export default function AppLayout() {
   const { primary } = useConfig();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -45,19 +45,17 @@ export default function AppLayout() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          position: "absolute",
-          bottom: Platform.OS === "ios" ? 24 : 14,
-          left: 20,
-          right: 20,
-          height: 64,
-          borderRadius: 32,
           backgroundColor: "#fff",
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: "#f0f0f0",
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 6,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 20,
-          elevation: 14,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
+          elevation: 10,
         },
       }}
     >
@@ -72,7 +70,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="add-product"
         options={{
-          tabBarIcon: () => <AddTabIcon primary={primary} />,
+          tabBarIcon: () => <AddTabIcon primary={primary} bottomInset={insets.bottom} />,
         }}
       />
       <Tabs.Screen
@@ -91,12 +89,10 @@ export default function AppLayout() {
 
 const styles = StyleSheet.create({
   tabItem: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
   },
-
-  // Onglet actif : pill horizontale icône + texte
   activePill: {
     flexDirection: "row",
     alignItems: "center",
@@ -108,19 +104,14 @@ const styles = StyleSheet.create({
   activeLabel: {
     fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.1,
   },
-
-  // Onglet inactif : juste l'icône centrée
   inactiveWrap: {
     padding: 8,
   },
-
-  // Bouton Ajouter central
   addWrap: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
   },
   addBtn: {
     width: 50,
@@ -128,7 +119,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
