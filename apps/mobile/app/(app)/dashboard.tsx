@@ -212,6 +212,26 @@ export default function DashboardScreen() {
               </LinearGradient>
             </View>
 
+            {/* ── RACCOURCIS ── */}
+            <View style={styles.shortcutsRow}>
+              <TouchableOpacity
+                style={[styles.shortcutBtn, { borderColor: primary + "40", backgroundColor: primary + "08" }]}
+                onPress={() => router.push(`/shop/${user?.id}`)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="storefront-outline" size={16} color={primary} />
+                <Text style={[styles.shortcutText, { color: primary }]}>Ma boutique</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.shortcutBtn}
+                onPress={() => router.push("/marketplace")}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="grid-outline" size={16} color="#6b7280" />
+                <Text style={styles.shortcutText}>Marketplace</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* ── STATS ── */}
             <View style={styles.statsRow}>
               <StatCard
@@ -406,6 +426,15 @@ const styles = StyleSheet.create({
   planProgressLink: { fontSize: 11, color: "#fff", fontWeight: "800" },
   planProgressBar: { height: 4, backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 2, overflow: "hidden" },
   planProgressFill: { height: 4, borderRadius: 2 },
+
+  // Raccourcis
+  shortcutsRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  shortcutBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    borderWidth: 1.5, borderColor: "#e5e7eb", borderRadius: 14,
+    paddingVertical: 10, backgroundColor: "#fff",
+  },
+  shortcutText: { fontSize: 13, fontWeight: "700", color: "#6b7280" },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
