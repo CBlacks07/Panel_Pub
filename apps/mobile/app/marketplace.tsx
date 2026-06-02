@@ -88,6 +88,9 @@ export default function MarketplaceScreen() {
   const bannerAnim = useRef(new Animated.Value(-30)).current;
   const bannerOpacity = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<any>(null);
+  // Référence stable pour le ListHeader — évite le remontage du TextInput
+  const listHeaderFnRef = useRef<() => React.ReactElement>(() => <></>);
+  const StableListHeader = useCallback(() => listHeaderFnRef.current(), []);
 
   useEffect(() => {
     getAppConfig().then(setConfig);
@@ -194,7 +197,8 @@ export default function MarketplaceScreen() {
     applyFilters(search, bizType);
   };
 
-  const ListHeader = () => (
+  // Met à jour la ref à chaque render — StableListHeader appellera toujours la dernière version
+  listHeaderFnRef.current = () => (
     <>
       {/* Bannière CTA vendeur */}
       <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
@@ -257,6 +261,28 @@ export default function MarketplaceScreen() {
         ))}
       </ScrollView>
 
+      {/* Barre de recherche — dans le scroll avec le header */}
+      <View style={styles.searchWrap}>
+        <Ionicons name="search-outline" size={16} color="#aaa" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher une boutique..."
+          placeholderTextColor="#bbb"
+          value={search}
+          onChangeText={handleSearch}
+          returnKeyType="search"
+          autoCorrect={false}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity
+          onPress={() => handleSearch("")}
+          disabled={search.length === 0}
+          style={{ opacity: search.length > 0 ? 1 : 0 }}
+        >
+          <Ionicons name="close-circle" size={18} color="#ccc" />
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.sectionTitle}>
         {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
         {filtered[0]?.avg_rating > 0 ? " · triées par note" : ""}
@@ -289,29 +315,6 @@ export default function MarketplaceScreen() {
         )}
       </Animated.View>
 
-      {/* Barre de recherche — HORS du FlatList pour éviter le remontage à chaque frappe */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={16} color="#bbb" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher une boutique..."
-          placeholderTextColor="#bbb"
-          value={search}
-          onChangeText={handleSearch}
-          returnKeyType="search"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        {/* Toujours rendu (opacity) — évite le changement de structure qui fait perdre le focus sur Android */}
-        <TouchableOpacity
-          onPress={() => handleSearch("")}
-          disabled={search.length === 0}
-          style={{ opacity: search.length > 0 ? 1 : 0 }}
-        >
-          <Ionicons name="close-circle" size={18} color="#ccc" />
-        </TouchableOpacity>
-      </View>
-
       {loading ? (
         <MarketplaceSkeleton />
       ) : (
@@ -324,7 +327,7 @@ export default function MarketplaceScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={StableListHeader}
           ListEmptyComponent={
             search.length > 0 ? (
               <View style={styles.empty}>
