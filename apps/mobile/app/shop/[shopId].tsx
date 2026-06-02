@@ -381,31 +381,37 @@ export default function ShopScreen() {
         {selected && (
           <View style={styles.modal}>
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-              {/* Image plein écran */}
+              {/* Image — contain pour afficher entière sans recadrage */}
               <View style={styles.modalImageWrap}>
-                {selected.image_url ? (
-                  <Image source={{ uri: selected.image_url }} style={styles.modalImage} resizeMode="cover" />
-                ) : (
-                  <View style={[styles.modalImage, { backgroundColor: primary + "15", justifyContent: "center", alignItems: "center" }]}>
-                    <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
-                  </View>
-                )}
-                {/* Gradient overlay bas */}
-                <View style={styles.modalImageGradient} />
-                <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
-                  <Ionicons name="close" size={18} color="#fff" />
-                </TouchableOpacity>
-                {/* Prix sur l'image */}
-                <View style={[styles.modalPriceBadge, { backgroundColor: primary }]}>
-                  <Text style={styles.modalPriceBadgeText}>{selected.price.toLocaleString("fr-FR")} FCFA</Text>
+                <View style={styles.modalImageContainer}>
+                  {selected.image_url ? (
+                    <Image
+                      source={{ uri: selected.image_url }}
+                      style={styles.modalImage}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View style={styles.modalImagePlaceholder}>
+                      <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
+                    </View>
+                  )}
                 </View>
+                {/* Bouton fermer */}
+                <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
+                  <Ionicons name="close" size={18} color="#1a1a1a" />
+                </TouchableOpacity>
               </View>
 
               {/* Contenu */}
               <View style={styles.modalContent}>
-                {/* Catégorie + titre */}
-                <View style={[styles.modalCatBadge, { backgroundColor: primary + "15" }]}>
-                  <Text style={[styles.modalCatText, { color: primary }]}>{selected.category}</Text>
+                {/* Prix + catégorie */}
+                <View style={styles.modalPriceRow}>
+                  <Text style={[styles.modalPriceText, { color: primary }]}>
+                    {selected.price.toLocaleString("fr-FR")} FCFA
+                  </Text>
+                  <View style={[styles.modalCatBadge, { backgroundColor: primary + "15" }]}>
+                    <Text style={[styles.modalCatText, { color: primary }]}>{selected.category}</Text>
+                  </View>
                 </View>
                 <Text style={styles.modalTitle}>{selected.title}</Text>
 
@@ -580,27 +586,30 @@ const styles = StyleSheet.create({
 
   // Modal produit
   modal: { flex: 1, backgroundColor: "#fff" },
-  modalImageWrap: { position: "relative" },
-  modalImage: { width: "100%", height: MAX_WIDTH * 1.05 },
-  modalImageGradient: {
-    position: "absolute", bottom: 0, left: 0, right: 0, height: 80,
-    backgroundColor: "rgba(0,0,0,0.25)",
+  modalImageWrap: { position: "relative", backgroundColor: "#f5f6fa" },
+  modalImageContainer: {
+    width: "100%",
+    aspectRatio: 1, // Carré — pas de recadrage
+    backgroundColor: "#f5f6fa",
+    justifyContent: "center",
+    alignItems: "center",
   },
+  modalImage: { width: "100%", height: "100%" },
+  modalImagePlaceholder: { justifyContent: "center", alignItems: "center" },
   modalCloseBtn: {
-    position: "absolute", top: 16, right: 16,
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    position: "absolute", top: 14, right: 14,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.9)",
     justifyContent: "center", alignItems: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12, shadowRadius: 4, elevation: 4,
   },
-  modalPriceBadge: {
-    position: "absolute", bottom: 16, left: 16,
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 8,
-  },
-  modalPriceBadgeText: { color: "#fff", fontSize: 18, fontWeight: "900" },
   modalContent: { padding: 20, gap: 12 },
+  modalPriceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  modalPriceText: { fontSize: 22, fontWeight: "900" },
   modalCatBadge: { alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
   modalCatText: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  modalTitle: { fontSize: 24, fontWeight: "900", color: "#1a1a1a", lineHeight: 30 },
+  modalTitle: { fontSize: 22, fontWeight: "900", color: "#1a1a1a", lineHeight: 28 },
   modalDescription: { fontSize: 14, color: "#666", lineHeight: 22 },
   varSection: { gap: 10 },
   varLabel: { fontSize: 13, fontWeight: "700", color: "#333" },
