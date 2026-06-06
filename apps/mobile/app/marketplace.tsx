@@ -4,6 +4,7 @@ import {
   StyleSheet, TextInput, Animated, Image, Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -50,6 +51,7 @@ export default function MarketplaceScreen() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [bannerHidden, setBannerHidden] = useState(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
   const bannerAnim = useRef(new Animated.Value(-30)).current;
@@ -61,6 +63,7 @@ export default function MarketplaceScreen() {
 
   useEffect(() => {
     getAppConfig().then(setConfig);
+    AsyncStorage.getItem("mk_banner_hidden").then((v) => { if (v) setBannerHidden(true); });
     // Géolocalisation — une seule demande par session d'appli
     if (cachedLocation) {
       setUserLocation(cachedLocation);
@@ -163,6 +166,11 @@ export default function MarketplaceScreen() {
     applyFilters(search, bizType);
   };
 
+  const dismissBanner = () => {
+    setBannerHidden(true);
+    AsyncStorage.setItem("mk_banner_hidden", "1").catch(() => {});
+  };
+
   // Stables → la FlatList ne re-rend pas toutes les cartes à chaque frappe
   const keyExtractor = useCallback((item: Shop) => item.id, []);
   const renderShop = useCallback(
@@ -175,10 +183,18 @@ export default function MarketplaceScreen() {
   // Met à jour la ref à chaque render — StableListHeader appellera toujours la dernière version
   listHeaderFnRef.current = () => (
     <>
-      {/* Bannière CTA vendeur — masquée pour les vendeurs connectés */}
-      {!session && (
+      {/* Bannière CTA vendeur — masquée pour les vendeurs connectés ou si déjà fermée */}
+      {!session && !bannerHidden && (
         <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
-          <Text style={styles.bannerTitle}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
+          <TouchableOpacity
+            style={styles.bannerClose}
+            onPress={dismissBanner}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Masquer cette bannière"
+          >
+            <Ionicons name="close" size={16} color="#fff" />
+          </TouchableOpacity>
+          <Text style={[styles.bannerTitle, { paddingRight: 28 }]}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
           <Text style={styles.bannerSubtitle}>{config?.marketplace_banner_subtitle || "Mode locale · Commande via WhatsApp"}</Text>
           <View style={styles.bannerActions}>
             <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/register")}>
@@ -334,6 +350,13 @@ const styles = StyleSheet.create({
   banner: {
     margin: 16, marginBottom: 8,
     borderRadius: 20, padding: 20, gap: 6,
+    position: "relative", overflow: "hidden",
+  },
+  bannerClose: {
+    position: "absolute", top: 10, right: 10, zIndex: 2,
+    width: 26, height: 26, borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    justifyContent: "center", alignItems: "center",
   },
   bannerTitle: { fontSize: 17, fontWeight: "800", color: "#fff", lineHeight: 24 },
   bannerSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.75)" },
