@@ -210,16 +210,16 @@ export default function MarketplaceScreen() {
   // Met à jour la ref à chaque render — StableListHeader appellera toujours la dernière version
   listHeaderFnRef.current = () => (
     <>
-      {/* Bannière CTA vendeur */}
-      <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
-        <Text style={styles.bannerTitle}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
-        <Text style={styles.bannerSubtitle}>{config?.marketplace_banner_subtitle || "Mode locale · Commande via WhatsApp"}</Text>
-        {!session && (
+      {/* Bannière CTA vendeur — masquée pour les vendeurs connectés */}
+      {!session && (
+        <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
+          <Text style={styles.bannerTitle}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
+          <Text style={styles.bannerSubtitle}>{config?.marketplace_banner_subtitle || "Mode locale · Commande via WhatsApp"}</Text>
           <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/register")}>
             <Text style={[styles.bannerBtnText, { color: primary }]}>{config?.vendor_cta || "Ouvrir ma boutique — Gratuit"}</Text>
           </TouchableOpacity>
-        )}
-      </Animated.View>
+        </Animated.View>
+      )}
 
       {/* Forfaits en scroll horizontal — uniquement si pas connecté */}
       {!session && plans.length > 0 && (
