@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { Animated, TouchableOpacity, View, Text, StyleSheet, Image, Dimensions } from "react-native";
 import StarRating from "./StarRating";
 import { useConfig } from "../context/ConfigContext";
@@ -39,7 +39,7 @@ type Props = {
   onPress: () => void;
 };
 
-export default function AnimatedShopCard({ item, index, onPress }: Props) {
+function AnimatedShopCard({ item, index, onPress }: Props) {
   const { primary } = useConfig();
   const biz = getBusinessType(item.business_type || "mode");
   const accentColor = BIZ_COLORS[item.business_type || "mode"] || primary;
@@ -216,3 +216,8 @@ const styles = StyleSheet.create({
   },
   metaText: { fontSize: 11, color: "#6b7280", fontWeight: "500" },
 });
+
+// Mémoïsé : les objets boutique gardent la même référence après filtrage,
+// donc on évite de re-rendre toutes les cartes à chaque frappe (le re-render
+// massif fermait le clavier). On ignore l'identité de onPress (effet identique).
+export default memo(AnimatedShopCard, (prev, next) => prev.item === next.item);

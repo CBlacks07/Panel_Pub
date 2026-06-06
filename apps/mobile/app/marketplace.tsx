@@ -198,6 +198,15 @@ export default function MarketplaceScreen() {
     applyFilters(search, bizType);
   };
 
+  // Stables → la FlatList ne re-rend pas toutes les cartes à chaque frappe
+  const keyExtractor = useCallback((item: Shop) => item.id, []);
+  const renderShop = useCallback(
+    ({ item, index }: { item: Shop; index: number }) => (
+      <AnimatedShopCard item={item} index={index} onPress={() => router.push(`/shop/${item.id}`)} />
+    ),
+    [router]
+  );
+
   // Met à jour la ref à chaque render — StableListHeader appellera toujours la dernière version
   listHeaderFnRef.current = () => (
     <>
@@ -299,11 +308,14 @@ export default function MarketplaceScreen() {
             onBlur={() => setSearchFocused(false)}
             onSubmitEditing={() => Keyboard.dismiss()}
           />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close-circle" size={18} color="#c4c4c4" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={() => handleSearch("")}
+            disabled={search.length === 0}
+            style={{ opacity: search.length > 0 ? 1 : 0 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={18} color="#c4c4c4" />
+          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -333,7 +345,6 @@ export default function MarketplaceScreen() {
         <FlatList
           ref={flatListRef}
           data={filtered}
-          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -351,13 +362,8 @@ export default function MarketplaceScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
           scrollEventThrottle={32}
-          renderItem={({ item, index }) => (
-            <AnimatedShopCard
-              item={item}
-              index={index}
-              onPress={() => router.push(`/shop/${item.id}`)}
-            />
-          )}
+          keyExtractor={keyExtractor}
+          renderItem={renderShop}
         />
       )}
     </SafeAreaView>
