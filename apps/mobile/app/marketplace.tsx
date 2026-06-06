@@ -78,6 +78,7 @@ export default function MarketplaceScreen() {
   const [filtered, setFiltered] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [activeBizType, setActiveBizType] = useState("all");
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
@@ -241,51 +242,16 @@ export default function MarketplaceScreen() {
         </View>
       )}
 
-      {/* Titre section boutiques */}
-      <Text style={styles.shopsTitle}>
-        {config?.marketplace_banner_title || "Les boutiques du moment ✨"}
-      </Text>
-
-      {/* Filtres par type de boutique */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bizFilterBar} contentContainerStyle={styles.bizFilterContent}>
-        <TouchableOpacity style={[styles.bizFilterChip, activeBizType === "all" && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter("all")}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="storefront-outline" size={13} color={activeBizType === "all" ? "#fff" : "#555"} />
-              <Text style={[styles.bizFilterText, activeBizType === "all" && { color: "#fff" }]}>Tout</Text>
-            </View>
-        </TouchableOpacity>
-        {BUSINESS_TYPES.filter((b) => shops.some((s) => s.business_type === b.id)).map((b) => (
-          <TouchableOpacity key={b.id} style={[styles.bizFilterChip, activeBizType === b.id && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter(b.id)}>
-            <Text style={[styles.bizFilterText, activeBizType === b.id && { color: "#fff" }]}>{b.emoji} {b.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Barre de recherche — dans le scroll avec le header */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={16} color="#aaa" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher une boutique..."
-          placeholderTextColor="#bbb"
-          value={search}
-          onChangeText={handleSearch}
-          returnKeyType="search"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          onPress={() => handleSearch("")}
-          disabled={search.length === 0}
-          style={{ opacity: search.length > 0 ? 1 : 0 }}
-        >
-          <Ionicons name="close-circle" size={18} color="#ccc" />
-        </TouchableOpacity>
-      </View>
-
+      {/* Compteur de résultats */}
       <Text style={styles.sectionTitle}>
         {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
-        {filtered[0]?.avg_rating > 0 ? " · triées par note" : ""}
+        {search.trim()
+          ? ` · « ${search.trim()} »`
+          : activeBizType !== "all"
+            ? ` · ${BUSINESS_TYPES.find((b) => b.id === activeBizType)?.label ?? ""}`
+            : filtered[0]?.avg_rating > 0
+              ? " · triées par note"
+              : ""}
       </Text>
     </>
   );
@@ -315,10 +281,55 @@ export default function MarketplaceScreen() {
         )}
       </Animated.View>
 
+      {/* Barre de recherche + filtres — FIXES, toujours visibles */}
+      <View style={styles.controls}>
+        <View style={[styles.searchWrap, searchFocused && { borderColor: primary, backgroundColor: "#fff" }]}>
+          <Ionicons name="search-outline" size={18} color={searchFocused ? primary : "#9ca3af"} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher une boutique..."
+            placeholderTextColor="#b0b6bf"
+            value={search}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
+            clearButtonMode="never"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            onSubmitEditing={() => Keyboard.dismiss()}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearch("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="close-circle" size={18} color="#c4c4c4" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.bizFilterBar}
+          contentContainerStyle={styles.bizFilterContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableOpacity style={[styles.bizFilterChip, activeBizType === "all" && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter("all")}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="storefront-outline" size={13} color={activeBizType === "all" ? "#fff" : "#555"} />
+              <Text style={[styles.bizFilterText, activeBizType === "all" && { color: "#fff" }]}>Tout</Text>
+            </View>
+          </TouchableOpacity>
+          {BUSINESS_TYPES.filter((b) => shops.some((s) => s.business_type === b.id)).map((b) => (
+            <TouchableOpacity key={b.id} style={[styles.bizFilterChip, activeBizType === b.id && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter(b.id)}>
+              <Text style={[styles.bizFilterText, activeBizType === b.id && { color: "#fff" }]}>{b.emoji} {b.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {loading ? (
         <MarketplaceSkeleton />
       ) : (
-        /* FlatList TOUJOURS rendu — évite le swap de layout qui fait perdre le focus du TextInput */
         <FlatList
           ref={flatListRef}
           data={filtered}
@@ -333,12 +344,13 @@ export default function MarketplaceScreen() {
               <View style={styles.empty}>
                 <Text style={styles.emptyIcon}>🔍</Text>
                 <Text style={styles.emptyTitle}>Aucune boutique trouvée</Text>
+                <Text style={styles.emptySub}>Essaie un autre nom ou un autre type de boutique.</Text>
               </View>
             ) : null
           }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; Keyboard.dismiss(); }}
-          scrollEventThrottle={16}
+          onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
+          scrollEventThrottle={32}
           renderItem={({ item, index }) => (
             <AnimatedShopCard
               item={item}
@@ -385,21 +397,26 @@ const styles = StyleSheet.create({
   },
   bannerBtnText: { fontWeight: "800", fontSize: 13 },
 
+  // Barre fixe recherche + filtres
+  controls: {
+    backgroundColor: "#fff",
+    borderBottomWidth: 1, borderBottomColor: "#f0f0f0",
+    paddingTop: 10, paddingBottom: 4,
+    maxWidth: 780, width: "100%", alignSelf: "center",
+  },
   searchWrap: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    marginHorizontal: 32, marginTop: 10, marginBottom: 4,
-    paddingHorizontal: 14, paddingVertical: 10,
-    backgroundColor: "#fff",
-    borderRadius: 999,
+    marginHorizontal: 16,
+    paddingHorizontal: 14, paddingVertical: 11,
+    backgroundColor: "#f4f6f8",
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#e0e4ea",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+    borderColor: "#eaedf1",
   },
   searchIcon: { fontSize: 16 },
-  searchInput: { flex: 1, fontSize: 14, color: "#1a1a1a" },
+  searchInput: { flex: 1, fontSize: 15, color: "#1a1a1a", padding: 0 },
 
-  bizFilterBar: { maxHeight: 52 },
+  bizFilterBar: { maxHeight: 50 },
   bizFilterContent: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
   bizFilterChip: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#eee", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fafafa" },
   bizFilterText: { fontSize: 12, fontWeight: "600", color: "#555" },
@@ -428,7 +445,8 @@ const styles = StyleSheet.create({
 
   list: { paddingBottom: 32, maxWidth: 780, width: "100%", alignSelf: "center", paddingHorizontal: 16, paddingTop: 4 },
 
-  empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12, paddingBottom: 80 },
+  empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 8, paddingTop: 60, paddingHorizontal: 40 },
   emptyIcon: { fontSize: 56 },
-  emptyTitle: { fontSize: 17, fontWeight: "700", color: "#aaa" },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: "#888" },
+  emptySub: { fontSize: 13, color: "#aaa", textAlign: "center", lineHeight: 19 },
 });
