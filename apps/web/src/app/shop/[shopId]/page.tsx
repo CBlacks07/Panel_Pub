@@ -1,15 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 import { useCart } from "@/hooks/useCart";
-import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, Star, Package } from "lucide-react";
+import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
 
 type Product = {
   id: string; title: string; price: number; description: string | null;
-  category: string; image_url: string | null;
+  category: string; image_url: string | null; images: string[] | null;
   product_variations: { type: string; value: string }[];
 };
 type Shop = {
@@ -29,6 +29,8 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Product | null>(null);
+  const [imgIndex, setImgIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const { items: cart, addItem: cartAdd, removeItem: cartRemove, clear: cartClear, total, count: cartCount } = useCart(shopId);
@@ -40,7 +42,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     Promise.all([
       supabase.from("app_config").select("key, value"),
       supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, business_type, suspended").eq("id", shopId).single(),
-      supabase.from("products").select("id, title, price, description, category, image_url, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
+      supabase.from("products").select("id, title, price, description, category, image_url, images, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
     ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }, { data: ratingsData }]) => {
       if (cfg) { const map: Config = {}; cfg.forEach((r) => { map[r.key] = r.value; }); setConfig(map); }
@@ -208,7 +210,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {filtered.map((product) => (
-              <button key={product.id} onClick={() => { setSelected(product); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
+              <button key={product.id} onClick={() => { setSelected(product); setImgIndex(0); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
                 className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all group">
                 <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative">
                   {product.image_url ? (
@@ -249,27 +251,79 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       {selected && (
         <div className="fixed inset-0 bg-black/60 z-30 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setSelected(null)}>
           <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            {/* Image */}
-            <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-              {selected.image_url ? (
-                <img src={selected.image_url} className="w-full h-full object-cover" alt={selected.title} />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: primary + "15" }}>
-                  <span className="text-7xl">{biz.emoji}</span>
+            {/* Galerie */}
+            {(() => {
+              const gallery = selected.images && selected.images.length > 0
+                ? selected.images
+                : (selected.image_url ? [selected.image_url] : []);
+              const scrollTo = (i: number) => {
+                const el = carouselRef.current;
+                if (!el) return;
+                el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+              };
+              return (
+                <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                  {gallery.length > 0 ? (
+                    <div
+                      ref={carouselRef}
+                      onScroll={(e) => {
+                        const el = e.currentTarget;
+                        setImgIndex(Math.round(el.scrollLeft / el.clientWidth));
+                      }}
+                      className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                    >
+                      {gallery.map((url, i) => (
+                        <img key={i} src={url} alt={`${selected.title} ${i + 1}`}
+                          className="w-full h-full object-cover flex-shrink-0 snap-center" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: primary + "15" }}>
+                      <span className="text-7xl">{biz.emoji}</span>
+                    </div>
+                  )}
+
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+
+                  {/* Flèches (desktop) + points (toutes tailles) */}
+                  {gallery.length > 1 && (
+                    <>
+                      <button onClick={() => scrollTo(Math.max(imgIndex - 1, 0))}
+                        className="hidden sm:flex absolute top-1/2 left-3 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white items-center justify-center text-gray-800 shadow-md transition-colors disabled:opacity-0"
+                        disabled={imgIndex === 0} aria-label="Image précédente">
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button onClick={() => scrollTo(Math.min(imgIndex + 1, gallery.length - 1))}
+                        className="hidden sm:flex absolute top-1/2 right-3 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white items-center justify-center text-gray-800 shadow-md transition-colors disabled:opacity-0"
+                        disabled={imgIndex === gallery.length - 1} aria-label="Image suivante">
+                        <ChevronRight size={18} />
+                      </button>
+                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/55 text-white text-xs font-bold">
+                        {imgIndex + 1}/{gallery.length}
+                      </div>
+                      <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                        {gallery.map((_, i) => (
+                          <button key={i} onClick={() => scrollTo(i)} aria-label={`Voir l'image ${i + 1}`}
+                            className="h-1.5 rounded-full transition-all"
+                            style={{ width: i === imgIndex ? 18 : 6, backgroundColor: i === imgIndex ? "#fff" : "rgba(255,255,255,0.55)" }} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Price */}
+                  <div className="absolute bottom-4 left-4 px-4 py-2 rounded-2xl text-white font-black text-xl shadow-lg pointer-events-none" style={{ backgroundColor: primary }}>
+                    {selected.price.toLocaleString("fr-FR")} FCFA
+                  </div>
+                  {/* Close */}
+                  <button onClick={() => setSelected(null)} aria-label="Fermer"
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white hover:bg-black/60 transition-colors">
+                    <X size={16} />
+                  </button>
                 </div>
-              )}
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              {/* Price */}
-              <div className="absolute bottom-4 left-4 px-4 py-2 rounded-2xl text-white font-black text-xl shadow-lg" style={{ backgroundColor: primary }}>
-                {selected.price.toLocaleString("fr-FR")} FCFA
-              </div>
-              {/* Close */}
-              <button onClick={() => setSelected(null)}
-                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white hover:bg-black/60 transition-colors">
-                <X size={16} />
-              </button>
-            </div>
+              );
+            })()}
 
             <div className="p-5 sm:p-6">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-3" style={{ backgroundColor: primary + "15", color: primary }}>

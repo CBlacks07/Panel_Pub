@@ -78,6 +78,7 @@ type Product = {
   description: string | null;
   category: string;
   image_url: string | null;
+  images: string[] | null;
   product_variations: Variation[];
 };
 type Shop = { shop_name: string; phone_whatsapp: string | null; slogan: string | null; description: string | null; shop_logo_url: string | null; suspended?: boolean; business_type?: string | null };
@@ -95,6 +96,7 @@ export default function ShopScreen() {
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Product | null>(null);
+  const [imgIndex, setImgIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [cartVisible, setCartVisible] = useState(false);
@@ -137,7 +139,7 @@ export default function ShopScreen() {
     const [{ data: shopData }, { data: productsData }, { data: ratingsData }] = await Promise.all([
       supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, suspended, business_type").eq("id", shopId).single(),
       supabase.from("products")
-        .select("id, title, price, description, category, image_url, product_variations(type, value)")
+        .select("id, title, price, description, category, image_url, images, product_variations(type, value)")
         .eq("user_id", shopId)
         .order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
@@ -164,6 +166,7 @@ export default function ShopScreen() {
 
   const openProduct = (product: Product) => {
     setSelected(product);
+    setImgIndex(0);
     setSelectedSize(null);
     setSelectedColor(null);
     // Tracker la vue
@@ -381,26 +384,64 @@ export default function ShopScreen() {
         {selected && (
           <View style={[styles.modal, { paddingTop: insets.top }]}>
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-              {/* Image — contain pour afficher entière sans recadrage */}
-              <View style={styles.modalImageWrap}>
-                <View style={styles.modalImageContainer}>
-                  {selected.image_url ? (
-                    <Image
-                      source={{ uri: selected.image_url }}
-                      style={styles.modalImage}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View style={styles.modalImagePlaceholder}>
-                      <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
-                    </View>
-                  )}
-                </View>
-                {/* Bouton fermer */}
-                <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
-                  <Ionicons name="close" size={18} color="#1a1a1a" />
-                </TouchableOpacity>
-              </View>
+              {/* Galerie — défilement horizontal, contain pour afficher entière */}
+              {(() => {
+                const gallery = selected.images && selected.images.length > 0
+                  ? selected.images
+                  : (selected.image_url ? [selected.image_url] : []);
+                return (
+                  <View style={styles.modalImageWrap}>
+                    {gallery.length > 0 ? (
+                      <ScrollView
+                        horizontal
+                        pagingEnabled
+                        bounces={false}
+                        showsHorizontalScrollIndicator={false}
+                        onMomentumScrollEnd={(e) =>
+                          setImgIndex(Math.round(e.nativeEvent.contentOffset.x / MAX_WIDTH))
+                        }
+                      >
+                        {gallery.map((uri, i) => (
+                          <View key={`${uri}-${i}`} style={styles.modalImageContainer}>
+                            <Image source={{ uri }} style={styles.modalImage} resizeMode="contain" />
+                          </View>
+                        ))}
+                      </ScrollView>
+                    ) : (
+                      <View style={styles.modalImageContainer}>
+                        <View style={styles.modalImagePlaceholder}>
+                          <Text style={{ fontSize: 80 }}>{shopBizType.emoji}</Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Compteur + points de pagination */}
+                    {gallery.length > 1 && (
+                      <>
+                        <View style={styles.galleryCounter}>
+                          <Text style={styles.galleryCounterText}>{imgIndex + 1}/{gallery.length}</Text>
+                        </View>
+                        <View style={styles.galleryDots}>
+                          {gallery.map((_, i) => (
+                            <View
+                              key={i}
+                              style={[
+                                styles.galleryDot,
+                                i === imgIndex && { backgroundColor: "#fff", width: 18 },
+                              ]}
+                            />
+                          ))}
+                        </View>
+                      </>
+                    )}
+
+                    {/* Bouton fermer */}
+                    <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
+                      <Ionicons name="close" size={18} color="#1a1a1a" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
 
               {/* Contenu */}
               <View style={styles.modalContent}>
@@ -597,6 +638,20 @@ const styles = StyleSheet.create({
   },
   modalImage: { width: MAX_WIDTH, height: MAX_WIDTH },
   modalImagePlaceholder: { justifyContent: "center", alignItems: "center" },
+  galleryCounter: {
+    position: "absolute", top: 14, left: 14,
+    backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  galleryCounterText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  galleryDots: {
+    position: "absolute", bottom: 12, left: 0, right: 0,
+    flexDirection: "row", justifyContent: "center", gap: 6,
+  },
+  galleryDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
   modalCloseBtn: {
     position: "absolute", top: 14, right: 14,
     width: 36, height: 36, borderRadius: 18,

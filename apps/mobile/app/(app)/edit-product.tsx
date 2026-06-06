@@ -1,23 +1,20 @@
 import { useEffect, useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, Image,
-  StyleSheet, Alert, ActivityIndicator, Dimensions,
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, Alert, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { uploadImage } from "../../lib/cloudinary";
+import { getImageLimit } from "../../lib/plans";
+import { ProductImages } from "../../components/ProductImages";
 import { useConfig } from "../../context/ConfigContext";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 type Variation = { type: "size" | "color" | "custom"; value: string };
-
-const { width: SW } = Dimensions.get("window");
-const IMG_W = Math.min(SW, 680) - 32;
-const IMG_H = IMG_W * 0.85;
 
 export default function EditProductScreen() {
   const router = useRouter();
@@ -29,11 +26,12 @@ export default function EditProductScreen() {
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [variations, setVariations] = useState<Variation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const maxImages = getImageLimit(getPlanById(profile?.plan || "free"));
 
   useEffect(() => { loadProduct(); }, [id]);
 
@@ -49,29 +47,14 @@ export default function EditProductScreen() {
       setPrice(String(data.price));
       setDescription(data.description ?? "");
       setCategory(data.category);
-      setExistingImageUrl(data.image_url);
+      // images[] si disponible, sinon fallback sur l'ancienne image unique
+      const existing: string[] = Array.isArray(data.images) && data.images.length > 0
+        ? data.images
+        : (data.image_url ? [data.image_url] : []);
+      setImages(existing.slice(0, maxImages));
       setVariations(data.product_variations.map((v: any) => ({ type: v.type, value: v.value })));
     }
     setLoading(false);
-  };
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, aspect: [1, 1], quality: 0.8,
-    });
-    if (!result.canceled) setImageUri(result.assets[0].uri);
-  };
-
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") return;
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true, aspect: [1, 1], quality: 0.8,
-    });
-    if (!result.canceled) setImageUri(result.assets[0].uri);
   };
 
   const toggleVariation = (type: "size" | "color" | "custom", value: string) => {
@@ -111,12 +94,15 @@ export default function EditProductScreen() {
 
     setSaving(true);
     try {
-      let image_url = existingImageUrl;
-      if (imageUri) image_url = await uploadImage(imageUri);
+      // Upload des nouvelles photos locales, conservation des URLs déjà distantes
+      const uploaded = await Promise.all(
+        images.map((uri) => (uri.startsWith("http") ? Promise.resolve(uri) : uploadImage(uri)))
+      );
+      const image_url = uploaded[0] ?? null;
 
       await supabase.from("products").update({
         title: title.trim(), price: Number(price),
-        description: description.trim() || null, category, image_url,
+        description: description.trim() || null, category, image_url, images: uploaded,
         last_edited_at: new Date().toISOString(),
       }).eq("id", id).eq("user_id", user!.id); // SEC-03 : double vérification
 
@@ -148,8 +134,6 @@ export default function EditProductScreen() {
     );
   }
 
-  const displayImage = imageUri ?? existingImageUrl;
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -170,36 +154,16 @@ export default function EditProductScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── PHOTO ── */}
+        {/* ── PHOTOS ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="image-outline" size={18} color={primary} />
-            <Text style={styles.sectionTitle}>Photo du produit</Text>
+            <Text style={styles.sectionTitle}>
+              {maxImages > 1 ? "Photos du produit" : "Photo du produit"}
+            </Text>
           </View>
 
-          {displayImage ? (
-            <View style={styles.imageWrap}>
-              <Image source={{ uri: displayImage }} style={styles.imagePreview} resizeMode="cover" />
-              <View style={styles.imageOverlayBtns}>
-                <TouchableOpacity style={styles.imageOverlayBtn} onPress={takePhoto}>
-                  <Ionicons name="camera-outline" size={16} color="#fff" />
-                  <Text style={styles.imageOverlayBtnText}>Caméra</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.imageOverlayBtn} onPress={pickImage}>
-                  <Ionicons name="images-outline" size={16} color="#fff" />
-                  <Text style={styles.imageOverlayBtnText}>Galerie</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImage} activeOpacity={0.8}>
-              <View style={[styles.imagePlaceholderIcon, { backgroundColor: primary + "15" }]}>
-                <Ionicons name="camera-outline" size={36} color={primary} />
-              </View>
-              <Text style={styles.imagePlaceholderTitle}>Ajouter une photo</Text>
-              <Text style={styles.imagePlaceholderSub}>Une belle photo = plus de ventes</Text>
-            </TouchableOpacity>
-          )}
+          <ProductImages images={images} onChange={setImages} maxImages={maxImages} primary={primary} />
         </View>
 
         {/* ── INFORMATIONS ── */}
@@ -378,31 +342,6 @@ const styles = StyleSheet.create({
   },
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
   sectionTitle: { fontSize: 15, fontWeight: "800", color: "#1a1a1a" },
-
-  imageWrap: { position: "relative", borderRadius: 16, overflow: "hidden" },
-  imagePreview: { width: "100%", height: IMG_H, borderRadius: 16 },
-  imageOverlayBtns: {
-    position: "absolute", bottom: 12, right: 12,
-    flexDirection: "row", gap: 8,
-  },
-  imageOverlayBtn: {
-    flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  imageOverlayBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  imagePlaceholder: {
-    width: "100%", height: IMG_H * 0.7,
-    borderRadius: 16, borderWidth: 2, borderColor: "#e5e7eb", borderStyle: "dashed",
-    justifyContent: "center", alignItems: "center", gap: 10,
-    backgroundColor: "#fafbfc",
-  },
-  imagePlaceholderIcon: {
-    width: 72, height: 72, borderRadius: 36,
-    justifyContent: "center", alignItems: "center",
-  },
-  imagePlaceholderTitle: { fontSize: 16, fontWeight: "700", color: "#374151" },
-  imagePlaceholderSub: { fontSize: 12, color: "#9ca3af" },
 
   fieldWrap: { marginBottom: 12 },
   label: { fontSize: 13, fontWeight: "700", color: "#374151", marginBottom: 6 },

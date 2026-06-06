@@ -9,6 +9,7 @@ export type Plan = {
   currency: string;
   billing: string;
   article_limit: number;
+  image_limit?: number; // nb max d'images par article (free = 1, premium = 6)
   daily_edit_limit: number;
   edit_cooldown_hours: number; // délai entre 2 modifs du même article (0 = illimité)
   features: string[];
@@ -17,9 +18,9 @@ export type Plan = {
 };
 
 const DEFAULT_PLANS: Plan[] = [
-  { id: "free", name: "Gratuit", price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, daily_edit_limit: 0, edit_cooldown_hours: 72, features: ["10 articles max", "1 modif/article toutes les 72h", "Vitrine publique", "Bouton WhatsApp", "Marketplace"], is_popular: false, active: true },
-  { id: "pro", name: "Pro", price: 5000, currency: "FCFA", billing: "mois", article_limit: 100, daily_edit_limit: 0, edit_cooldown_hours: 0, features: ["100 articles", "Modifications illimitées", "Vitrine publique", "Bouton WhatsApp", "Marketplace", "Statistiques", "Support prioritaire"], is_popular: true, active: true },
-  { id: "annual", name: "Annuel", price: 40000, currency: "FCFA", billing: "an", article_limit: 999, daily_edit_limit: 0, edit_cooldown_hours: 0, features: ["Articles illimités", "Modifications illimitées", "Vitrine publique", "Bouton WhatsApp", "Marketplace", "Statistiques avancées", "Support dédié", "Badge vérifié"], is_popular: false, active: true },
+  { id: "free", name: "Gratuit", price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, image_limit: 1, daily_edit_limit: 0, edit_cooldown_hours: 72, features: ["10 articles max", "1 photo par article", "1 modif/article toutes les 72h", "Vitrine publique", "Bouton WhatsApp", "Marketplace"], is_popular: false, active: true },
+  { id: "pro", name: "Pro", price: 5000, currency: "FCFA", billing: "mois", article_limit: 100, image_limit: 6, daily_edit_limit: 0, edit_cooldown_hours: 0, features: ["100 articles", "Jusqu'à 6 photos par article", "Modifications illimitées", "Vitrine publique", "Bouton WhatsApp", "Marketplace", "Statistiques", "Support prioritaire"], is_popular: true, active: true },
+  { id: "annual", name: "Annuel", price: 40000, currency: "FCFA", billing: "an", article_limit: 999, image_limit: 6, daily_edit_limit: 0, edit_cooldown_hours: 0, features: ["Articles illimités", "Jusqu'à 6 photos par article", "Modifications illimitées", "Vitrine publique", "Bouton WhatsApp", "Marketplace", "Statistiques avancées", "Support dédié", "Badge vérifié"], is_popular: false, active: true },
 ];
 
 let cachedPlans: Plan[] | null = null;
@@ -66,6 +67,13 @@ async function fetchAndCachePlans(): Promise<Plan[]> {
 
 export function getPlanById(plans: Plan[], id: string): Plan {
   return plans.find((p) => p.id === id) ?? plans[0];
+}
+
+// Nombre max de photos autorisées par article selon le plan.
+// Free = 1, premium (pro/annual) = 6. Fallback si le champ n'est pas en DB.
+export function getImageLimit(plan: { id: string; image_limit?: number }): number {
+  if (typeof plan.image_limit === "number" && plan.image_limit > 0) return plan.image_limit;
+  return plan.id === "free" ? 1 : 6;
 }
 
 export function clearPlansCache() {
