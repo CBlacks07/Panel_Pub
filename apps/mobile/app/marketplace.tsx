@@ -12,7 +12,6 @@ import { MarketplaceSkeleton } from "../components/Skeleton";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
-import { getPlanFeatures } from "../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
 import * as ExpoLocation from "expo-location";
 import { getDistance, formatDistance } from "../lib/location";
@@ -33,38 +32,6 @@ type Shop = {
   distance?: number;
 };
 
-function PricingCard({ plan, primary, onPress }: { plan: any; primary: string; index: number; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      style={[styles.pricingCard, plan.is_popular && { borderColor: primary, borderWidth: 2 }]}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      {plan.is_popular && (
-        <View style={[styles.popularTag, { backgroundColor: primary }]}>
-          <Text style={styles.popularTagText}>⭐ Recommandé</Text>
-        </View>
-      )}
-      <Text style={styles.pricingName}>{plan.name}</Text>
-      <Text style={[styles.pricingPrice, { color: primary }]}>
-        {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} ${plan.currency}`}
-      </Text>
-      <Text style={styles.pricingBilling}>
-        {plan.price === 0 ? "pour toujours" : `/${plan.billing}`}
-      </Text>
-      <View style={styles.pricingDivider} />
-      {getPlanFeatures(plan).map((f: string, i: number) => (
-        <Text key={i} style={[styles.pricingFeature, i < 2 && { fontWeight: "700", color: "#333" }]}>✓ {f}</Text>
-      ))}
-      <View style={[styles.pricingBtn, { backgroundColor: plan.is_popular ? primary : "#f3f4f6" }]}>
-        <Text style={[styles.pricingBtnText, { color: plan.is_popular ? "#fff" : "#555" }]}>
-          {plan.price === 0 ? "Commencer" : `Choisir ${plan.name}`}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 // Variables GLOBALES — survivent à la destruction/recréation du composant
 let savedScrollOffset = 0;
 let cachedLocation: { lat: number; lon: number } | null = null;
@@ -81,7 +48,6 @@ export default function MarketplaceScreen() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeBizType, setActiveBizType] = useState("all");
   const [config, setConfig] = useState<AppConfig | null>(null);
-  const [plans, setPlans] = useState<any[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
 
@@ -95,7 +61,6 @@ export default function MarketplaceScreen() {
 
   useEffect(() => {
     getAppConfig().then(setConfig);
-    supabase.from("plans").select("*").eq("active", true).order("sort_order").then(({ data }) => { if (data) setPlans(data); });
     // Géolocalisation — une seule demande par session d'appli
     if (cachedLocation) {
       setUserLocation(cachedLocation);
@@ -215,40 +180,16 @@ export default function MarketplaceScreen() {
         <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
           <Text style={styles.bannerTitle}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
           <Text style={styles.bannerSubtitle}>{config?.marketplace_banner_subtitle || "Mode locale · Commande via WhatsApp"}</Text>
-          <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/register")}>
-            <Text style={[styles.bannerBtnText, { color: primary }]}>{config?.vendor_cta || "Ouvrir ma boutique — Gratuit"}</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
-
-      {/* Forfaits en scroll horizontal — uniquement si pas connecté */}
-      {!session && plans.length > 0 && (
-        <View style={styles.pricingWrap}>
-          <View style={styles.pricingSectionHeader}>
-            <Text style={styles.pricingSectionTitle}>💼 Nos forfaits</Text>
-            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-              <Text style={[styles.pricingSectionLink, { color: primary }]}>Commencer &gt;</Text>
+          <View style={styles.bannerActions}>
+            <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/register")}>
+              <Text style={[styles.bannerBtnText, { color: primary }]}>{config?.vendor_cta || "Ouvrir ma boutique — Gratuit"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.bannerLink} onPress={() => router.push("/forfaits")}>
+              <Text style={styles.bannerLinkText}>Voir les forfaits</Text>
+              <Ionicons name="chevron-forward" size={13} color="#fff" />
             </TouchableOpacity>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.pricingScrollContent}
-            decelerationRate="fast"
-            snapToInterval={252}
-            snapToAlignment="start"
-          >
-            {plans.map((plan: any, index: number) => (
-              <PricingCard
-                key={plan.id}
-                plan={plan}
-                primary={primary}
-                index={index}
-                onPress={() => router.push("/(auth)/register")}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        </Animated.View>
       )}
 
       {/* Compteur de résultats */}
@@ -396,12 +337,14 @@ const styles = StyleSheet.create({
   },
   bannerTitle: { fontSize: 17, fontWeight: "800", color: "#fff", lineHeight: 24 },
   bannerSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.75)" },
+  bannerActions: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 10, flexWrap: "wrap" },
   bannerBtn: {
-    marginTop: 8, backgroundColor: "#fff",
+    backgroundColor: "#fff",
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
-    alignSelf: "flex-start",
   },
   bannerBtnText: { fontWeight: "800", fontSize: 13 },
+  bannerLink: { flexDirection: "row", alignItems: "center", gap: 2 },
+  bannerLinkText: { color: "#fff", fontWeight: "700", fontSize: 13, textDecorationLine: "underline" },
 
   // Barre fixe recherche + filtres
   controls: {
@@ -427,27 +370,6 @@ const styles = StyleSheet.create({
   bizFilterChip: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#eee", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fafafa" },
   bizFilterText: { fontSize: 12, fontWeight: "600", color: "#555" },
   sectionTitle: { fontSize: 13, color: "#aaa", fontWeight: "600", marginHorizontal: 16, marginBottom: 8 },
-  pricingWrap: { marginBottom: 8 },
-  pricingSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, marginBottom: 12 },
-  pricingSectionTitle: { fontSize: 16, fontWeight: "800", color: "#1a1a1a" },
-  pricingSectionLink: { fontSize: 13, fontWeight: "700" },
-  pricingScrollContent: { paddingHorizontal: 16, paddingBottom: 4, gap: 12 },
-  pricingCard: {
-    width: 240, borderRadius: 20, borderWidth: 1, borderColor: "#f0f0f0",
-    padding: 18, gap: 5, backgroundColor: "#fff", overflow: "hidden",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
-  },
-  popularTag: { position: "absolute", top: 0, right: 0, paddingHorizontal: 10, paddingVertical: 5, borderBottomLeftRadius: 12 },
-  popularTagText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  pricingName: { fontSize: 18, fontWeight: "800", color: "#1a1a1a", marginTop: 4 },
-  pricingPrice: { fontSize: 22, fontWeight: "800", marginTop: 4 },
-  pricingBilling: { fontSize: 11, color: "#aaa" },
-  pricingDivider: { height: 1, backgroundColor: "#f0f0f0", marginVertical: 10 },
-  pricingLimit: { fontSize: 12, color: "#444", fontWeight: "600" },
-  pricingFeature: { fontSize: 12, color: "#666" },
-  pricingBtn: { borderRadius: 12, padding: 10, alignItems: "center", marginTop: 12 },
-  pricingBtnText: { fontWeight: "700", fontSize: 13 },
-  shopsTitle: { fontSize: 17, fontWeight: "800", color: "#1a1a1a", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
 
   list: { paddingBottom: 32, maxWidth: 780, width: "100%", alignSelf: "center", paddingHorizontal: 16, paddingTop: 4 },
 

@@ -21,7 +21,7 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(auth)";
     const inAppGroup = segments[0] === "(app)";
-    const inPublicGroup = segments[0] === "shop" || segments[0] === "marketplace";
+    const inPublicGroup = segments[0] === "shop" || segments[0] === "marketplace" || segments[0] === "forfaits";
     const isSplash = (segments as string[]).length === 0 || segments[0] === "index";
 
     if (isSplash) return;
