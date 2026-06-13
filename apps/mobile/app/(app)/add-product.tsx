@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase";
 import { uploadImage } from "../../lib/cloudinary";
 import { getImageLimit } from "../../lib/plans";
 import { ProductImages } from "../../components/ProductImages";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -118,14 +119,7 @@ export default function AddProductScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
-          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{bizType.ui.addBtn}</Text>
-        <View style={{ width: 36 }} />
-      </View>
+      <ScreenHeader title={bizType.ui.addBtn} onBack={() => router.back()} />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}

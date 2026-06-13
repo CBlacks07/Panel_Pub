@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase";
 import { uploadImage } from "../../lib/cloudinary";
 import { getImageLimit } from "../../lib/plans";
 import { ProductImages } from "../../components/ProductImages";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { useConfig } from "../../context/ConfigContext";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -136,14 +137,7 @@ export default function EditProductScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
-          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Modifier l'article</Text>
-        <View style={{ width: 36 }} />
-      </View>
+      <ScreenHeader title="Modifier l'article" onBack={() => router.back()} />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}

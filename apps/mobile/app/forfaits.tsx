@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import { getPlanFeatures } from "../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../lib/supabase";
+import { ScreenHeader } from "../components/ScreenHeader";
 import { useConfig } from "../context/ConfigContext";
 
 type Plan = {
@@ -48,14 +49,10 @@ export default function ForfaitsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/marketplace"))} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
-          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nos forfaits</Text>
-        <View style={{ width: 36 }} />
-      </View>
+      <ScreenHeader
+        title="Nos forfaits"
+        onBack={() => (router.canGoBack() ? router.back() : router.replace("/marketplace"))}
+      />
 
       {loading ? (
         <View style={styles.centered}>

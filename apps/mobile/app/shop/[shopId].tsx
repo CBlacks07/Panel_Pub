@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { optimizeImage } from "../../lib/cloudinary";
+import { EmptyState } from "../../components/EmptyState";
+import { PRODUCT_IMAGE_RATIO } from "../../lib/theme";
 import { useCartStore, CartItem } from "../../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../../lib/whatsapp";
 import CartModal from "../../components/CartModal";
@@ -20,7 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 const { width: screenWidth } = Dimensions.get("window");
 const MAX_WIDTH = Math.min(screenWidth, 680);
 const CARD_SIZE = (MAX_WIDTH - 48) / 2;
-const IMG_HEIGHT = CARD_SIZE * 1.15;
+const IMG_HEIGHT = CARD_SIZE * PRODUCT_IMAGE_RATIO;
 
 /* ── Image produit avec shimmer + fallback ─────── */
 function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: number; fallbackEmoji: string }) {
@@ -326,16 +328,19 @@ export default function ShopScreen() {
 
       {/* ── GRILLE PRODUITS ── */}
       {products.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>{shopBizType.emoji}</Text>
-          <Text style={styles.emptyTitle}>{shopBizType.ui.emptyTitle}</Text>
-          <Text style={styles.emptyText}>{shopBizType.ui.emptySubtitle}</Text>
-        </View>
+        <EmptyState
+          emoji={shopBizType.emoji}
+          accent={primary}
+          title={shopBizType.ui.emptyTitle}
+          subtitle={shopBizType.ui.emptySubtitle}
+        />
       ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>{shopBizType.emoji}</Text>
-          <Text style={styles.emptyText}>Aucun {shopBizType.ui.itemLabel} dans cette catégorie</Text>
-        </View>
+        <EmptyState
+          emoji={shopBizType.emoji}
+          accent={primary}
+          title="Rien dans cette catégorie"
+          subtitle={`Aucun ${shopBizType.ui.itemLabel} ne correspond à ce filtre.`}
+        />
       ) : (
         <FlatList
           data={filtered}

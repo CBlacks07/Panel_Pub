@@ -10,6 +10,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import AnimatedShopCard from "../components/AnimatedShopCard";
 import { MarketplaceSkeleton } from "../components/Skeleton";
+import { EmptyState } from "../components/EmptyState";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
@@ -311,11 +312,12 @@ export default function MarketplaceScreen() {
           ListHeaderComponent={StableListHeader}
           ListEmptyComponent={
             search.length > 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>🔍</Text>
-                <Text style={styles.emptyTitle}>Aucune boutique trouvée</Text>
-                <Text style={styles.emptySub}>Essaie un autre nom ou un autre type de boutique.</Text>
-              </View>
+              <EmptyState
+                emoji="🔍"
+                accent={primary}
+                title="Aucune boutique trouvée"
+                subtitle="Essaie un autre nom ou un autre type de boutique."
+              />
             ) : null
           }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}

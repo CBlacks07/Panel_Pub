@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { getPlanFeatures } from "../../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
 
@@ -72,15 +73,7 @@ export default function PlansScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>Nos forfaits</Text>
-          <Text style={styles.subtitle}>Plan actuel : <Text style={{ color: primary, fontWeight: "700" }}>{currentPlan}</Text></Text>
-        </View>
-      </View>
+      <ScreenHeader title="Nos forfaits" subtitle={`Plan actuel : ${currentPlan}`} onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {plans.map((plan) => {

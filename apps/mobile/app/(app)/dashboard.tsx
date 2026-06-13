@@ -7,6 +7,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import OnboardingModal from "../../components/OnboardingModal";
 import { DashboardSkeleton } from "../../components/Skeleton";
+import { EmptyState } from "../../components/EmptyState";
+import { PRODUCT_IMAGE_RATIO } from "../../lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -19,7 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 const { width: SW } = Dimensions.get("window");
 const MAX_W = Math.min(SW, 680);
 const CARD_W = (MAX_W - 48) / 2;
-const IMG_H = CARD_W * 1.1;
+const IMG_H = CARD_W * PRODUCT_IMAGE_RATIO;
 
 type Product = {
   id: string; title: string; price: number;
@@ -291,31 +293,18 @@ export default function DashboardScreen() {
           </>
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={[styles.emptyIconWrap, { backgroundColor: primary + "15" }]}>
-              <Text style={styles.emptyEmoji}>{bizType.emoji}</Text>
-            </View>
-            <Text style={styles.emptyTitle}>
-              {search ? "Aucun article trouvé" : bizType.ui.emptyTitle}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-              {search
-                ? `Aucun article ne correspond à "${search}"`
-                : bizType.ui.emptySubtitle}
-            </Text>
-            {!search && (
-              <TouchableOpacity
-                style={[styles.emptyBtn, { backgroundColor: primary }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  router.push("/(app)/add-product");
-                }}
-              >
-                <Ionicons name="add-circle-outline" size={18} color="#fff" />
-                <Text style={styles.emptyBtnText}>{bizType.ui.addBtn}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <EmptyState
+            emoji={bizType.emoji}
+            accent={primary}
+            title={search ? "Aucun article trouvé" : bizType.ui.emptyTitle}
+            subtitle={search ? `Aucun article ne correspond à "${search}"` : bizType.ui.emptySubtitle}
+            actionLabel={!search ? bizType.ui.addBtn : undefined}
+            actionIcon={!search ? "add-circle-outline" : undefined}
+            onAction={!search ? () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push("/(app)/add-product");
+            } : undefined}
+          />
         }
         renderItem={({ item }) => {
           const canEdit = !item.last_edited_at || currentPlan.edit_cooldown_hours === 0 ||
