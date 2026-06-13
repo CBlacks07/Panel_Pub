@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import { optimizeImage } from "../../lib/cloudinary";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,7 +38,7 @@ function ProductThumb({ uri, emoji }: { uri: string | null; emoji: string }) {
     );
   }
   return (
-    <Image source={{ uri }} style={thumb.wrap} resizeMode="cover" onError={() => setErr(true)} />
+    <Image source={{ uri: optimizeImage(uri, CARD_W * 2.5) ?? uri }} style={thumb.wrap} resizeMode="cover" onError={() => setErr(true)} />
   );
 }
 const thumb = StyleSheet.create({ wrap: { width: CARD_W, height: IMG_H } });
@@ -185,7 +186,7 @@ export default function DashboardScreen() {
                       <Text style={styles.planBadgeText}>Plan {currentPlan.name}</Text>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={() => router.push(`/shop/${user?.id}`)} style={styles.headerAvatar}>
+                  <TouchableOpacity onPress={() => router.push(`/shop/${user?.id}`)} style={styles.headerAvatar} accessibilityRole="button" accessibilityLabel="Voir ma boutique publique">
                     {shopLogo ? (
                       <Image source={{ uri: shopLogo }} style={styles.headerAvatarImg} resizeMode="cover" />
                     ) : (
@@ -358,6 +359,8 @@ export default function DashboardScreen() {
               <View style={styles.cardActions}>
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: "#f0f9ff" }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Modifier ${item.title}`}
                   onPress={(e) => {
                     e.stopPropagation();
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -368,6 +371,8 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: "#fff5f5" }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Supprimer ${item.title}`}
                   onPress={(e) => { e.stopPropagation(); confirmDelete(item.id, item.title); }}
                 >
                   <Ionicons name="trash-outline" size={14} color="#ef4444" />

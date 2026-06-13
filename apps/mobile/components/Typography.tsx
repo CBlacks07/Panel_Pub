@@ -23,9 +23,9 @@ export function Text({ weight = "regular", size, color, center, style, children,
     <RNText
       style={[
         { fontFamily: FONT_MAP[weight] },
-        size && { fontSize: size },
-        color && { color },
-        center && { textAlign: "center" },
+        size ? { fontSize: size } : null,
+        color ? { color } : null,
+        center ? { textAlign: "center" as const } : null,
         style,
       ]}
       {...props}

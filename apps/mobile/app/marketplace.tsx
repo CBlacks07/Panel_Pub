@@ -270,6 +270,8 @@ export default function MarketplaceScreen() {
             disabled={search.length === 0}
             style={{ opacity: search.length > 0 ? 1 : 0 }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Effacer la recherche"
           >
             <Ionicons name="close-circle" size={18} color="#c4c4c4" />
           </TouchableOpacity>

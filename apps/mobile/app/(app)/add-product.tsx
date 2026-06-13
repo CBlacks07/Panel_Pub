@@ -120,7 +120,7 @@ export default function AddProductScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
           <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{bizType.ui.addBtn}</Text>

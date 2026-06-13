@@ -5,6 +5,7 @@ import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 import { useCart } from "@/hooks/useCart";
+import { optimizeImage } from "@/lib/image";
 import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
 
 type Product = {
@@ -143,7 +144,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl border-4 border-white/40 flex items-center justify-center text-white font-black text-3xl overflow-hidden flex-shrink-0 shadow-xl"
               style={{ backgroundColor: "rgba(255,255,255,0.25)" }}>
               {shop.shop_logo_url
-                ? <img src={shop.shop_logo_url} className="w-full h-full object-cover" alt={shop.shop_name} />
+                ? <img src={optimizeImage(shop.shop_logo_url, 220)} className="w-full h-full object-cover" alt={shop.shop_name} />
                 : shop.shop_name[0].toUpperCase()}
             </div>
 
@@ -214,7 +215,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                 className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all group">
                 <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative">
                   {product.image_url ? (
-                    <img src={product.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} />
+                    <img src={optimizeImage(product.image_url, 500)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} loading="lazy" />
                   ) : (
                     <span className="text-4xl">{biz.emoji}</span>
                   )}
@@ -273,7 +274,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                       className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
                     >
                       {gallery.map((url, i) => (
-                        <img key={i} src={url} alt={`${selected.title} ${i + 1}`}
+                        <img key={i} src={optimizeImage(url, 1024)} alt={`${selected.title} ${i + 1}`}
                           className="w-full h-full object-cover flex-shrink-0 snap-center" />
                       ))}
                     </div>
@@ -408,7 +409,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                     <div key={i} className="px-5 py-4 flex items-center gap-3">
                       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
                         {item.image_url
-                          ? <img src={item.image_url} className="w-full h-full object-cover" alt={item.title} />
+                          ? <img src={optimizeImage(item.image_url, 150)} className="w-full h-full object-cover" alt={item.title} />
                           : <span className="text-2xl">{biz.emoji}</span>}
                       </div>
                       <div className="flex-1 min-w-0">

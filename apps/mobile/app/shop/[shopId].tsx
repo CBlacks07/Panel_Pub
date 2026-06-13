@@ -7,6 +7,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import { optimizeImage } from "../../lib/cloudinary";
 import { useCartStore, CartItem } from "../../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../../lib/whatsapp";
 import CartModal from "../../components/CartModal";
@@ -26,6 +27,7 @@ function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: 
   const [loading, setLoading] = useState(!!uri);
   const [error, setError] = useState(false);
   const shimmer = useRef(new Animated.Value(0.4)).current;
+  const src = optimizeImage(uri, size * 2.5);
 
   useEffect(() => {
     if (!uri) return;
@@ -55,7 +57,7 @@ function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: 
         />
       )}
       <Image
-        source={{ uri }}
+        source={{ uri: src ?? uri }}
         style={{ width: size, height: IMG_HEIGHT }}
         resizeMode="contain"
         onLoad={() => setLoading(false)}
@@ -255,10 +257,10 @@ export default function ShopScreen() {
         <View style={styles.headerCircle2} />
 
         {/* Boutons flottants */}
-        <TouchableOpacity onPress={() => router.canGoBack() && router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.canGoBack() && router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cartBtn} onPress={() => setCartVisible(true)}>
+        <TouchableOpacity style={styles.cartBtn} onPress={() => setCartVisible(true)} accessibilityRole="button" accessibilityLabel={`Voir le panier, ${items.length} article${items.length > 1 ? "s" : ""}`}>
           <Ionicons name="bag-handle-outline" size={22} color="#fff" />
           {items.length > 0 && (
             <View style={styles.cartBadge}>
@@ -403,7 +405,7 @@ export default function ShopScreen() {
                       >
                         {gallery.map((uri, i) => (
                           <View key={`${uri}-${i}`} style={styles.modalImageContainer}>
-                            <Image source={{ uri }} style={styles.modalImage} resizeMode="contain" />
+                            <Image source={{ uri: optimizeImage(uri, 1080) ?? uri }} style={styles.modalImage} resizeMode="contain" />
                           </View>
                         ))}
                       </ScrollView>
@@ -436,7 +438,7 @@ export default function ShopScreen() {
                     )}
 
                     {/* Bouton fermer */}
-                    <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)}>
+                    <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelected(null)} accessibilityRole="button" accessibilityLabel="Fermer">
                       <Ionicons name="close" size={18} color="#1a1a1a" />
                     </TouchableOpacity>
                   </View>

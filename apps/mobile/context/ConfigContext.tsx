@@ -16,6 +16,7 @@ const DEFAULTS: AppConfig = {
   vendor_cta: "Ouvrir ma boutique Boutiki — Gratuit",
   marketplace_enabled: "true",
   ratings_enabled: "true",
+  support_whatsapp: "+22893914694",
 };
 
 type ConfigContextType = {
@@ -31,7 +32,7 @@ const ConfigContext = createContext<ConfigContextType>({
   primary: DEFAULTS.primary_color,
   ready: false,
   plans: [],
-  getPlanById: (id: string) => ({ id, name: id, price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, features: [], is_popular: false, active: true }),
+  getPlanById: (id: string) => ({ id, name: id, price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, image_limit: 1, daily_edit_limit: 0, edit_cooldown_hours: 0, features: [], is_popular: false, active: true }),
 });
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
@@ -51,7 +52,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getPlanById = (id: string): Plan =>
-    plans.find((p) => p.id === id) ?? plans[0] ?? { id, name: id, price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, features: [], is_popular: false, active: true };
+    plans.find((p) => p.id === id) ?? plans[0] ?? { id, name: id, price: 0, currency: "FCFA", billing: "toujours", article_limit: 10, image_limit: 1, daily_edit_limit: 0, edit_cooldown_hours: 0, features: [], is_popular: false, active: true };
 
   return (
     <ConfigContext.Provider value={{ config, primary: config.primary_color, ready, plans, getPlanById }}>

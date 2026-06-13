@@ -4,6 +4,7 @@ import StarRating from "./StarRating";
 import { useConfig } from "../context/ConfigContext";
 import { getBusinessType } from "../lib/businessTypes";
 import { formatDistance } from "../lib/location";
+import { optimizeImage } from "../lib/cloudinary";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width: SW } = Dimensions.get("window");
@@ -89,7 +90,7 @@ function AnimatedShopCard({ item, index, onPress }: Props) {
             <View style={[styles.logoWrap, { borderColor: accentColor + "40" }]}>
               <View style={[styles.logo, { backgroundColor: hasLogo ? "#fff" : accentColor }]}>
                 {hasLogo ? (
-                  <Image source={{ uri: item.shop_logo_url! }} style={styles.logoImg} resizeMode="cover" />
+                  <Image source={{ uri: optimizeImage(item.shop_logo_url, 150) ?? item.shop_logo_url! }} style={styles.logoImg} resizeMode="cover" />
                 ) : (
                   <Text style={styles.logoInitial}>{item.shop_name[0].toUpperCase()}</Text>
                 )}

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, TextStyle } from "react-native";
+import { Animated, Text, TextStyle, StyleProp } from "react-native";
 
 type Props = {
   value: number;
   duration?: number;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   suffix?: string;
   decimals?: number;
 };

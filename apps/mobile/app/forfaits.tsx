@@ -50,7 +50,7 @@ export default function ForfaitsScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/marketplace"))} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/marketplace"))} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
           <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nos forfaits</Text>
