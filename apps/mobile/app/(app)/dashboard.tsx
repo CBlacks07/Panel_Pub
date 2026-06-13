@@ -172,6 +172,10 @@ export default function DashboardScreen() {
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={11}
+        removeClippedSubviews
         ListHeaderComponent={
           <>
             {/* ── HEADER ── */}

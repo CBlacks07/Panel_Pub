@@ -349,6 +349,10 @@ export default function ShopScreen() {
           contentContainerStyle={[styles.grid, { paddingBottom: 120 + insets.bottom }]}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={11}
+          removeClippedSubviews
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.9}>
               {/* Image */}

@@ -104,48 +104,64 @@ export default function MarketplaceScreen() {
     }
   }, [loading]);
 
+  // Calcule distance + tri (distance > note > nb articles) et alimente l'état
+  const finalizeShops = (rows: any[]) => {
+    const withStats = rows.map((s) => ({
+      ...s,
+      product_count: s.product_count ?? 0,
+      avg_rating: s.avg_rating ?? 0,
+      rating_count: s.rating_count ?? 0,
+      distance: (userLocation && s.latitude && s.longitude)
+        ? getDistance(userLocation.lat, userLocation.lon, s.latitude, s.longitude)
+        : undefined,
+    })).sort((a, b) => {
+      if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
+      if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
+      return b.product_count - a.product_count;
+    });
+    setShops(withStats);
+    setFiltered(withStats);
+    setActiveBizType("all");
+  };
+
   const loadShops = async () => {
     setLoading(true);
+
+    // Chemin efficace : vue agrégée côté serveur (1 requête). Migration 006.
+    const view = await supabase
+      .from("marketplace_shops")
+      .select("id, shop_name, slogan, description, shop_logo_url, business_type, city, latitude, longitude, product_count, avg_rating, rating_count")
+      .limit(500);
+
+    if (!view.error && view.data) {
+      finalizeShops(view.data);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback (vue absente / migration 006 pas encore appliquée) : agrégation client
     const { data } = await supabase
       .from("users")
       .select("id, shop_name, slogan, description, shop_logo_url, business_type, city, latitude, longitude");
-
     if (data) {
       const [{ data: counts }, { data: ratings }] = await Promise.all([
         supabase.from("products").select("user_id"),
         supabase.from("shop_ratings").select("shop_id, rating"),
       ]);
-
       const countMap: Record<string, number> = {};
       counts?.forEach((p) => { countMap[p.user_id] = (countMap[p.user_id] || 0) + 1; });
-
       const ratingMap: Record<string, { sum: number; count: number }> = {};
       ratings?.forEach((r) => {
         if (!ratingMap[r.shop_id]) ratingMap[r.shop_id] = { sum: 0, count: 0 };
         ratingMap[r.shop_id].sum += r.rating;
         ratingMap[r.shop_id].count += 1;
       });
-
-      const shopsWithStats = data.map((s) => {
-        const dist = (userLocation && s.latitude && s.longitude)
-          ? getDistance(userLocation.lat, userLocation.lon, s.latitude, s.longitude)
-          : undefined;
-        return {
-          ...s,
-          product_count: countMap[s.id] || 0,
-          avg_rating: ratingMap[s.id] ? ratingMap[s.id].sum / ratingMap[s.id].count : 0,
-          rating_count: ratingMap[s.id]?.count || 0,
-          distance: dist,
-        };
-      }).sort((a, b) => {
-        if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
-        if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
-        return b.product_count - a.product_count;
-      });
-
-      setShops(shopsWithStats);
-      setFiltered(shopsWithStats);
-      setActiveBizType("all");
+      finalizeShops(data.map((s) => ({
+        ...s,
+        product_count: countMap[s.id] || 0,
+        avg_rating: ratingMap[s.id] ? ratingMap[s.id].sum / ratingMap[s.id].count : 0,
+        rating_count: ratingMap[s.id]?.count || 0,
+      })));
     }
     setLoading(false);
   };
@@ -323,6 +339,10 @@ export default function MarketplaceScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           onScroll={(e) => { savedScrollOffset = e.nativeEvent.contentOffset.y; }}
           scrollEventThrottle={32}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={11}
+          removeClippedSubviews
           keyExtractor={keyExtractor}
           renderItem={renderShop}
         />
