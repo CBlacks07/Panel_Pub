@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCartStore } from "../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../lib/whatsapp";
+import { optimizeImage } from "../lib/cloudinary";
 import { useConfig } from "../context/ConfigContext";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -59,16 +60,17 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
       <View style={styles.container}>
+        <View style={styles.handle} />
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Mon panier</Text>
           <View style={styles.headerRight}>
             {items.length > 0 && (
-              <TouchableOpacity onPress={clear} style={styles.clearBtn}>
+              <TouchableOpacity onPress={clear} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel="Vider le panier">
                 <Text style={styles.clearBtnText}>Vider</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Fermer">
               <Ionicons name="close" size={16} color="#555" />
             </TouchableOpacity>
           </View>
@@ -92,7 +94,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
               renderItem={({ item }) => (
                 <View style={styles.cartItem}>
                   {item.image_url ? (
-                    <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+                    <Image source={{ uri: optimizeImage(item.image_url, 160) ?? item.image_url }} style={styles.itemImage} />
                   ) : (
                     <View style={[styles.itemImage, { backgroundColor: "#f3e8ff", justifyContent: "center", alignItems: "center" }]}>
                       <Ionicons name="bag-outline" size={22} color="#aaa" />
@@ -109,7 +111,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
                       {item.quantity > 1 && <Text style={styles.itemQty}> ×{item.quantity}</Text>}
                     </Text>
                   </View>
-                  <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeBtn}>
+                  <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeBtn} accessibilityRole="button" accessibilityLabel={`Retirer ${item.title}`}>
                     <Ionicons name="trash-outline" size={18} color="#ef4444" />
                   </TouchableOpacity>
                 </View>
@@ -143,9 +145,10 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <View style={styles.overlay}>
           <View style={[styles.deliveryForm, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
+            <View style={styles.handle} />
             <View style={styles.deliveryHeader}>
               <Text style={styles.deliveryTitle}>Infos de livraison</Text>
-              <TouchableOpacity onPress={() => setShowDeliveryForm(false)} style={styles.closeBtn}>
+              <TouchableOpacity onPress={() => setShowDeliveryForm(false)} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Fermer">
                 <Ionicons name="close" size={16} color="#555" />
               </TouchableOpacity>
             </View>
@@ -199,6 +202,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "85%",
+  },
+  handle: {
+    alignSelf: "center", width: 40, height: 4, borderRadius: 2,
+    backgroundColor: "#e5e7eb", marginTop: 10, marginBottom: 2,
   },
 
   header: {

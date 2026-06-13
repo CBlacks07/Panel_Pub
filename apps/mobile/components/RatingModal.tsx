@@ -74,7 +74,7 @@ export default function RatingModal({ visible, onClose, shopId, shopName, onRate
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Noter la boutique</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Fermer">
             <Ionicons name="close" size={16} color="#555" />
           </TouchableOpacity>
         </View>
@@ -88,7 +88,7 @@ export default function RatingModal({ visible, onClose, shopId, shopName, onRate
           <Text style={styles.label}>Ta note</Text>
           <View style={styles.stars}>
             {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => setRating(star)} style={styles.starBtn}>
+              <TouchableOpacity key={star} onPress={() => setRating(star)} style={styles.starBtn} accessibilityRole="button" accessibilityLabel={`${star} étoile${star > 1 ? "s" : ""}`}>
                 <Text style={[styles.star, star <= rating && styles.starActive]}>★</Text>
               </TouchableOpacity>
             ))}

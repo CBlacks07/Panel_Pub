@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { useConfig } from "../../context/ConfigContext";
-import { uploadImage } from "../../lib/cloudinary";
+import { uploadImage, optimizeImage } from "../../lib/cloudinary";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
 import { BUSINESS_TYPES } from "../../lib/businessTypes";
 import * as ExpoLocation from "expo-location";
@@ -213,11 +213,16 @@ export default function ProfileScreen() {
         <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
           {/* Avatar / Logo */}
           <View style={styles.avatarSection}>
-            <TouchableOpacity onPress={editing ? handlePickLogo : undefined} style={[styles.avatar, { backgroundColor: primary }]}>
+            <TouchableOpacity
+              onPress={editing ? handlePickLogo : undefined}
+              style={[styles.avatar, { backgroundColor: primary }]}
+              accessibilityRole={editing ? "button" : undefined}
+              accessibilityLabel={editing ? "Changer le logo de la boutique" : undefined}
+            >
               {uploadingLogo ? (
                 <ActivityIndicator color="#fff" />
               ) : hasLogo ? (
-                <Image source={{ uri: shopLogoUrl }} style={styles.avatarImg} resizeMode="cover" />
+                <Image source={{ uri: optimizeImage(shopLogoUrl, 240) ?? shopLogoUrl }} style={styles.avatarImg} resizeMode="cover" />
               ) : (
                 <Text style={styles.avatarText}>{shopName ? shopName[0].toUpperCase() : "?"}</Text>
               )}
