@@ -150,11 +150,11 @@ export default function DashboardScreen() {
 
   const currentPlan = getPlanById(profile?.plan || "free");
   const isFreePlan = currentPlan.id === "free";
-  const totalCreated = (profile as any)?.total_articles_created ?? products.length;
+  const totalCreated = profile?.total_articles_created ?? products.length;
   const PLAN_LIMIT = currentPlan.article_limit;
   const usagePct = Math.min((totalCreated / PLAN_LIMIT) * 100, 100);
-  const shopName = (profile as any)?.shop_name || user?.email?.split("@")[0] || "Ma boutique";
-  const shopLogo = (profile as any)?.shop_logo_url || null;
+  const shopName = profile?.shop_name || user?.email?.split("@")[0] || "Ma boutique";
+  const shopLogo = profile?.shop_logo_url || null;
 
   if (loading) return (
     <SafeAreaView style={styles.safeArea}>

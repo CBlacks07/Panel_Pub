@@ -57,7 +57,7 @@ export default function MarketplaceScreen() {
   const headerAnim = useRef(new Animated.Value(0)).current;
   const bannerAnim = useRef(new Animated.Value(-30)).current;
   const bannerOpacity = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef<any>(null);
+  const flatListRef = useRef<FlatList<Shop>>(null);
   // Référence stable pour le ListHeader — évite le remontage du TextInput
   const listHeaderFnRef = useRef<() => React.ReactElement>(() => <></>);
   const StableListHeader = useCallback(() => listHeaderFnRef.current(), []);
