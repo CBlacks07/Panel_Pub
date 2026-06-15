@@ -75,10 +75,16 @@ Mobile : Jest + `jest-expo` (`apps/mobile/__tests__`). Couvre la logique pure
 cd apps/mobile && npm test
 ```
 
-Web : Vitest **pas encore en place** (bloqué par un bug npm de résolution de
-workspace lors de l'install des devDeps). À ajouter une fois l'arbre npm
-assaini. La logique `optimizeImage` du web est identique à celle du mobile,
-déjà couverte par les tests mobile.
+Web : Vitest (`apps/web/src/**/*.test.ts`).
+
+```bash
+npm run test --workspace=apps/web   # depuis la racine
+```
+
+> Note : ajouter une devDep web via `npm install --workspace=apps/web` peut
+> échouer (bug arborter avec ce workspace). Contournement fiable : ajouter la
+> dépendance à la main dans `apps/web/package.json` puis lancer `npm install`
+> à la racine.
 
 ## Base de données / migrations
 
@@ -93,6 +99,10 @@ en local). Ordre = numéro de fichier.
 - `004` — galerie multi-images (`products.images`, `plans.image_limit`)
 - `005` — enforcement serveur des limites (limite d'articles + cooldown
   d'édition via triggers) — clôt SEC-04/05
+- `006` — vue agrégée `marketplace_shops` (product_count / avg_rating
+  côté serveur) — clôt PERF-01
+- `007` — RPC `marketplace_search` (recherche/filtre/tri/pagination
+  serveur) pour le défilement infini du marketplace
 
 **Important** : appliquer une migration *avant* de déployer le code qui en
 dépend (ex. `004` ajoute `products.images` que les pages boutique lisent).
@@ -111,8 +121,5 @@ dépend (ex. `004` ajoute `products.images` que les pages boutique lisent).
 
 ## Dette technique connue (à traiter)
 
-- Tests web (Vitest) à installer une fois le bug npm workspace résolu.
-- Pagination des listes (marketplace/boutique/dashboard) — le marketplace
-  charge tout puis trie côté client ; à terme, vue SQL agrégée + `.range()`.
-- Réduire les `any` restants (~17) en générant les types Supabase depuis le
+- Réduire les `any` restants en générant les types Supabase depuis le
   schéma (`supabase gen types`, nécessite le lien CLI au projet).
