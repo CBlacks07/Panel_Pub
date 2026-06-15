@@ -2,7 +2,7 @@ import {
   View, Text, Modal, TouchableOpacity, FlatList,
   StyleSheet, Image, Dimensions, Platform, TextInput, Alert, KeyboardAvoidingView,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCartStore } from "../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../lib/whatsapp";
@@ -34,6 +34,11 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
   const [quartier, setQuartier] = useState("");
   const [phone, setPhone] = useState("");
 
+  // Réinitialise le formulaire quand le panier se ferme
+  useEffect(() => {
+    if (!visible) setShowDeliveryForm(false);
+  }, [visible]);
+
   const handleOrderPress = () => {
     if (!whatsappPhone) return;
     setShowDeliveryForm(true);
@@ -57,7 +62,8 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <>
+    <Modal visible={visible && !showDeliveryForm} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
       <View style={styles.container}>
         <View style={styles.handle} />
@@ -139,9 +145,11 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
         )}
       </View>
       </View>
+    </Modal>
 
-      {/* Formulaire livraison */}
-      <Modal visible={showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
+      {/* Formulaire livraison — modale séparée (non imbriquée pour éviter
+          l'empilement de deux écrans) */}
+      <Modal visible={visible && showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <View style={styles.overlay}>
           <View style={[styles.deliveryForm, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
@@ -187,7 +195,7 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
         </View>
         </KeyboardAvoidingView>
       </Modal>
-    </Modal>
+    </>
   );
 }
 
