@@ -7,6 +7,7 @@ type UserProfile = {
   shop_name: string;
   business_type: string;
   plan: string;
+  plan_expires_at: string | null;
   phone_whatsapp: string | null;
   total_articles_created: number;
   shop_logo_url: string | null;
@@ -63,11 +64,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("users")
-        .select("shop_name, business_type, plan, phone_whatsapp, total_articles_created, shop_logo_url")
+        .select("shop_name, business_type, plan, plan_expires_at, phone_whatsapp, total_articles_created, shop_logo_url")
         .eq("id", userId)
         .single();
       if (error) throw error;
-      if (data) setProfile(data);
+      if (data) {
+        // Plan effectif : un forfait payant expiré est traité comme gratuit
+        const expired = data.plan !== "free"
+          && !!data.plan_expires_at
+          && new Date(data.plan_expires_at).getTime() < Date.now();
+        setProfile({ ...data, plan: expired ? "free" : data.plan });
+      }
     } catch (e) {
       console.warn("[AuthContext] loadProfile error:", e);
     } finally {

@@ -73,7 +73,15 @@ export default function PlansScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader title="Nos forfaits" subtitle={`Plan actuel : ${currentPlan}`} onBack={() => router.back()} />
+      <ScreenHeader
+        title="Nos forfaits"
+        subtitle={
+          profile?.plan && profile.plan !== "free" && profile.plan_expires_at
+            ? `Plan ${currentPlan} · jusqu'au ${new Date(profile.plan_expires_at).toLocaleDateString("fr-FR")}`
+            : `Plan actuel : ${currentPlan}`
+        }
+        onBack={() => router.back()}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {plans.map((plan) => {
