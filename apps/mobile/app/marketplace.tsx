@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, ScrollView,
-  StyleSheet, TextInput, Animated, Image, Keyboard,
+  StyleSheet, TextInput, Animated, Image, Keyboard, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -44,15 +44,24 @@ export default function MarketplaceScreen() {
   const { session } = useAuth();
   const { primary } = useConfig();
   const [shops, setShops] = useState<Shop[]>([]);
-  const [filtered, setFiltered] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeBizType, setActiveBizType] = useState("all");
+  const [bizTypes, setBizTypes] = useState<string[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
-  const [sortByDistance, setSortByDistance] = useState(false);
   const [bannerHidden, setBannerHidden] = useState(false);
+
+  const PAGE = 20;
+  const legacyRef = useRef(false);          // true si la RPC marketplace_search est absente
+  const legacyAllRef = useRef<Shop[]>([]);  // jeu complet en mode legacy
+  const offsetRef = useRef(0);
+  const reqIdRef = useRef(0);               // garde anti-réponses obsolètes
+  const didRestore = useRef(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
   const bannerAnim = useRef(new Animated.Value(-30)).current;
@@ -89,57 +98,106 @@ export default function MarketplaceScreen() {
     ]).start();
   }, []);
 
-  // Charger une seule fois au montage — pas à chaque retour
+  // Débounce de la recherche (évite une requête par frappe)
   useEffect(() => {
-    loadShops();
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Types de boutiques présents (pour les puces de filtre), chargés une fois
+  useEffect(() => {
+    supabase.from("marketplace_shops").select("business_type").then(({ data, error }) => {
+      if (!error && data) {
+        setBizTypes(Array.from(new Set(data.map((d: any) => d.business_type).filter(Boolean))));
+      }
+    });
   }, []);
 
-  // Restaurer le scroll quand les données sont prêtes
+  // (Re)charge la 1re page quand les critères changent (recherche/type/position)
   useEffect(() => {
-    if (!loading && savedScrollOffset > 0) {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, activeBizType, userLocation]);
+
+  // Restaure le scroll une seule fois (premier chargement)
+  useEffect(() => {
+    if (!loading && !didRestore.current && savedScrollOffset > 0) {
+      didRestore.current = true;
       const offset = savedScrollOffset;
-      setTimeout(() => {
-        flatListRef.current?.scrollToOffset({ offset, animated: false });
-      }, 100);
+      setTimeout(() => flatListRef.current?.scrollToOffset({ offset, animated: false }), 100);
     }
   }, [loading]);
 
-  // Calcule distance + tri (distance > note > nb articles) et alimente l'état
-  const finalizeShops = (rows: any[]) => {
-    const withStats = rows.map((s) => ({
-      ...s,
-      product_count: s.product_count ?? 0,
-      avg_rating: s.avg_rating ?? 0,
-      rating_count: s.rating_count ?? 0,
-      distance: (userLocation && s.latitude && s.longitude)
-        ? getDistance(userLocation.lat, userLocation.lon, s.latitude, s.longitude)
-        : undefined,
-    })).sort((a, b) => {
-      if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
-      if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
-      return b.product_count - a.product_count;
-    });
-    setShops(withStats);
-    setFiltered(withStats);
-    setActiveBizType("all");
+  // Ajoute distance (si non fournie par le serveur) + valeurs par défaut
+  const enrich = (rows: any[]): Shop[] => rows.map((s) => ({
+    ...s,
+    product_count: s.product_count ?? 0,
+    avg_rating: s.avg_rating ?? 0,
+    rating_count: s.rating_count ?? 0,
+    distance: s.distance ?? ((userLocation && s.latitude && s.longitude)
+      ? getDistance(userLocation.lat, userLocation.lon, s.latitude, s.longitude)
+      : undefined),
+  }));
+
+  const rpcParams = (offset: number) => ({
+    p_search: debouncedSearch || null,
+    p_biz_type: activeBizType === "all" ? null : activeBizType,
+    p_lat: userLocation?.lat ?? null,
+    p_lon: userLocation?.lon ?? null,
+    p_limit: PAGE,
+    p_offset: offset,
+  });
+
+  // Charge la 1re page (RPC), avec bascule legacy si la RPC est absente
+  const reload = async () => {
+    if (legacyRef.current) { applyLegacy(); return; }
+    const myReq = ++reqIdRef.current;
+    setLoading(true);
+    offsetRef.current = 0;
+
+    const { data, error } = await supabase.rpc("marketplace_search", rpcParams(0));
+    if (myReq !== reqIdRef.current) return; // réponse obsolète
+
+    if (error) {
+      legacyRef.current = true;
+      await loadLegacyAll();
+      applyLegacy();
+      return;
+    }
+    const rows = enrich(data ?? []);
+    setShops(rows);
+    offsetRef.current = rows.length;
+    setHasMore(rows.length === PAGE);
+    setLoading(false);
   };
 
-  const loadShops = async () => {
-    setLoading(true);
+  // Page suivante (défilement infini)
+  const loadMore = async () => {
+    if (legacyRef.current || loadingMore || loading || !hasMore) return;
+    const myReq = reqIdRef.current;
+    setLoadingMore(true);
+    const { data, error } = await supabase.rpc("marketplace_search", rpcParams(offsetRef.current));
+    if (myReq !== reqIdRef.current) { setLoadingMore(false); return; }
+    if (!error && data) {
+      const rows = enrich(data);
+      setShops((prev) => [...prev, ...rows]);
+      offsetRef.current += rows.length;
+      setHasMore(rows.length === PAGE);
+    }
+    setLoadingMore(false);
+  };
 
-    // Chemin efficace : vue agrégée côté serveur (1 requête). Migration 006.
+  // ── Mode legacy (RPC absente) : charge tout puis filtre/trie côté client ──
+  const loadLegacyAll = async () => {
     const view = await supabase
       .from("marketplace_shops")
       .select("id, shop_name, slogan, description, shop_logo_url, business_type, city, latitude, longitude, product_count, avg_rating, rating_count")
       .limit(500);
-
     if (!view.error && view.data) {
-      finalizeShops(view.data);
-      setLoading(false);
+      legacyAllRef.current = view.data as Shop[];
+      if (bizTypes.length === 0) setBizTypes(Array.from(new Set(view.data.map((d: any) => d.business_type).filter(Boolean))));
       return;
     }
-
-    // Fallback (vue absente / migration 006 pas encore appliquée) : agrégation client
     const { data } = await supabase
       .from("users")
       .select("id, shop_name, slogan, description, shop_logo_url, business_type, city, latitude, longitude");
@@ -156,32 +214,35 @@ export default function MarketplaceScreen() {
         ratingMap[r.shop_id].sum += r.rating;
         ratingMap[r.shop_id].count += 1;
       });
-      finalizeShops(data.map((s) => ({
+      legacyAllRef.current = data.map((s) => ({
         ...s,
         product_count: countMap[s.id] || 0,
         avg_rating: ratingMap[s.id] ? ratingMap[s.id].sum / ratingMap[s.id].count : 0,
         rating_count: ratingMap[s.id]?.count || 0,
-      })));
+      })) as Shop[];
+      if (bizTypes.length === 0) setBizTypes(Array.from(new Set(data.map((d: any) => d.business_type).filter(Boolean))));
     }
+  };
+
+  const applyLegacy = () => {
+    let rows = legacyAllRef.current;
+    if (activeBizType !== "all") rows = rows.filter((s) => s.business_type === activeBizType);
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      rows = rows.filter((s) => s.shop_name.toLowerCase().includes(q));
+    }
+    const sorted = enrich(rows).sort((a, b) => {
+      if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
+      if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
+      return b.product_count - a.product_count;
+    });
+    setShops(sorted);
+    setHasMore(false);
     setLoading(false);
   };
 
-  const applyFilters = (text: string, bizType: string) => {
-    let result = shops;
-    if (bizType !== "all") result = result.filter((s) => s.business_type === bizType);
-    if (text.trim()) result = result.filter((s) => s.shop_name.toLowerCase().includes(text.toLowerCase()));
-    setFiltered(result);
-  };
-
-  const handleSearch = (text: string) => {
-    setSearch(text);
-    applyFilters(text, activeBizType);
-  };
-
-  const handleBizFilter = (bizType: string) => {
-    setActiveBizType(bizType);
-    applyFilters(search, bizType);
-  };
+  const handleSearch = (text: string) => setSearch(text);
+  const handleBizFilter = (bizType: string) => setActiveBizType(bizType);
 
   const dismissBanner = () => {
     setBannerHidden(true);
@@ -227,14 +288,14 @@ export default function MarketplaceScreen() {
 
       {/* Compteur de résultats */}
       <Text style={styles.sectionTitle}>
-        {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
-        {search.trim()
-          ? ` · « ${search.trim()} »`
+        {shops.length}{hasMore ? "+" : ""} boutique{shops.length > 1 ? "s" : ""}
+        {debouncedSearch
+          ? ` · « ${debouncedSearch} »`
           : activeBizType !== "all"
             ? ` · ${BUSINESS_TYPES.find((b) => b.id === activeBizType)?.label ?? ""}`
-            : filtered[0]?.avg_rating > 0
-              ? " · triées par note"
-              : ""}
+            : userLocation
+              ? " · les plus proches"
+              : " · les mieux notées"}
       </Text>
     </>
   );
@@ -307,7 +368,7 @@ export default function MarketplaceScreen() {
               <Text style={[styles.bizFilterText, activeBizType === "all" && { color: "#fff" }]}>Tout</Text>
             </View>
           </TouchableOpacity>
-          {BUSINESS_TYPES.filter((b) => shops.some((s) => s.business_type === b.id)).map((b) => (
+          {BUSINESS_TYPES.filter((b) => bizTypes.includes(b.id)).map((b) => (
             <TouchableOpacity key={b.id} style={[styles.bizFilterChip, activeBizType === b.id && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter(b.id)}>
               <Text style={[styles.bizFilterText, activeBizType === b.id && { color: "#fff" }]}>{b.emoji} {b.label}</Text>
             </TouchableOpacity>
@@ -320,14 +381,14 @@ export default function MarketplaceScreen() {
       ) : (
         <FlatList
           ref={flatListRef}
-          data={filtered}
+          data={shops}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListHeaderComponent={StableListHeader}
           ListEmptyComponent={
-            search.length > 0 ? (
+            (debouncedSearch || activeBizType !== "all") ? (
               <EmptyState
                 emoji="🔍"
                 accent={primary}
@@ -343,6 +404,13 @@ export default function MarketplaceScreen() {
           maxToRenderPerBatch={8}
           windowSize={11}
           removeClippedSubviews
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loadingMore ? (
+            <View style={{ paddingVertical: 20 }}>
+              <ActivityIndicator color={primary} />
+            </View>
+          ) : null}
           keyExtractor={keyExtractor}
           renderItem={renderShop}
         />
