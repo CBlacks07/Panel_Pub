@@ -1,31 +1,25 @@
-"use client";
-import { useState, useEffect } from "react";
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, Dimensions, Platform,
-} from "react-native";
+import { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link } from "expo-router";
-import { Image } from "react-native";
+import { useRouter, Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { useConfig } from "../../context/ConfigContext";
 import { BUSINESS_TYPES } from "../../lib/businessTypes";
-
-const { width } = Dimensions.get("window");
-const IS_WEB_DESKTOP = Platform.OS === "web" && width > 768;
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { colors } from "../../lib/theme";
 
 export default function RegisterScreen() {
+  const router = useRouter();
+  const { primary } = useConfig();
   const [step, setStep] = useState<1 | 2>(1);
   const [shopName, setShopName] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { config, primary } = useConfig();
-  const appName = config.app_name || "Boutiki";
-  const vendorCta = config.vendor_cta || "Créer ma boutique gratuitement";
-  const hasLogo = config.logo_url && config.logo_url.trim().length > 0;
 
   const handleNextStep = () => {
     if (!shopName.trim()) { Alert.alert("Champ manquant", "Entre le nom de ta boutique"); return; }
@@ -37,201 +31,140 @@ export default function RegisterScreen() {
     if (!email || !password) { Alert.alert("Champs manquants", "Remplis tous les champs"); return; }
     if (password.length < 6) { Alert.alert("Mot de passe trop court", "6 caractères minimum"); return; }
     setLoading(true);
-    // Note: la vérification WhatsApp se fait dans le profil, pas à l'inscription
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { shop_name: shopName, business_type: businessType } },
     });
-    if (error) {
-      Alert.alert("Erreur", error.message);
-      setLoading(false);
-      return;
-    }
-    // Mettre à jour directement le profil avec le business_type
-    // (au cas où le trigger ne le fait pas encore)
+    if (error) { Alert.alert("Erreur", error.message); setLoading(false); return; }
     if (data.user) {
-      await supabase.from("users").upsert({
-        id: data.user.id,
-        email,
-        shop_name: shopName,
-        business_type: businessType,
-      });
+      await supabase.from("users").upsert({ id: data.user.id, email, shop_name: shopName, business_type: businessType });
     }
     setLoading(false);
+    // La session active redirige automatiquement vers le dashboard (cf. _layout)
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* En-tête : retour + progression */}
+      <View style={styles.topbar}>
+        <TouchableOpacity
+          style={styles.back}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          onPress={() => (step === 2 ? setStep(1) : router.back())}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.dots}>
+          <View style={[styles.dot, { backgroundColor: primary, width: 22 }]} />
+          <View style={[styles.dot, step === 2 && { backgroundColor: primary, width: 22 }]} />
+        </View>
+        <View style={{ width: 36 }} />
+      </View>
+
       <KeyboardAwareScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
-          <View style={[styles.card, IS_WEB_DESKTOP && styles.cardDesktop]}>
+        {step === 1 ? (
+          <>
+            <Text style={styles.title}>Ta boutique</Text>
+            <Text style={styles.subtitle}>Donne-lui un nom et choisis ton activité.</Text>
 
-            {/* Logo */}
-            <View style={styles.logoWrap}>
-              <View style={[styles.logo, { backgroundColor: hasLogo ? "transparent" : primary }]}>
-                {hasLogo
-                  ? <Image source={{ uri: config.logo_url }} style={styles.logoImage} resizeMode="cover" />
-                  : <Text style={styles.logoText}>{appName[0].toUpperCase()}</Text>
-                }
-              </View>
-              <Text style={styles.appName}>{appName}</Text>
-            </View>
+            <View style={styles.form}>
+              <Input
+                label="Nom de la boutique"
+                placeholder="Ex : Awa Fashion, Style by Kofi…"
+                value={shopName}
+                onChangeText={setShopName}
+                autoCapitalize="words"
+                autoFocus
+              />
 
-            {/* Étapes */}
-            <View style={styles.stepsRow}>
-              <View style={[styles.stepCircle, { backgroundColor: primary }]}>
-                <Text style={styles.stepCircleText}>1</Text>
-              </View>
-              <View style={[styles.stepLine, step === 2 && { backgroundColor: primary }]} />
-              <View style={[styles.stepCircle, step === 2 ? { backgroundColor: primary } : styles.stepCircleInactive]}>
-                <Text style={[styles.stepCircleText, step !== 2 && { color: "#aaa" }]}>2</Text>
-              </View>
-            </View>
-
-            {step === 1 ? (
-              <>
-                <Text style={styles.title}>Ta boutique 🛍️</Text>
-                <Text style={styles.subtitle}>Donne un nom à ta boutique et choisis ton activité</Text>
-
-                <View style={styles.form}>
-                  <View style={styles.inputWrap}>
-                    <Text style={styles.inputLabel}>Nom de ta boutique</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Ex: Awa Fashion, Style by Kofi..."
-                      placeholderTextColor="#bbb"
-                      value={shopName}
-                      onChangeText={setShopName}
-                      autoCapitalize="words"
-                      autoFocus
-                    />
-                  </View>
-
-                  <Text style={styles.inputLabel}>Type de boutique</Text>
-                  <View style={styles.businessGrid}>
-                    {BUSINESS_TYPES.map((b) => (
+              <View>
+                <Text style={styles.fieldLabel}>Type d'activité</Text>
+                <View style={styles.bizGrid}>
+                  {BUSINESS_TYPES.map((b) => {
+                    const on = businessType === b.id;
+                    return (
                       <TouchableOpacity
                         key={b.id}
-                        style={[styles.businessCard, businessType === b.id && { borderColor: primary, backgroundColor: primary + "10" }]}
                         onPress={() => setBusinessType(b.id)}
+                        activeOpacity={0.85}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: on }}
+                        style={[styles.bizCard, on && { borderColor: primary, backgroundColor: primary + "10" }]}
                       >
-                        <Text style={styles.businessEmoji}>{b.emoji}</Text>
-                        <Text style={[styles.businessLabel, businessType === b.id && { color: primary, fontWeight: "700" }]}>{b.label}</Text>
-                        <Text style={styles.businessDesc} numberOfLines={1}>{b.description}</Text>
+                        <Text style={styles.bizEmoji}>{b.emoji}</Text>
+                        <Text style={[styles.bizLabel, on && { color: primary, fontWeight: "700" }]}>{b.label}</Text>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.btn, { backgroundColor: primary }]}
-                    onPress={handleNextStep}
-                  >
-                    <Text style={styles.btnText}>Continuer {">"}</Text>
-                  </TouchableOpacity>
+                    );
+                  })}
                 </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.title}>Ton compte</Text>
-                <Text style={styles.subtitle}>Crée ton accès — Gratuit, prêt en 30 secondes</Text>
+              </View>
 
-                <View style={styles.form}>
-                  <View style={styles.inputWrap}>
-                    <Text style={styles.inputLabel}>Email</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="ton@email.com"
-                      placeholderTextColor="#bbb"
-                      value={email}
-                      onChangeText={setEmail}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoFocus
-                    />
-                  </View>
-                  <View style={styles.inputWrap}>
-                    <Text style={styles.inputLabel}>Mot de passe</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="6 caractères minimum"
-                      placeholderTextColor="#bbb"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry
-                    />
-                  </View>
+              <Button label="Continuer" icon="arrow-forward" onPress={handleNextStep} />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.title}>Ton compte</Text>
+            <Text style={styles.subtitle}>Crée ton accès — gratuit, prêt en 30 secondes.</Text>
 
-                  <TouchableOpacity
-                    style={[styles.btn, { backgroundColor: primary }, loading && styles.btnDisabled]}
-                    onPress={handleRegister}
-                    disabled={loading}
-                  >
-                    <Text style={styles.btnText}>{loading ? "Création..." : vendorCta}</Text>
-                  </TouchableOpacity>
+            <View style={styles.form}>
+              <Input
+                label="Email"
+                placeholder="ton@email.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoFocus
+              />
+              <Input
+                label="Mot de passe"
+                placeholder="6 caractères minimum"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+              <Button label="Créer ma boutique" icon="checkmark-circle-outline" loading={loading} onPress={handleRegister} />
+            </View>
+          </>
+        )}
 
-                  <TouchableOpacity onPress={() => setStep(1)} style={styles.backBtn}>
-                    <Text style={styles.backBtnText}>{"<"} Retour</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-
-            <Link href="/(auth)/login" asChild>
-              <TouchableOpacity style={styles.linkBtn}>
-                <Text style={styles.linkText}>Déjà un compte ? <Text style={[styles.linkTextBold, { color: primary }]}>Se connecter</Text></Text>
-              </TouchableOpacity>
-            </Link>
-            <TouchableOpacity onPress={() => require("react-native").Linking.openURL("https://panel-pub-web.vercel.app/privacy")} style={styles.privacyBtn}>
-              <Text style={styles.privacyText}>En créant un compte, tu acceptes nos{"\n"}Politique de confidentialité · Conditions d'utilisation</Text>
-            </TouchableOpacity>
-          </View>
+        <Link href="/(auth)/login" asChild>
+          <TouchableOpacity style={styles.linkBtn}>
+            <Text style={styles.linkText}>Déjà un compte ? <Text style={[styles.linkBold, { color: primary }]}>Se connecter</Text></Text>
+          </TouchableOpacity>
+        </Link>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9fb" },
-  scroll: { flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 20, paddingBottom: 40 },
-  card: {
-    width: "100%", maxWidth: 440, backgroundColor: "#fff", borderRadius: 24, padding: 28,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4,
+  container: { flex: 1, backgroundColor: colors.surface },
+  topbar: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
   },
-  cardDesktop: { padding: 48 },
-  logoWrap: { alignItems: "center", marginBottom: 20 },
-  logo: { width: 96, height: 96, borderRadius: 28, justifyContent: "center", alignItems: "center", marginBottom: 10, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 4 },
-  logoImage: { width: 96, height: 96 },
-  logoText: { fontSize: 44, fontWeight: "800", color: "#fff" },
-  appName: { fontSize: 18, fontWeight: "800", color: "#1a1a1a" },
-  stepsRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 0, marginBottom: 20 },
-  stepCircle: { width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center" },
-  stepCircleInactive: { backgroundColor: "#e5e5e5" },
-  stepCircleText: { color: "#fff", fontSize: 13, fontWeight: "800" },
-  stepLine: { width: 48, height: 2, backgroundColor: "#e5e5e5" },
-  title: { fontSize: 22, fontWeight: "800", color: "#1a1a1a", marginBottom: 4 },
-  subtitle: { fontSize: 13, color: "#888", marginBottom: 20, lineHeight: 20 },
-  form: { gap: 16 },
-  inputWrap: { gap: 6 },
-  inputLabel: { fontSize: 13, fontWeight: "600", color: "#444", marginBottom: 2 },
-  input: {
-    borderWidth: 1.5, borderColor: "#eee", borderRadius: 14,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: "#1a1a1a", backgroundColor: "#fafafa",
+  back: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.bgAlt, justifyContent: "center", alignItems: "center" },
+  dots: { flexDirection: "row", gap: 6 },
+  dot: { width: 8, height: 8, borderRadius: 5, backgroundColor: colors.border },
+
+  scroll: { padding: 24, paddingTop: 12, flexGrow: 1 },
+  title: { fontSize: 26, fontWeight: "800", color: colors.text, marginBottom: 4 },
+  subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  form: { gap: 18 },
+  fieldLabel: { fontSize: 13, fontWeight: "700", color: colors.text, marginBottom: 10 },
+
+  bizGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  bizCard: {
+    width: "31%", borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
+    paddingVertical: 14, alignItems: "center", gap: 6, backgroundColor: colors.surface,
   },
-  businessGrid: { gap: 8 },
-  businessCard: {
-    borderWidth: 1.5, borderColor: "#eee", borderRadius: 14, padding: 14,
-    backgroundColor: "#fafafa",
-  },
-  businessEmoji: { fontSize: 24, marginBottom: 4 },
-  businessLabel: { fontSize: 14, fontWeight: "600", color: "#1a1a1a", marginBottom: 2 },
-  businessDesc: { fontSize: 12, color: "#aaa" },
-  btn: { borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 4 },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  backBtn: { alignItems: "center", padding: 8 },
-  backBtnText: { color: "#aaa", fontSize: 14 },
-  linkBtn: { alignItems: "center", padding: 8, marginTop: 8 },
-  linkText: { color: "#888", fontSize: 14 },
-  linkTextBold: { fontWeight: "700" },
-  privacyBtn: { alignItems: "center", paddingVertical: 8 },
-  privacyText: { color: "#ccc", fontSize: 11, textAlign: "center", lineHeight: 16 },
+  bizEmoji: { fontSize: 26 },
+  bizLabel: { fontSize: 12, fontWeight: "600", color: colors.textSecondary, textAlign: "center" },
+
+  linkBtn: { alignItems: "center", paddingVertical: 18, marginTop: "auto" },
+  linkText: { color: colors.textSecondary, fontSize: 14 },
+  linkBold: { fontWeight: "700" },
 });

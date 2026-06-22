@@ -275,7 +275,7 @@ export default function MarketplaceScreen() {
           <Text style={[styles.bannerTitle, { paddingRight: 28 }]}>{config?.marketplace_banner_title || "Les boutiques mode du moment ✨"}</Text>
           <Text style={styles.bannerSubtitle}>{config?.marketplace_banner_subtitle || "Mode locale · Commande via WhatsApp"}</Text>
           <View style={styles.bannerActions}>
-            <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/register")}>
+            <TouchableOpacity style={styles.bannerBtn} onPress={() => router.push("/(auth)/welcome")}>
               <Text style={[styles.bannerBtnText, { color: primary }]}>{config?.vendor_cta || "Ouvrir ma boutique — Gratuit"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.bannerLink} onPress={() => router.push("/forfaits")}>
