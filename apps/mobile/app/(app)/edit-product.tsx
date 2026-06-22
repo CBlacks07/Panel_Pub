@@ -10,6 +10,8 @@ import { uploadImage } from "../../lib/cloudinary";
 import { getImageLimit } from "../../lib/plans";
 import { ProductImages } from "../../components/ProductImages";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { Button } from "../../components/ui/Button";
+import { Chip } from "../../components/ui/Chip";
 import { useConfig } from "../../context/ConfigContext";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -218,13 +220,7 @@ export default function EditProductScreen() {
           </View>
           <View style={styles.chips}>
             {bizType.categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.chip, category === cat && { backgroundColor: primary, borderColor: primary }]}
-                onPress={() => setCategory(cat)}
-              >
-                <Text style={[styles.chipText, category === cat && { color: "#fff", fontWeight: "700" }]}>{cat}</Text>
-              </TouchableOpacity>
+              <Chip key={cat} label={cat} selected={category === cat} onPress={() => setCategory(cat)} />
             ))}
           </View>
         </View>
@@ -242,13 +238,7 @@ export default function EditProductScreen() {
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.sizes.label}</Text>
                 <View style={styles.chips}>
                   {bizType.variationTypes.sizes.values.map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[styles.chip, isSelected("size", v) && { backgroundColor: primary, borderColor: primary }]}
-                      onPress={() => toggleVariation("size", v)}
-                    >
-                      <Text style={[styles.chipText, isSelected("size", v) && { color: "#fff", fontWeight: "700" }]}>{v}</Text>
-                    </TouchableOpacity>
+                    <Chip key={v} label={v} selected={isSelected("size", v)} onPress={() => toggleVariation("size", v)} />
                   ))}
                 </View>
               </View>
@@ -259,13 +249,7 @@ export default function EditProductScreen() {
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.colors.label}</Text>
                 <View style={styles.chips}>
                   {bizType.variationTypes.colors.values.map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[styles.chip, isSelected("color", v) && { backgroundColor: primary, borderColor: primary }]}
-                      onPress={() => toggleVariation("color", v)}
-                    >
-                      <Text style={[styles.chipText, isSelected("color", v) && { color: "#fff", fontWeight: "700" }]}>{v}</Text>
-                    </TouchableOpacity>
+                    <Chip key={v} label={v} selected={isSelected("color", v)} onPress={() => toggleVariation("color", v)} />
                   ))}
                 </View>
               </View>
@@ -276,13 +260,7 @@ export default function EditProductScreen() {
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.custom.label}</Text>
                 <View style={styles.chips}>
                   {bizType.variationTypes.custom.values.map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[styles.chip, isSelected("custom", v) && { backgroundColor: primary, borderColor: primary }]}
-                      onPress={() => toggleVariation("custom", v)}
-                    >
-                      <Text style={[styles.chipText, isSelected("custom", v) && { color: "#fff", fontWeight: "700" }]}>{v}</Text>
-                    </TouchableOpacity>
+                    <Chip key={v} label={v} selected={isSelected("custom", v)} onPress={() => toggleVariation("custom", v)} />
                   ))}
                 </View>
               </View>
@@ -291,21 +269,7 @@ export default function EditProductScreen() {
         )}
 
         {/* ── BOUTON ENREGISTRER ── */}
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: primary }, saving && { opacity: 0.7 }]}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-              <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <Button label="Enregistrer les modifications" icon="checkmark-circle-outline" loading={saving} onPress={handleSave} />
 
       </KeyboardAwareScrollView>
     </SafeAreaView>
