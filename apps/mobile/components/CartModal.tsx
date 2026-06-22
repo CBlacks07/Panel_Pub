@@ -1,5 +1,5 @@
 import {
-  View, Text, Modal, TouchableOpacity, FlatList,
+  View, Text, Modal, TouchableOpacity, FlatList, ScrollView,
   StyleSheet, Image, Dimensions, Platform, TextInput, Alert, KeyboardAvoidingView,
 } from "react-native";
 import { useState, useEffect } from "react";
@@ -150,9 +150,11 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
       {/* Formulaire livraison — modale séparée (non imbriquée pour éviter
           l'empilement de deux écrans) */}
       <Modal visible={visible && showDeliveryForm} animationType="slide" transparent onRequestClose={() => setShowDeliveryForm(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-        <View style={styles.overlay}>
-          <View style={[styles.deliveryForm, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.overlay}
+        >
+          <View style={[styles.deliveryForm, { maxHeight: "88%", paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
             <View style={styles.handle} />
             <View style={styles.deliveryHeader}>
               <Text style={styles.deliveryTitle}>Infos de livraison</Text>
@@ -161,38 +163,44 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.deliverySubtitle}>Ces informations seront transmises au vendeur avec ta commande.</Text>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.deliveryScroll}
+            >
+              <Text style={styles.deliverySubtitle}>Ces informations seront transmises au vendeur avec ta commande.</Text>
 
-            <View style={styles.fieldWrap}>
-              <Text style={styles.fieldLabel}>📍 Quartier de livraison</Text>
-              <TextInput
-                style={styles.fieldInput}
-                placeholder="Ex: Adidogomé, Bè, Tokoin..."
-                placeholderTextColor="#bbb"
-                value={quartier}
-                onChangeText={setQuartier}
-                autoCapitalize="words"
-              />
-            </View>
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>📍 Quartier de livraison</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  placeholder="Ex: Adidogomé, Bè, Tokoin..."
+                  placeholderTextColor="#bbb"
+                  value={quartier}
+                  onChangeText={setQuartier}
+                  autoCapitalize="words"
+                />
+              </View>
 
-            <View style={styles.fieldWrap}>
-              <Text style={styles.fieldLabel}>📞 Numéro à appeler</Text>
-              <TextInput
-                style={styles.fieldInput}
-                placeholder="Ex: +228 90 00 00 00"
-                placeholderTextColor="#bbb"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>📞 Numéro à appeler</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  placeholder="Ex: +228 90 00 00 00"
+                  placeholderTextColor="#bbb"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  returnKeyType="done"
+                />
+              </View>
 
-            <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: "#25D366" }]} onPress={handleConfirmOrder} activeOpacity={0.8}>
-              <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-              <Text style={styles.confirmBtnText}>Confirmer la commande</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: "#25D366" }]} onPress={handleConfirmOrder} activeOpacity={0.8}>
+                <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                <Text style={styles.confirmBtnText}>Confirmer la commande</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
         </KeyboardAvoidingView>
       </Modal>
     </>
@@ -277,6 +285,7 @@ const styles = StyleSheet.create({
   deliveryHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
+  deliveryScroll: { gap: 16, paddingTop: 12 },
   deliveryTitle: { fontSize: 18, fontWeight: "800", color: "#1a1a1a" },
   deliverySubtitle: { fontSize: 13, color: "#888", lineHeight: 18, marginTop: -8 },
   fieldWrap: { gap: 6 },
