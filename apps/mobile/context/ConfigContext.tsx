@@ -12,7 +12,7 @@ const DEFAULTS: AppConfig = {
   splash_subtitle: "Ta boutique en ligne, tes clients à portée de main.",
   marketplace_banner_title: "Les boutiques mode du moment ✨",
   marketplace_banner_subtitle: "Mode locale · Commande via WhatsApp · Livraison rapide",
-  primary_color: "#34adea",
+  primary_color: "#2563EB",
   vendor_cta: "Ouvrir ma boutique Boutiki — Gratuit",
   marketplace_enabled: "true",
   ratings_enabled: "true",

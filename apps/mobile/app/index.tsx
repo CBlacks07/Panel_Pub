@@ -54,7 +54,7 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, [loading, session]);
 
-  const primaryColor = config?.primary_color || "#34adea";
+  const primaryColor = config?.primary_color || "#2563EB";
   const title = config?.splash_title || "Boutiki";
   const subtitle = config?.splash_subtitle || "Ta boutique en ligne, tes clients à portée de main.";
   const hasLogo = config?.logo_url && config.logo_url.trim().length > 0;

@@ -1,53 +1,68 @@
 /**
- * Tokens de design partagés — couleurs, espacements, rayons, ombres.
- * But : une seule source de vérité pour un rendu cohérent entre modules
- * (fini le mélange de gris #888 / #aaa / #9ca3af...).
- * La couleur primaire reste dynamique (config) et n'est pas figée ici.
+ * Tokens de design partagés — palette bleu & blanc moderne.
+ * Source de vérité unique pour un rendu cohérent entre modules.
+ * La couleur primaire de marque reste pilotée par la config (DB) ; `brand.blue`
+ * ci-dessous est la valeur par défaut/référence et alimente le mockup.
  */
 
+export const brand = {
+  blue: "#2563EB",
+  blueDark: "#1E40AF",
+  blueSoft: "#EFF4FF",
+} as const;
+
 export const colors = {
-  text: "#1a1a1a",        // titres / texte principal
-  textSecondary: "#6b7280", // texte secondaire
-  textMuted: "#9ca3af",   // libellés discrets
-  textFaint: "#c4c4c4",   // placeholders / icônes inactives
+  text: "#0F172A",        // slate-900 — titres / texte principal
+  textSecondary: "#64748B", // slate-500 — texte secondaire
+  textMuted: "#94A3B8",   // slate-400 — libellés discrets
+  textFaint: "#CBD5E1",   // slate-300 — placeholders / icônes inactives
 
-  border: "#e5e7eb",
-  borderLight: "#f0f0f0",
+  border: "#E2E8F0",      // slate-200
+  borderLight: "#EEF2F7",
 
-  bg: "#f5f6fa",          // fond d'écran (app)
-  bgAlt: "#f7f9fb",       // fond d'écran (public)
-  surface: "#ffffff",
-  surfaceAlt: "#fafbfc",
+  bg: "#F8FAFC",          // slate-50 — fond d'écran
+  bgAlt: "#F1F5F9",       // slate-100
+  surface: "#FFFFFF",
+  surfaceAlt: "#F8FAFC",
 
-  danger: "#ef4444",
-  warning: "#f59e0b",
-  success: "#22c55e",
-  info: "#3b82f6",
+  danger: "#EF4444",
+  warning: "#F59E0B",
+  success: "#22C55E",
+  info: "#3B82F6",
   whatsapp: "#25D366",
 } as const;
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 } as const;
 
-export const radius = { sm: 10, md: 14, lg: 18, xl: 20, pill: 999 } as const;
+export const radius = { sm: 10, md: 14, lg: 16, xl: 20, pill: 999 } as const;
 
 export const shadow = {
-  // ombre douce pour cartes au repos
   card: {
-    shadowColor: "#000",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
-  // ombre plus marquée pour éléments en relief
   raised: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 4,
   },
+  // ombre teintée bleu pour les boutons primaires
+  button: {
+    shadowColor: brand.blue,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 6,
+  },
 } as const;
+
+// Hauteurs standard des contrôles
+export const sizing = { button: 54, input: 52 } as const;
 
 // Ratio hauteur/largeur unique pour les vignettes produit (grilles)
 export const PRODUCT_IMAGE_RATIO = 1.15;

@@ -19,7 +19,7 @@ export default class ErrorBoundary extends React.Component<
   }
 
   render() {
-    const primary = this.props.primary || "#34adea";
+    const primary = this.props.primary || "#2563EB";
     if (this.state.hasError) {
       return (
         <View style={styles.container}>

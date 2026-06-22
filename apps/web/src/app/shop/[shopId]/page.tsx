@@ -60,7 +60,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     });
   }, [shopId]);
 
-  const primary = config["primary_color"] || "#34adea";
+  const primary = config["primary_color"] || "#2563EB";
   const appName = config["app_name"] || "Boutiki";
   const biz = BUSINESS_TYPES.find((b) => b.id === shop?.business_type) || BUSINESS_TYPES[0];
 

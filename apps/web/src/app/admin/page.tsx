@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [primary, setPrimary] = useState("#34adea");
+  const [primary, setPrimary] = useState("#2563EB");
   const [appName, setAppName] = useState("Boutiki");
   const [logoUrl, setLogoUrl] = useState("");
 

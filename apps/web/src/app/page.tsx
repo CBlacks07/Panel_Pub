@@ -24,7 +24,7 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: "01", title: "Crée ta boutique",    desc: "Donne un nom à ta boutique, choisis ton activité. C'est prêt en 30 secondes, gratuit.", color: "#34adea" },
+  { n: "01", title: "Crée ta boutique",    desc: "Donne un nom à ta boutique, choisis ton activité. C'est prêt en 30 secondes, gratuit.", color: "#2563EB" },
   { n: "02", title: "Ajoute tes articles", desc: "Prends une photo, fixe ton prix, publie. Tes clients voient ton catalogue en temps réel.", color: "#8b5cf6" },
   { n: "03", title: "Reçois sur WhatsApp", desc: "Chaque commande arrive directement dans ta messagerie. Tu n'as qu'à confirmer.", color: "#25D366" },
 ];
@@ -166,7 +166,7 @@ export default function LandingPage() {
   const rawTagline = config["app_tagline"] || "Vends ta mode. Reçois sur WhatsApp.";
   const stripEmoji = (s: string) => s.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
   const tagline = stripEmoji(rawTagline);
-  const primary = config["primary_color"] || "#34adea";
+  const primary = config["primary_color"] || "#2563EB";
   const vendorCta = config["vendor_cta"] || "Créer ma boutique gratuitement";
   const logoUrl = config["logo_url"] || "";
 

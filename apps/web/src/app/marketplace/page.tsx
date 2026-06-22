@@ -56,7 +56,7 @@ export default function MarketplacePage() {
     });
   }, []);
 
-  const primary = config["primary_color"] || "#34adea";
+  const primary = config["primary_color"] || "#2563EB";
   const appName = config["app_name"] || "Boutiki";
   const logoUrl = config["logo_url"] || "";
   const presentBizTypes = BUSINESS_TYPES.filter((b) => shops.some((s) => s.business_type === b.id));

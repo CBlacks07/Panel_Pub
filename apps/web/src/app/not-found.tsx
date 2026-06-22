@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function NotFound() {
-  const [primary, setPrimary] = useState("#34adea");
+  const [primary, setPrimary] = useState("#2563EB");
   const [appName, setAppName] = useState("Boutiki");
 
   useEffect(() => {
