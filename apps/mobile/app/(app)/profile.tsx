@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { useConfig } from "../../context/ConfigContext";
 import { uploadImage, optimizeImage } from "../../lib/cloudinary";
+import { Button } from "../../components/ui/Button";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
 import { BUSINESS_TYPES } from "../../lib/businessTypes";
 import * as ExpoLocation from "expo-location";
@@ -361,9 +362,7 @@ export default function ProfileScreen() {
           </View>
 
           {editing && (
-            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: primary }, saving && styles.saveBtnDisabled]} onPress={saveProfile} disabled={saving}>
-              <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : "Enregistrer"}</Text>
-            </TouchableOpacity>
+            <Button label="Enregistrer" icon="checkmark" loading={saving} onPress={saveProfile} />
           )}
 
           <TouchableOpacity style={styles.shareCard} onPress={shareShopLink}>

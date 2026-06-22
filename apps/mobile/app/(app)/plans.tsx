@@ -8,6 +8,7 @@ import { getPlanFeatures } from "../../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
 
@@ -147,14 +148,11 @@ export default function PlansScreen() {
                   </View>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={[styles.upgradeBtn, { backgroundColor: isPopular ? primary : "#1a1a1a" }]}
+                <Button
+                  label={plan.price === 0 ? "Plan de base" : `Passer au ${plan.name}`}
+                  variant={isPopular ? "primary" : "soft"}
                   onPress={() => handleUpgrade(plan)}
-                >
-                  <Text style={styles.upgradeBtnText}>
-                    {plan.price === 0 ? "Plan de base" : `Passer au ${plan.name}`}
-                  </Text>
-                </TouchableOpacity>
+                />
               )}
             </View>
           );

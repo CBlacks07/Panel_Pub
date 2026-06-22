@@ -9,6 +9,7 @@ import { getPlanFeatures } from "../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../lib/supabase";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { Button } from "../components/ui/Button";
 import { useConfig } from "../context/ConfigContext";
 
 type Plan = {
@@ -110,15 +111,11 @@ export default function ForfaitsScreen() {
                   ))}
                 </View>
 
-                <TouchableOpacity
-                  style={[styles.cta, { backgroundColor: isPopular ? primary : "#1a1a1a" }]}
+                <Button
+                  label={plan.price === 0 ? "Commencer gratuitement" : `Choisir ${plan.name}`}
+                  variant={isPopular ? "primary" : "soft"}
                   onPress={() => router.push("/(auth)/register")}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.ctaText}>
-                    {plan.price === 0 ? "Commencer gratuitement" : `Choisir ${plan.name}`}
-                  </Text>
-                </TouchableOpacity>
+                />
               </View>
             );
           })}
