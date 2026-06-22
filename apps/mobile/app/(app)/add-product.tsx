@@ -12,6 +12,7 @@ import { ProductImages } from "../../components/ProductImages";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
+import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../context/AuthContext";
 import { useConfig } from "../../context/ConfigContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,7 @@ export default function AddProductScreen() {
   const router = useRouter();
   const { user, profile, bizType } = useAuth();
   const { primary, getPlanById } = useConfig();
+  const toast = useToast();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -83,9 +85,8 @@ export default function AddProductScreen() {
         );
       }
 
-      Alert.alert("Article publié ! 🎉", "Ton article est maintenant visible dans ta boutique.", [
-        { text: "Voir ma boutique", onPress: () => router.replace("/(app)/dashboard") },
-      ]);
+      toast("Article publié — visible dans ta boutique");
+      router.replace("/(app)/dashboard");
     } catch (err: any) {
       Alert.alert("Erreur", err.message ?? "Une erreur est survenue");
     } finally {

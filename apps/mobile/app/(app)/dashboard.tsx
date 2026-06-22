@@ -1,14 +1,16 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useMemo } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Image,
-  TextInput, Dimensions, FlatList, Animated,
+  TextInput, Dimensions, FlatList, Animated, Share, RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import OnboardingModal from "../../components/OnboardingModal";
 import { DashboardSkeleton } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
-import { PRODUCT_IMAGE_RATIO } from "../../lib/theme";
+import { Chip } from "../../components/ui/Chip";
+import { useToast } from "../../components/ui/Toast";
+import { PRODUCT_IMAGE_RATIO, colors } from "../../lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -64,14 +66,18 @@ export default function DashboardScreen() {
   const { user, bizType, profile } = useAuth();
   const { primary, getPlanById } = useConfig();
   const router = useRouter();
+  const toast = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [filtered, setFiltered] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"recent" | "views" | "price">("recent");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
   const searchClearScale = useRef(new Animated.Value(0)).current;
+
+  const SHOP_URL = `https://panel-pub-web.vercel.app/shop/${user?.id}`;
 
   useFocusEffect(
     useCallback(() => {
@@ -82,9 +88,9 @@ export default function DashboardScreen() {
     }, [])
   );
 
-  const fetchAll = async () => {
+  const fetchAll = async (silent = false) => {
     if (!user?.id) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
     // TECH-03 fix : charger les produits d'abord, puis les vues avec les IDs déjà connus
     const [{ data: prods, error: prodsErr }, { data: ratingsData }] = await Promise.all([
@@ -111,9 +117,7 @@ export default function DashboardScreen() {
     setAvgRating(avg);
 
     if (prods) {
-      const withViews = prods.map((p) => ({ ...p, views: viewMap[p.id] || 0 }));
-      setProducts(withViews);
-      setFiltered(withViews);
+      setProducts(prods.map((p) => ({ ...p, views: viewMap[p.id] || 0 })));
     }
     } catch (e) {
       console.warn("[Dashboard] fetchAll error:", e);
@@ -122,13 +126,40 @@ export default function DashboardScreen() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAll(true);
+    setRefreshing(false);
+  };
+
+  // Liste affichée : recherche + tri (recomputée à la volée)
+  const displayed = useMemo(() => {
+    let list = products;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((p) => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    }
+    const sorted = [...list];
+    if (sort === "views") sorted.sort((a, b) => b.views - a.views);
+    else if (sort === "price") sorted.sort((a, b) => a.price - b.price);
+    // "recent" = ordre serveur (created_at desc)
+    return sorted;
+  }, [products, search, sort]);
+
   const handleSearch = (text: string) => {
     setSearch(text);
     Animated.spring(searchClearScale, { toValue: text.length > 0 ? 1 : 0, useNativeDriver: true, speed: 50 }).start();
-    setFiltered(!text.trim() ? products : products.filter((p) =>
-      p.title.toLowerCase().includes(text.toLowerCase()) ||
-      p.category.toLowerCase().includes(text.toLowerCase())
-    ));
+  };
+
+  const shareShop = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await Share.share({ message: `Découvre ma boutique 🛍️\n${SHOP_URL}`, url: SHOP_URL });
+  };
+
+  const shareProduct = async (title: string, price: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const msg = `${title} — ${price.toLocaleString("fr-FR")} FCFA\nDisponible dans ma boutique 🛍️\n${SHOP_URL}`;
+    await Share.share({ message: msg, url: SHOP_URL });
   };
 
   const confirmDelete = (id: string, title: string) => {
@@ -139,10 +170,10 @@ export default function DashboardScreen() {
         text: "Supprimer", style: "destructive",
         onPress: async () => {
           const { error } = await supabase.from("products").delete().eq("id", id).eq("user_id", user!.id);
-          if (error) { Alert.alert("Erreur", "Impossible de supprimer cet article"); return; }
+          if (error) { toast("Impossible de supprimer cet article", "error"); return; }
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setProducts((prev) => prev.filter((p) => p.id !== id));
-          setFiltered((prev) => prev.filter((p) => p.id !== id));
+          toast("Article supprimé");
         },
       },
     ]);
@@ -165,13 +196,14 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={filtered}
+        data={displayed}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} colors={[primary]} />}
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         windowSize={11}
@@ -219,14 +251,27 @@ export default function DashboardScreen() {
               </LinearGradient>
             </View>
 
+            {/* ── RAPPEL WHATSAPP (si non renseigné) ── */}
+            {!profile?.phone_whatsapp && (
+              <TouchableOpacity
+                style={styles.waReminder}
+                onPress={() => router.push("/(app)/profile")}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="logo-whatsapp" size={20} color="#16a34a" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.waReminderTitle}>Ajoute ton numéro WhatsApp</Text>
+                  <Text style={styles.waReminderText}>Sans lui, tes clients ne peuvent pas commander.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#16a34a" />
+              </TouchableOpacity>
+            )}
+
             {/* ── RACCOURCIS ── */}
             <View style={styles.shortcutsRow}>
               <TouchableOpacity
                 style={[styles.shortcutBtn, { borderColor: primary + "40", backgroundColor: primary + "08" }]}
-                onPress={async () => {
-                  const { Share } = require("react-native");
-                  await Share.share({ message: `Découvrez ma boutique 🛍️\nhttps://panel-pub-web.vercel.app/shop/${user?.id}` });
-                }}
+                onPress={shareShop}
                 activeOpacity={0.8}
               >
                 <Ionicons name="share-social-outline" size={16} color={primary} />
@@ -286,13 +331,20 @@ export default function DashboardScreen() {
               </View>
             )}
 
-            {/* Titre section */}
+            {/* Titre section + tri */}
             {products.length > 0 && (
-              <View style={styles.sectionTitle}>
-                <Text style={styles.sectionTitleText}>
-                  {search ? `${filtered.length} résultat${filtered.length > 1 ? "s" : ""}` : "Mes articles"}
-                </Text>
-              </View>
+              <>
+                <View style={styles.sectionTitle}>
+                  <Text style={styles.sectionTitleText}>
+                    {search ? `${displayed.length} résultat${displayed.length > 1 ? "s" : ""}` : "Mes articles"}
+                  </Text>
+                </View>
+                <View style={styles.sortRow}>
+                  <Chip label="Récents" selected={sort === "recent"} onPress={() => setSort("recent")} />
+                  <Chip label="Plus vus" selected={sort === "views"} onPress={() => setSort("views")} />
+                  <Chip label="Prix" selected={sort === "price"} onPress={() => setSort("price")} />
+                </View>
+              </>
             )}
           </>
         }
@@ -363,6 +415,14 @@ export default function DashboardScreen() {
                   <Ionicons name={canEdit ? "create-outline" : "time-outline"} size={14} color={canEdit ? primary : "#f59e0b"} />
                 </TouchableOpacity>
                 <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: "#f0fdf4" }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Partager ${item.title}`}
+                  onPress={(e) => { e.stopPropagation(); shareProduct(item.title, item.price); }}
+                >
+                  <Ionicons name="share-social-outline" size={14} color="#16a34a" />
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: "#fff5f5" }]}
                   accessibilityRole="button"
                   accessibilityLabel={`Supprimer ${item.title}`}
@@ -385,6 +445,18 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f5f6fa" },
   listContent: { paddingHorizontal: 16, paddingTop: 0 },
   row: { gap: 12, marginBottom: 12 },
+
+  // Rappel WhatsApp
+  waReminder: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: "#f0fdf4", borderRadius: 14, padding: 14, marginBottom: 12,
+    borderWidth: 1, borderColor: "#bbf7d0",
+  },
+  waReminderTitle: { fontSize: 14, fontWeight: "800", color: "#166534" },
+  waReminderText: { fontSize: 12, color: "#16a34a", marginTop: 1 },
+
+  // Tri
+  sortRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
 
   // Header gradient
   header: { marginBottom: 16, marginHorizontal: -16 },
@@ -466,8 +538,9 @@ const styles = StyleSheet.create({
   // Product card
   card: {
     width: CARD_W, backgroundColor: "#fff", borderRadius: 20, overflow: "hidden",
+    borderWidth: 1, borderColor: colors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07, shadowRadius: 10, elevation: 4,
+    shadowOpacity: 0.06, shadowRadius: 10, elevation: 3,
   },
   cardImageWrap: { position: "relative" },
   viewsBadge: {

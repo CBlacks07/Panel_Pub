@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { useConfig } from "../../context/ConfigContext";
 import { uploadImage, optimizeImage } from "../../lib/cloudinary";
 import { Button } from "../../components/ui/Button";
+import { useToast } from "../../components/ui/Toast";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
 import { BUSINESS_TYPES } from "../../lib/businessTypes";
 import * as ExpoLocation from "expo-location";
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, bizType, refreshProfile, profile } = useAuth();
   const { primary, getPlanById } = useConfig();
+  const toast = useToast();
   const [shopName, setShopName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [slogan, setSlogan] = useState("");
@@ -132,6 +134,7 @@ export default function ProfileScreen() {
     setSaving(false);
     setEditing(false);
     refreshProfile();
+    toast("Profil enregistré");
   };
 
   const handlePickLogo = async () => {

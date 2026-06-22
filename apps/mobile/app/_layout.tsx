@@ -8,6 +8,7 @@ import * as Font from "expo-font";
 import * as Updates from "expo-updates";
 import ErrorBoundary from "../components/ErrorBoundary";
 import OfflineBanner from "../components/OfflineBanner";
+import { ToastProvider } from "../components/ui/Toast";
 import { applyBrandFont } from "../lib/brandFont";
 
 // Applique Plus Jakarta Sans à tout le texte (patch unique, avant tout rendu)
@@ -86,8 +87,10 @@ export default function RootLayout() {
       <ErrorBoundary>
         <ConfigProvider>
           <AuthProvider>
-            <RootLayoutNav />
-            <OfflineBanner />
+            <ToastProvider>
+              <RootLayoutNav />
+              <OfflineBanner />
+            </ToastProvider>
           </AuthProvider>
         </ConfigProvider>
       </ErrorBoundary>

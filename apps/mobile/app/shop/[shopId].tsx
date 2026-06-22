@@ -594,8 +594,9 @@ const styles = StyleSheet.create({
 
   card: {
     width: CARD_SIZE, borderRadius: 18, overflow: "hidden", backgroundColor: "#fff",
+    borderWidth: 1, borderColor: "#e2e8f0",
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, shadowRadius: 12, elevation: 5,
+    shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
   },
   cardImageWrap: { position: "relative" },
   cardImagePlaceholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },

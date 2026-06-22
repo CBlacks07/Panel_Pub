@@ -12,6 +12,7 @@ import { ProductImages } from "../../components/ProductImages";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
+import { useToast } from "../../components/ui/Toast";
 import { useConfig } from "../../context/ConfigContext";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, profile, bizType } = useAuth();
   const { primary, getPlanById } = useConfig();
+  const toast = useToast();
 
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -119,9 +121,8 @@ export default function EditProductScreen() {
         await supabase.from("product_edits").insert({ user_id: user.id, product_id: id });
       }
 
-      Alert.alert("Article mis à jour ✅", "Les modifications ont été enregistrées.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      toast("Modifications enregistrées");
+      router.back();
     } catch (err: any) {
       Alert.alert("Erreur", err.message ?? "Une erreur est survenue");
     } finally {
