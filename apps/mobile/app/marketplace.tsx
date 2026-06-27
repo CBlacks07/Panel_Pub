@@ -24,6 +24,7 @@ type Shop = {
   slogan: string | null;
   description: string | null;
   shop_logo_url: string | null;
+  shop_cover_url?: string | null;
   business_type: string | null;
   city: string | null;
   latitude: number | null;
@@ -382,6 +383,8 @@ export default function MarketplaceScreen() {
         <FlatList
           ref={flatListRef}
           data={shops}
+          numColumns={2}
+          columnWrapperStyle={styles.gridRow}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -487,6 +490,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 13, color: "#aaa", fontWeight: "600", marginHorizontal: 16, marginBottom: 8 },
 
   list: { paddingBottom: 32, maxWidth: 780, width: "100%", alignSelf: "center", paddingHorizontal: 16, paddingTop: 4 },
+  gridRow: { gap: 12 },
 
   empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 8, paddingTop: 60, paddingHorizontal: 40 },
   emptyIcon: { fontSize: 56 },

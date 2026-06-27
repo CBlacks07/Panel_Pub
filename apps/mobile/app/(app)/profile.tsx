@@ -30,6 +30,8 @@ export default function ProfileScreen() {
   const [slogan, setSlogan] = useState("");
   const [description, setDescription] = useState("");
   const [shopLogoUrl, setShopLogoUrl] = useState("");
+  const [shopCoverUrl, setShopCoverUrl] = useState("");
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [city, setCity] = useState("");
   const [locating, setLocating] = useState(false);
   const [selectedBizType, setSelectedBizType] = useState(bizType.id);
@@ -59,7 +61,7 @@ export default function ProfileScreen() {
 
   const loadProfile = async () => {
     const [{ data }, { count: productCount }, { data: ratingsData }] = await Promise.all([
-      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, city, business_type").eq("id", user!.id).single(),
+      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, shop_cover_url, city, business_type").eq("id", user!.id).single(),
       supabase.from("products").select("id", { count: "exact" }).eq("user_id", user!.id),
       supabase.from("shop_ratings").select("rating").eq("shop_id", user!.id),
     ]);
@@ -69,6 +71,7 @@ export default function ProfileScreen() {
       setSlogan(data.slogan ?? "");
       setDescription(data.description ?? "");
       setShopLogoUrl(data.shop_logo_url ?? "");
+      setShopCoverUrl((data as any).shop_cover_url ?? "");
       setCity((data as any).city ?? "");
       if ((data as any).business_type) setSelectedBizType((data as any).business_type);
     }
@@ -122,6 +125,7 @@ export default function ProfileScreen() {
       slogan,
       description,
       shop_logo_url: shopLogoUrl,
+      shop_cover_url: shopCoverUrl || null,
       business_type: selectedBizType,
       city: city || null,
     }).eq("id", user!.id);
@@ -172,6 +176,28 @@ export default function ProfileScreen() {
     }
   };
 
+  const handlePickCover = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permission refusée"); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setUploadingCover(true);
+      try {
+        const url = await uploadImage(result.assets[0].uri);
+        setShopCoverUrl(url);
+      } catch {
+        Alert.alert("Erreur", "Échec de l'upload");
+      } finally {
+        setUploadingCover(false);
+      }
+    }
+  };
+
   const handleLocate = async () => {
     setLocating(true);
     const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
@@ -215,6 +241,28 @@ export default function ProfileScreen() {
         </View>
 
         <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
+          {/* Couverture boutique (bannière marketplace) */}
+          {editing && (
+            <TouchableOpacity onPress={handlePickCover} activeOpacity={0.85} style={styles.coverEdit}>
+              {uploadingCover ? (
+                <ActivityIndicator color={primary} />
+              ) : shopCoverUrl ? (
+                <>
+                  <Image source={{ uri: optimizeImage(shopCoverUrl, 800) ?? shopCoverUrl }} style={styles.coverEditImg} resizeMode="cover" />
+                  <View style={styles.coverEditBadge}>
+                    <Ionicons name="camera" size={13} color="#fff" />
+                    <Text style={styles.coverEditBadgeText}>Changer</Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.coverEditEmpty}>
+                  <Ionicons name="image-outline" size={22} color={primary} />
+                  <Text style={[styles.coverEditEmptyText, { color: primary }]}>Ajouter une couverture (attire sur le marketplace)</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+
           {/* Avatar / Logo */}
           <View style={styles.avatarSection}>
             <TouchableOpacity
@@ -466,6 +514,19 @@ const styles = StyleSheet.create({
   editToggle: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
   editToggleText: { fontWeight: "700", fontSize: 13 },
   content: { padding: 20, gap: 16, paddingBottom: 110 },
+  coverEdit: {
+    height: 110, borderRadius: 16, overflow: "hidden", backgroundColor: "#f1f5f9",
+    justifyContent: "center", alignItems: "center", position: "relative",
+    borderWidth: 1.5, borderColor: "#e2e8f0", borderStyle: "dashed",
+  },
+  coverEditImg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  coverEditBadge: {
+    position: "absolute", bottom: 8, right: 8, flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5,
+  },
+  coverEditBadgeText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  coverEditEmpty: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16 },
+  coverEditEmptyText: { fontSize: 13, fontWeight: "700", flexShrink: 1 },
   avatarSection: { alignItems: "center", paddingVertical: 12, gap: 6 },
   avatar: { width: 80, height: 80, borderRadius: 40, justifyContent: "center", alignItems: "center", marginBottom: 4, overflow: "hidden" },
   avatarImg: { width: 80, height: 80 },
