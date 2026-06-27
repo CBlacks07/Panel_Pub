@@ -26,7 +26,7 @@ const CARD_W = (MAX_W - 48) / 2;
 const IMG_H = CARD_W * PRODUCT_IMAGE_RATIO;
 
 type Product = {
-  id: string; title: string; price: number;
+  id: string; title: string; price: number; compare_at_price: number | null;
   last_edited_at?: string | null; views: number;
   category: string; description: string | null; image_url: string | null;
 };
@@ -95,7 +95,7 @@ export default function DashboardScreen() {
     // TECH-03 fix : charger les produits d'abord, puis les vues avec les IDs déjà connus
     const [{ data: prods, error: prodsErr }, { data: ratingsData }] = await Promise.all([
       supabase.from("products")
-        .select("id, title, price, category, description, image_url, last_edited_at")
+        .select("id, title, price, compare_at_price, category, description, image_url, last_edited_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", user.id),
@@ -397,7 +397,12 @@ export default function DashboardScreen() {
               <View style={styles.cardInfo}>
                 <Text style={[styles.cardCat, { color: primary + "99" }]}>{item.category}</Text>
                 <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-                <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
+                <View style={styles.priceRow}>
+                  <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
+                  {item.compare_at_price && item.compare_at_price > item.price ? (
+                    <Text style={styles.cardComparePrice}>{item.compare_at_price.toLocaleString("fr-FR")} F</Text>
+                  ) : null}
+                </View>
               </View>
 
               {/* Actions rapides */}
@@ -558,7 +563,9 @@ const styles = StyleSheet.create({
   cardInfo: { padding: 10, gap: 2 },
   cardCat: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3 },
   cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", lineHeight: 18 },
-  cardPrice: { fontSize: 14, fontWeight: "900", marginTop: 3 },
+  cardPrice: { fontSize: 14, fontWeight: "900" },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" },
+  cardComparePrice: { fontSize: 12, color: "#9ca3af", textDecorationLine: "line-through", fontWeight: "600" },
   cardActions: { flexDirection: "row", gap: 6, paddingHorizontal: 10, paddingBottom: 10 },
   actionBtn: { flex: 1, borderRadius: 10, paddingVertical: 7, alignItems: "center" },
 

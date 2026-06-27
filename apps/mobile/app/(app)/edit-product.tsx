@@ -29,6 +29,7 @@ export default function EditProductScreen() {
 
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [comparePrice, setComparePrice] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -50,6 +51,7 @@ export default function EditProductScreen() {
     if (data) {
       setTitle(data.title);
       setPrice(String(data.price));
+      setComparePrice(data.compare_at_price ? String(data.compare_at_price) : "");
       setDescription(data.description ?? "");
       setCategory(data.category);
       // images[] si disponible, sinon fallback sur l'ancienne image unique
@@ -105,8 +107,11 @@ export default function EditProductScreen() {
       );
       const image_url = uploaded[0] ?? null;
 
+      const compareNum = Number(comparePrice);
+      const compare_at_price = comparePrice && !isNaN(compareNum) && compareNum > Number(price) ? compareNum : null;
+
       await supabase.from("products").update({
-        title: title.trim(), price: Number(price),
+        title: title.trim(), price: Number(price), compare_at_price,
         description: description.trim() || null, category, image_url, images: uploaded,
         last_edited_at: new Date().toISOString(),
       }).eq("id", id).eq("user_id", user!.id); // SEC-03 : double vérification
@@ -189,6 +194,23 @@ export default function EditProductScreen() {
                 value={price}
                 onChangeText={setPrice}
                 keyboardType="numeric"
+                placeholderTextColor="#c4c4c4"
+              />
+              <View style={[styles.priceSuffix, { backgroundColor: primary + "15" }]}>
+                <Text style={[styles.priceSuffixText, { color: primary }]}>FCFA</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.fieldWrap}>
+            <Text style={styles.label}>Prix d'origine (barré) <Text style={styles.optional}>(optionnel)</Text></Text>
+            <View style={styles.priceWrap}>
+              <TextInput
+                style={[styles.input, styles.priceInput]}
+                value={comparePrice}
+                onChangeText={setComparePrice}
+                keyboardType="numeric"
+                placeholder="Ex : 18000 (pour afficher une promo)"
                 placeholderTextColor="#c4c4c4"
               />
               <View style={[styles.priceSuffix, { backgroundColor: primary + "15" }]}>

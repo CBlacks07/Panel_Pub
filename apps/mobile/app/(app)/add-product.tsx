@@ -27,6 +27,7 @@ export default function AddProductScreen() {
   const toast = useToast();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [comparePrice, setComparePrice] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -69,10 +70,14 @@ export default function AddProductScreen() {
       const uploaded = await Promise.all(images.map((uri) => uploadImage(uri)));
       const image_url = uploaded[0] ?? null;
 
+      const compareNum = Number(comparePrice);
+      const compare_at_price = comparePrice && !isNaN(compareNum) && compareNum > Number(price) ? compareNum : null;
+
       const { data: product, error } = await supabase.from("products").insert({
         user_id: user!.id,
         title: title.trim(),
         price: Number(price),
+        compare_at_price,
         description: description.trim() || null,
         category, image_url, images: uploaded,
       }).select().single();
@@ -173,6 +178,23 @@ export default function AddProductScreen() {
                 placeholderTextColor="#c4c4c4"
                 value={price}
                 onChangeText={setPrice}
+                keyboardType="numeric"
+              />
+              <View style={[styles.priceSuffix, { backgroundColor: primary + "15" }]}>
+                <Text style={[styles.priceSuffixText, { color: primary }]}>FCFA</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.fieldWrap}>
+            <Text style={styles.label}>Prix d'origine (barré) <Text style={styles.optional}>(optionnel)</Text></Text>
+            <View style={styles.priceWrap}>
+              <TextInput
+                style={[styles.input, styles.priceInput]}
+                placeholder="Ex : 18000 (pour afficher une promo)"
+                placeholderTextColor="#c4c4c4"
+                value={comparePrice}
+                onChangeText={setComparePrice}
                 keyboardType="numeric"
               />
               <View style={[styles.priceSuffix, { backgroundColor: primary + "15" }]}>

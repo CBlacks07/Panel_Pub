@@ -61,7 +61,7 @@ function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: 
       <Image
         source={{ uri: src ?? uri }}
         style={{ width: size, height: IMG_HEIGHT }}
-        resizeMode="contain"
+        resizeMode="cover"
         onLoad={() => setLoading(false)}
         onError={() => { setLoading(false); setError(true); }}
       />
@@ -79,6 +79,7 @@ type Product = {
   id: string;
   title: string;
   price: number;
+  compare_at_price: number | null;
   description: string | null;
   category: string;
   image_url: string | null;
@@ -143,7 +144,7 @@ export default function ShopScreen() {
     const [{ data: shopData }, { data: productsData }, { data: ratingsData }] = await Promise.all([
       supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, suspended, business_type").eq("id", shopId).single(),
       supabase.from("products")
-        .select("id, title, price, description, category, image_url, images, product_variations(type, value)")
+        .select("id, title, price, compare_at_price, description, category, image_url, images, product_variations(type, value)")
         .eq("user_id", shopId)
         .order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
@@ -358,15 +359,21 @@ export default function ShopScreen() {
               {/* Image */}
               <View style={styles.cardImageWrap}>
                 <ProductImage uri={item.image_url} size={CARD_SIZE} fallbackEmoji={shopBizType.emoji} />
-                {/* Badge prix */}
-                <View style={[styles.priceBadge, { backgroundColor: primary }]}>
-                  <Text style={styles.priceBadgeText}>{item.price.toLocaleString("fr-FR")} F</Text>
-                </View>
+                {item.compare_at_price && item.compare_at_price > item.price ? (
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountBadgeText}>-{Math.round((1 - item.price / item.compare_at_price) * 100)}%</Text>
+                  </View>
+                ) : null}
               </View>
               {/* Infos */}
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-                <Text style={[styles.cardCategory, { color: primary + "99" }]}>{item.category}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={[styles.cardPrice, { color: primary }]}>{item.price.toLocaleString("fr-FR")} F</Text>
+                  {item.compare_at_price && item.compare_at_price > item.price ? (
+                    <Text style={styles.cardComparePrice}>{item.compare_at_price.toLocaleString("fr-FR")} F</Text>
+                  ) : null}
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -605,9 +612,17 @@ const styles = StyleSheet.create({
     borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4,
   },
   priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "800" },
-  cardInfo: { padding: 10 },
-  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", lineHeight: 18, marginBottom: 3 },
+  discountBadge: {
+    position: "absolute", top: 8, left: 8,
+    backgroundColor: "#ef4444", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+  },
+  discountBadgeText: { color: "#fff", fontSize: 11, fontWeight: "800" },
+  cardInfo: { padding: 10, gap: 4 },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a", lineHeight: 18 },
   cardCategory: { fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
+  cardPrice: { fontSize: 14, fontWeight: "900" },
+  cardComparePrice: { fontSize: 12, color: "#9ca3af", textDecorationLine: "line-through", fontWeight: "600" },
 
   // Vide
   empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },

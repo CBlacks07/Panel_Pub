@@ -9,7 +9,7 @@ import { optimizeImage } from "@/lib/image";
 import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
 
 type Product = {
-  id: string; title: string; price: number; description: string | null;
+  id: string; title: string; price: number; compare_at_price: number | null; description: string | null;
   category: string; image_url: string | null; images: string[] | null;
   product_variations: { type: string; value: string }[];
 };
@@ -43,7 +43,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     Promise.all([
       supabase.from("app_config").select("key, value"),
       supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, business_type, suspended").eq("id", shopId).single(),
-      supabase.from("products").select("id, title, price, description, category, image_url, images, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
+      supabase.from("products").select("id, title, price, compare_at_price, description, category, image_url, images, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
     ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }, { data: ratingsData }]) => {
       if (cfg) { const map: Config = {}; cfg.forEach((r) => { map[r.key] = r.value; }); setConfig(map); }
@@ -219,14 +219,21 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                   ) : (
                     <span className="text-4xl">{biz.emoji}</span>
                   )}
-                  {/* Price badge */}
-                  <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl text-white text-xs font-black shadow-md" style={{ backgroundColor: primary }}>
-                    {product.price.toLocaleString("fr-FR")} F
-                  </div>
+                  {/* Badge promo */}
+                  {product.compare_at_price && product.compare_at_price > product.price ? (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-red-500 text-white text-xs font-black shadow-md">
+                      -{Math.round((1 - product.price / product.compare_at_price) * 100)}%
+                    </div>
+                  ) : null}
                 </div>
                 <div className="p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-0.5 truncate" style={{ color: primary + "99" }}>{product.category}</p>
-                  <p className="text-sm font-bold text-gray-900 truncate">{product.title}</p>
+                  <p className="text-sm font-bold text-gray-900 truncate mb-1">{product.title}</p>
+                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-sm font-black" style={{ color: primary }}>{product.price.toLocaleString("fr-FR")} F</span>
+                    {product.compare_at_price && product.compare_at_price > product.price ? (
+                      <span className="text-xs text-gray-400 line-through">{product.compare_at_price.toLocaleString("fr-FR")} F</span>
+                    ) : null}
+                  </div>
                 </div>
               </button>
             ))}
