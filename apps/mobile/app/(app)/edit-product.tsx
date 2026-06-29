@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { uploadImage } from "../../lib/cloudinary";
@@ -26,6 +26,7 @@ export default function EditProductScreen() {
   const { user, profile, bizType } = useAuth();
   const { primary, getPlanById } = useConfig();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -144,11 +145,11 @@ export default function EditProductScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScreenHeader title="Modifier l'article" onBack={() => router.back()} />
 
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 60 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         enableOnAndroid

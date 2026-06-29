@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Share, Alert, TextInput, ScrollView, Image, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
@@ -25,6 +25,7 @@ export default function ProfileScreen() {
   const { user, signOut, bizType, refreshProfile, profile } = useAuth();
   const { primary, getPlanById } = useConfig();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const [shopName, setShopName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [slogan, setSlogan] = useState("");
@@ -231,7 +232,7 @@ export default function ProfileScreen() {
   const hasLogo = shopLogoUrl && shopLogoUrl.trim().length > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={{ flex: 1 }}>
         <View style={styles.header}>
           <Text style={styles.title}>Mon profil</Text>
@@ -240,7 +241,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
+        <KeyboardAwareScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={24}>
           {/* Couverture boutique (bannière marketplace) */}
           {editing && (
             <TouchableOpacity onPress={handlePickCover} activeOpacity={0.85} style={styles.coverEdit}>

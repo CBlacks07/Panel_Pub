@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { uploadImage } from "../../lib/cloudinary";
@@ -25,6 +25,7 @@ export default function AddProductScreen() {
   const { user, profile, bizType } = useAuth();
   const { primary, getPlanById } = useConfig();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [comparePrice, setComparePrice] = useState("");
@@ -102,7 +103,7 @@ export default function AddProductScreen() {
   if (limitReached) {
     const plan = getPlanById(profile?.plan || "free");
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.limitScreen}>
           <View style={[styles.limitIconWrap, { backgroundColor: primary + "15" }]}>
             <Ionicons name="lock-closed" size={40} color={primary} />
@@ -126,11 +127,11 @@ export default function AddProductScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScreenHeader title={bizType.ui.addBtn} onBack={() => router.back()} />
 
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 60 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         enableOnAndroid

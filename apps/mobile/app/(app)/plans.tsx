@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, SafeAreaView, ActivityIndicator, Alert, Linking,
+  StyleSheet, ActivityIndicator, Alert, Linking,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { getPlanFeatures } from "../../lib/planFeatures";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ type Plan = {
 
 export default function PlansScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { profile } = useAuth();
   const { primary, config } = useConfig();
   const supportWhatsApp = config.support_whatsapp || SUPPORT_WHATSAPP_DEFAULT;
@@ -73,7 +75,7 @@ export default function PlansScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScreenHeader
         title="Nos forfaits"
         subtitle={
@@ -84,7 +86,7 @@ export default function PlansScreen() {
         onBack={() => router.back()}
       />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 60 }]} showsVerticalScrollIndicator={false}>
         {plans.map((plan) => {
           const isCurrent = plan.id === currentPlan;
           const isPopular = plan.is_popular;
