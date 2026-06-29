@@ -1,5 +1,6 @@
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
+import { BackHandler, Alert } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { ConfigProvider } from "../context/ConfigContext";
@@ -39,6 +40,26 @@ function RootLayoutNav() {
       router.replace("/(app)/dashboard");
     }
   }, [session, loading, segments]);
+
+  // Bouton retour Android : si on est à la racine (aucun écran en arrière),
+  // demander confirmation avant de fermer l'app. Sinon, navigation normale.
+  useEffect(() => {
+    const onBack = () => {
+      if (router.canGoBack()) return false; // laisse la navigation gérer le retour
+      Alert.alert(
+        "Quitter Boutiki ?",
+        "Veux-tu vraiment fermer l'application ?",
+        [
+          { text: "Annuler", style: "cancel" },
+          { text: "Quitter", style: "destructive", onPress: () => BackHandler.exitApp() },
+        ],
+        { cancelable: true }
+      );
+      return true; // empêche la fermeture immédiate
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+    return () => sub.remove();
+  }, [router]);
 
   return <Slot />;
 }
