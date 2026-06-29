@@ -86,7 +86,7 @@ type Product = {
   images: string[] | null;
   product_variations: Variation[];
 };
-type Shop = { shop_name: string; phone_whatsapp: string | null; slogan: string | null; description: string | null; shop_logo_url: string | null; suspended?: boolean; business_type?: string | null };
+type Shop = { shop_name: string; phone_whatsapp: string | null; slogan: string | null; description: string | null; shop_logo_url: string | null; shop_cover_url?: string | null; suspended?: boolean; business_type?: string | null };
 
 export default function ShopScreen() {
   const { shopId } = useLocalSearchParams<{ shopId: string }>();
@@ -142,7 +142,7 @@ export default function ShopScreen() {
 
   const loadShop = async () => {
     const [{ data: shopData }, { data: productsData }, { data: ratingsData }] = await Promise.all([
-      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, suspended, business_type").eq("id", shopId).single(),
+      supabase.from("users").select("shop_name, phone_whatsapp, slogan, description, shop_logo_url, shop_cover_url, suspended, business_type").eq("id", shopId).single(),
       supabase.from("products")
         .select("id, title, price, compare_at_price, description, category, image_url, images, product_variations(type, value)")
         .eq("user_id", shopId)
@@ -247,6 +247,7 @@ export default function ShopScreen() {
 
   const shopBizType = getBusinessType(shop.business_type || "mode");
   const hasLogo = !!(shop.shop_logo_url && shop.shop_logo_url.trim().length > 0);
+  const hasCover = !!(shop.shop_cover_url && shop.shop_cover_url.trim().length > 0);
 
   return (
     <View style={styles.outerContainer}>
@@ -255,9 +256,18 @@ export default function ShopScreen() {
 
       {/* ── HEADER avec bandeau gradient ── */}
       <View style={[styles.shopHeader, { backgroundColor: primary }]}>
-        {/* Décoration fond */}
-        <View style={styles.headerCircle1} />
-        <View style={styles.headerCircle2} />
+        {/* Fond : couverture si configurée, sinon décoration */}
+        {hasCover ? (
+          <>
+            <Image source={{ uri: optimizeImage(shop.shop_cover_url, 1080) ?? shop.shop_cover_url! }} style={styles.coverBg} resizeMode="cover" />
+            <View style={styles.coverScrim} />
+          </>
+        ) : (
+          <>
+            <View style={styles.headerCircle1} />
+            <View style={styles.headerCircle2} />
+          </>
+        )}
 
         {/* Boutons flottants */}
         <TouchableOpacity onPress={() => router.canGoBack() && router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Retour">
@@ -540,6 +550,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20, paddingHorizontal: 16,
     alignItems: "center", overflow: "hidden", position: "relative",
   },
+  coverBg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  coverScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(15,23,42,0.45)" },
   headerCircle1: {
     position: "absolute", width: 200, height: 200, borderRadius: 100,
     backgroundColor: "rgba(255,255,255,0.08)", top: -60, right: -40,

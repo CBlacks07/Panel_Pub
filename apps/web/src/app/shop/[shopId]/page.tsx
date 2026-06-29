@@ -15,7 +15,7 @@ type Product = {
 };
 type Shop = {
   shop_name: string; slogan: string | null; description: string | null;
-  phone_whatsapp: string | null; shop_logo_url: string | null;
+  phone_whatsapp: string | null; shop_logo_url: string | null; shop_cover_url: string | null;
   business_type: string | null; suspended?: boolean;
   avg_rating?: number; rating_count?: number;
 };
@@ -42,7 +42,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   useEffect(() => {
     Promise.all([
       supabase.from("app_config").select("key, value"),
-      supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, business_type, suspended").eq("id", shopId).single(),
+      supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, shop_cover_url, business_type, suspended").eq("id", shopId).single(),
       supabase.from("products").select("id, title, price, compare_at_price, description, category, image_url, images, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
     ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }, { data: ratingsData }]) => {
@@ -135,8 +135,17 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* ── HERO HEADER ── */}
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary} 0%, ${primary}cc 100%)` }}>
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/08" />
+        {shop.shop_cover_url ? (
+          <>
+            <img src={optimizeImage(shop.shop_cover_url, 1600)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-slate-900/45" />
+          </>
+        ) : (
+          <>
+            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10" />
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/08" />
+          </>
+        )}
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 relative">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
