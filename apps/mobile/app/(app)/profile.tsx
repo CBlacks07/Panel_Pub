@@ -212,15 +212,31 @@ export default function ProfileScreen() {
       latitude: loc.coords.latitude,
       longitude: loc.coords.longitude,
     });
-    const cityName = address?.city || address?.district || address?.subregion || "";
-    setCity(cityName);
-    // Sauvegarder les coordonnées directement
+    // Libellé le plus précis disponible : rue / quartier + ville (le
+    // géocodeur ne renvoie souvent que la ville selon la zone)
+    const parts = [address?.name, address?.street, address?.district, address?.subregion, address?.city]
+      .filter((x): x is string => !!x && x.trim().length > 0);
+    const seen = new Set<string>();
+    const deduped = parts.filter((x) => {
+      const k = x.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    const label = deduped.slice(0, 3).join(", ") || address?.region || "";
+    setCity(label);
+    // Les coordonnées GPS exactes sont enregistrées (servent à la distance)
     await supabase.from("users").update({
       latitude: loc.coords.latitude,
       longitude: loc.coords.longitude,
-      city: cityName,
+      city: label,
     }).eq("id", user!.id);
-    Alert.alert("Position enregistrée !", `Ville : ${cityName || "détectée"}`);
+    Alert.alert(
+      "Position enregistrée",
+      label
+        ? `Lieu : ${label}\n\nTu peux préciser l'adresse à la main si besoin.`
+        : "Coordonnées GPS enregistrées. Précise le lieu à la main si tu veux."
+    );
     setLocating(false);
   };
 
