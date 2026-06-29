@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, ScrollView,
   StyleSheet, TextInput, Animated, Image, Keyboard, ActivityIndicator,
@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import AnimatedShopCard from "../components/AnimatedShopCard";
 import { MarketplaceSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
+import { CategoryCircle, ProductMiniCard, HomeProduct } from "../components/marketplace/HomeBits";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
@@ -53,6 +54,7 @@ export default function MarketplaceScreen() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeBizType, setActiveBizType] = useState("all");
   const [bizTypes, setBizTypes] = useState<string[]>([]);
+  const [homeProducts, setHomeProducts] = useState<HomeProduct[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [bannerHidden, setBannerHidden] = useState(false);
@@ -105,7 +107,7 @@ export default function MarketplaceScreen() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Types de boutiques présents (pour les puces de filtre), chargés une fois
+  // Types de boutiques présents (pour les catégories), chargés une fois
   useEffect(() => {
     supabase.from("marketplace_shops").select("business_type").then(({ data, error }) => {
       if (!error && data) {
@@ -113,6 +115,41 @@ export default function MarketplaceScreen() {
       }
     });
   }, []);
+
+  // Produits récents (toutes boutiques) pour les sections de l'accueil
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id, title, price, compare_at_price, image_url, user_id, users!inner(shop_name, business_type, suspended)")
+      .order("created_at", { ascending: false })
+      .limit(150)
+      .then(({ data, error }) => {
+        if (error || !data) return;
+        const rows: HomeProduct[] = data
+          .filter((p: any) => p.users && !p.users.suspended)
+          .map((p: any) => ({
+            id: p.id, title: p.title, price: p.price, compare_at_price: p.compare_at_price,
+            image_url: p.image_url, user_id: p.user_id,
+            shop_name: p.users.shop_name, business_type: p.users.business_type,
+          }));
+        setHomeProducts(rows);
+      });
+  }, []);
+
+  // Sections produits groupées par type de boutique (ordre BUSINESS_TYPES)
+  const homeSections = useMemo(() => {
+    const map: Record<string, HomeProduct[]> = {};
+    homeProducts.forEach((p) => {
+      const k = p.business_type || "autre";
+      (map[k] ||= []).push(p);
+    });
+    return BUSINESS_TYPES
+      .filter((b) => (map[b.id]?.length ?? 0) >= 1)
+      .map((b) => ({ biz: b, products: map[b.id].slice(0, 10) }));
+  }, [homeProducts]);
+
+  // Vue "accueil" (sections + catégories) seulement sans recherche ni filtre
+  const isHome = !debouncedSearch && activeBizType === "all";
 
   // (Re)charge la 1re page quand les critères changent (recherche/type/position)
   useEffect(() => {
@@ -287,16 +324,41 @@ export default function MarketplaceScreen() {
         </Animated.View>
       )}
 
-      {/* Compteur de résultats */}
-      <Text style={styles.sectionTitle}>
-        {shops.length}{hasMore ? "+" : ""} boutique{shops.length > 1 ? "s" : ""}
-        {debouncedSearch
-          ? ` · « ${debouncedSearch} »`
-          : activeBizType !== "all"
-            ? ` · ${BUSINESS_TYPES.find((b) => b.id === activeBizType)?.label ?? ""}`
-            : userLocation
-              ? " · les plus proches"
-              : " · les mieux notées"}
+      {/* Catégories rondes */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.catRow}
+        keyboardShouldPersistTaps="handled"
+      >
+        <CategoryCircle emoji="🏪" label="Tout" selected={activeBizType === "all"} accent={primary} onPress={() => handleBizFilter("all")} />
+        {BUSINESS_TYPES.filter((b) => bizTypes.includes(b.id)).map((b) => (
+          <CategoryCircle key={b.id} emoji={b.emoji} label={b.label} selected={activeBizType === b.id} accent={primary} onPress={() => handleBizFilter(b.id)} />
+        ))}
+      </ScrollView>
+
+      {/* Sections produits par catégorie (accueil uniquement) */}
+      {isHome && homeSections.map(({ biz, products }) => (
+        <View key={biz.id} style={styles.prodSection}>
+          <View style={styles.prodSectionHead}>
+            <Text style={styles.prodSectionTitle}>{biz.emoji} {biz.label}</Text>
+            <TouchableOpacity onPress={() => handleBizFilter(biz.id)}>
+              <Text style={[styles.prodSectionLink, { color: primary }]}>Voir tout ›</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.prodSectionScroll} keyboardShouldPersistTaps="handled">
+            {products.map((p) => (
+              <ProductMiniCard key={p.id} product={p} accent={primary} fallbackEmoji={biz.emoji} onPress={() => router.push(`/shop/${p.user_id}`)} />
+            ))}
+          </ScrollView>
+        </View>
+      ))}
+
+      {/* Titre boutiques */}
+      <Text style={[styles.sectionTitle, isHome && { marginTop: 8 }]}>
+        {isHome
+          ? "Toutes les boutiques"
+          : `${shops.length}${hasMore ? "+" : ""} boutique${shops.length > 1 ? "s" : ""}${debouncedSearch ? ` · « ${debouncedSearch} »` : activeBizType !== "all" ? ` · ${BUSINESS_TYPES.find((b) => b.id === activeBizType)?.label ?? ""}` : ""}`}
       </Text>
     </>
   );
@@ -355,26 +417,6 @@ export default function MarketplaceScreen() {
             <Ionicons name="close-circle" size={18} color="#c4c4c4" />
           </TouchableOpacity>
         </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.bizFilterBar}
-          contentContainerStyle={styles.bizFilterContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <TouchableOpacity style={[styles.bizFilterChip, activeBizType === "all" && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter("all")}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="storefront-outline" size={13} color={activeBizType === "all" ? "#fff" : "#555"} />
-              <Text style={[styles.bizFilterText, activeBizType === "all" && { color: "#fff" }]}>Tout</Text>
-            </View>
-          </TouchableOpacity>
-          {BUSINESS_TYPES.filter((b) => bizTypes.includes(b.id)).map((b) => (
-            <TouchableOpacity key={b.id} style={[styles.bizFilterChip, activeBizType === b.id && { backgroundColor: primary, borderColor: primary }]} onPress={() => handleBizFilter(b.id)}>
-              <Text style={[styles.bizFilterText, activeBizType === b.id && { color: "#fff" }]}>{b.emoji} {b.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
       </View>
 
       {loading ? (
@@ -488,6 +530,17 @@ const styles = StyleSheet.create({
   bizFilterChip: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#eee", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fafafa" },
   bizFilterText: { fontSize: 12, fontWeight: "600", color: "#555" },
   sectionTitle: { fontSize: 13, color: "#aaa", fontWeight: "600", marginHorizontal: 16, marginBottom: 8 },
+
+  // Accueil produits
+  catRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, gap: 14 },
+  prodSection: { marginBottom: 12 },
+  prodSectionHead: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, marginBottom: 10,
+  },
+  prodSectionTitle: { fontSize: 16, fontWeight: "800", color: "#0f172a" },
+  prodSectionLink: { fontSize: 13, fontWeight: "700" },
+  prodSectionScroll: { paddingHorizontal: 16, gap: 12 },
 
   list: { paddingBottom: 32, maxWidth: 780, width: "100%", alignSelf: "center", paddingHorizontal: 16, paddingTop: 4 },
   gridRow: { gap: 12 },
