@@ -12,7 +12,7 @@ import { Chip } from "../../components/ui/Chip";
 import { useToast } from "../../components/ui/Toast";
 import { PRODUCT_IMAGE_RATIO, colors } from "../../lib/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { optimizeImage } from "../../lib/cloudinary";
@@ -67,6 +67,7 @@ export default function DashboardScreen() {
   const { primary, getPlanById } = useConfig();
   const router = useRouter();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"recent" | "views" | "price">("recent");
@@ -188,18 +189,18 @@ export default function DashboardScreen() {
   const shopLogo = profile?.shop_logo_url || null;
 
   if (loading) return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <DashboardSkeleton />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <FlatList
         data={displayed}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 130 }]}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
