@@ -5,6 +5,7 @@ import {
   Dimensions, StatusBar, Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { optimizeImage } from "../../lib/cloudinary";
@@ -260,7 +261,11 @@ export default function ShopScreen() {
         {hasCover ? (
           <>
             <Image source={{ uri: optimizeImage(shop.shop_cover_url, 1080) ?? shop.shop_cover_url! }} style={styles.coverBg} resizeMode="cover" />
-            <View style={styles.coverScrim} />
+            <LinearGradient
+              colors={["rgba(15,23,42,0.25)", "rgba(15,23,42,0.55)", "rgba(15,23,42,0.85)"]}
+              locations={[0, 0.5, 1]}
+              style={styles.coverScrim}
+            />
           </>
         ) : (
           <>
@@ -550,8 +555,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20, paddingHorizontal: 16,
     alignItems: "center", overflow: "hidden", position: "relative",
   },
-  coverBg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
-  coverScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(15,23,42,0.45)" },
+  coverBg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  coverScrim: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   headerCircle1: {
     position: "absolute", width: 200, height: 200, borderRadius: 100,
     backgroundColor: "rgba(255,255,255,0.08)", top: -60, right: -40,

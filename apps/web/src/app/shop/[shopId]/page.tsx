@@ -138,7 +138,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
         {shop.shop_cover_url ? (
           <>
             <img src={optimizeImage(shop.shop_cover_url, 1600)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-slate-900/45" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-slate-900/55 to-slate-900/85" />
           </>
         ) : (
           <>
