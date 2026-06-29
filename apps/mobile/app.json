@@ -8,11 +8,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#2563EB"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.panelpub.app",
@@ -26,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.panelpub.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "intentFilters": [
         {
@@ -54,6 +49,15 @@
       "expo-router",
       "expo-font",
       "expo-location",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-logo.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
       [
         "expo-build-properties",
         {
