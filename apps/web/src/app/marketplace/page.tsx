@@ -2,13 +2,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Store, Search, Star, MapPin, Package, SlidersHorizontal, X } from "lucide-react";
-const stripEmoji = (str: string) => str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
+import { optimizeImage } from "@/lib/image";
+import { Search, Star, X } from "lucide-react";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
+
+const stripEmoji = (str: string) =>
+  str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
+
+/** Accent chaleureux de la direction visuelle (dégradé bleu -> corail). */
+const CORAL = "#F2764B";
 
 type Shop = {
   id: string; shop_name: string; slogan: string | null;
   description: string | null; shop_logo_url: string | null;
+  shop_cover_url: string | null; city: string | null;
   business_type: string | null; product_count: number;
   avg_rating: number; rating_count: number;
 };
@@ -27,12 +34,11 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [activeBiz, setActiveBiz] = useState("all");
   const [config, setConfig] = useState<Config>({});
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([
       supabase.from("app_config").select("key, value"),
-      supabase.from("users").select("id, shop_name, slogan, description, shop_logo_url, business_type"),
+      supabase.from("users").select("id, shop_name, slogan, description, shop_logo_url, shop_cover_url, city, business_type"),
       supabase.from("products").select("user_id"),
       supabase.from("shop_ratings").select("shop_id, rating"),
     ]).then(([{ data: cfg }, { data: shopsData }, { data: products }, { data: ratings }]) => {
@@ -68,231 +74,209 @@ export default function MarketplacePage() {
     setFiltered(result);
   };
 
-  const FilterPanel = () => (
-    <div className="space-y-2">
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Catégories</p>
-      <button onClick={() => { setActiveBiz("all"); applyFilters(search, "all"); setSidebarOpen(false); }}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeBiz === "all" ? "text-white" : "text-gray-600 hover:bg-gray-50"}`}
-        style={activeBiz === "all" ? { backgroundColor: primary } : {}}>
-        <Store size={16} /> Toutes les boutiques
-        <span className="ml-auto text-xs opacity-70">{shops.length}</span>
-      </button>
-      {presentBizTypes.map((b) => {
-        const count = shops.filter(s => s.business_type === b.id).length;
-        return (
-          <button key={b.id} onClick={() => { setActiveBiz(b.id); applyFilters(search, b.id); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeBiz === b.id ? "text-white" : "text-gray-600 hover:bg-gray-50"}`}
-            style={activeBiz === b.id ? { backgroundColor: BIZ_COLORS[b.id] || primary } : {}}>
-            <span className="text-base">{b.emoji}</span> {b.label}
-            <span className="ml-auto text-xs opacity-70">{count}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
+  const heroGradient = `linear-gradient(120deg, ${primary} 0%, #3b5bdb 45%, ${CORAL} 120%)`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "#FFF8F4" }}>
 
       {/* ── NAV ── */}
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      <nav className="sticky top-0 z-30 backdrop-blur-md" style={{ background: "rgba(255,255,255,.9)", borderBottom: "1px solid #F1E4DB" }}>
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-10 py-3.5 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
             {logoUrl ? (
-              <img src={logoUrl} className="w-8 h-8 rounded-xl object-cover" alt={appName} />
+              <img src={optimizeImage(logoUrl, 120)} className="w-9 h-9 rounded-xl object-cover" alt={appName} />
             ) : (
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{ backgroundColor: primary }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-lg"
+                style={{ background: `linear-gradient(135deg, ${primary}, ${CORAL})` }}>
                 {appName[0]}
               </div>
             )}
-            <span className="font-black text-gray-900">{appName}</span>
+            <span className="text-xl sm:text-[22px] font-extrabold text-slate-900">{appName}</span>
           </Link>
 
-          {/* Search bar (desktop) */}
-          <div className="hidden md:flex flex-1 max-w-md relative">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Rechercher une boutique..." value={search}
+          {/* Recherche (desktop) */}
+          <div className="hidden md:flex flex-1 max-w-[420px] mx-6 relative">
+            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cherche une boutique, un article…"
+              value={search}
               onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeBiz); }}
-              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-colors"
-              style={{ ["--tw-ring-color" as any]: primary + "40" }} />
-            {search && <button onClick={() => { setSearch(""); applyFilters("", activeBiz); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <X size={14} />
-            </button>}
+              className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-sm bg-white focus:outline-none focus:ring-2 transition"
+              style={{ border: "1px solid #F1E4DB", boxShadow: "0 2px 8px rgba(15,23,42,.04)", ["--tw-ring-color" as string]: primary + "40" }}
+            />
+            {search && (
+              <button onClick={() => { setSearch(""); applyFilters("", activeBiz); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" aria-label="Effacer">
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-xl border border-gray-200 text-gray-500">
-              <SlidersHorizontal size={16} />
-            </button>
-            <Link href="/auth/login" className="hidden sm:block text-sm font-semibold text-gray-500 hover:text-gray-900 px-3 py-2">Connexion</Link>
-            <Link href="/auth/register" className="text-sm font-bold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap" style={{ backgroundColor: primary }}>
-              Ma boutique
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/auth/login" className="hidden sm:block text-sm font-bold text-slate-600 hover:text-slate-900">Connexion</Link>
+            <Link href="/auth/register"
+              className="text-sm font-bold text-white px-4 py-2.5 rounded-[13px] hover:opacity-90 transition-opacity whitespace-nowrap"
+              style={{ backgroundColor: primary, boxShadow: `0 8px 18px ${primary}40` }}>
+              Ouvrir ma boutique
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── LAYOUT ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex gap-6">
+      <div className="max-w-[1400px] mx-auto">
 
-        {/* Sidebar desktop */}
-        <aside className="hidden lg:block w-56 flex-shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sticky top-20">
-            <FilterPanel />
-          </div>
-        </aside>
-
-        {/* Sidebar mobile (drawer) */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <p className="font-black text-gray-900">Filtrer</p>
-                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl bg-gray-100"><X size={16} /></button>
-              </div>
-              <FilterPanel />
+        {/* ── HERO ── */}
+        <div className="relative overflow-hidden mx-5 sm:mx-10 mt-6 sm:mt-8 rounded-[28px] px-7 py-10 sm:px-11 sm:py-12" style={{ background: heroGradient }}>
+          <div className="absolute w-[280px] h-[280px] rounded-full bg-white/10 -top-24 -right-10" />
+          <div className="absolute w-[160px] h-[160px] rounded-full bg-white/[.08] -bottom-16 right-44" />
+          <div className="relative max-w-[560px]">
+            <h1 className="text-[28px] sm:text-[38px] font-extrabold text-white leading-[1.12] tracking-tight">
+              {stripEmoji(config["marketplace_banner_title"] || "Les pépites mode locales, à portée de WhatsApp")} ✨
+            </h1>
+            <p className="text-[15px] sm:text-base text-white/[.88] mt-3.5 leading-relaxed">
+              {config["marketplace_banner_subtitle"] || "Découvre les créateurs et boutiques près de toi. Commande en un clic, directement auprès du vendeur."}
+            </p>
+            <div className="flex flex-wrap gap-3.5 mt-6">
+              <a href="#boutiques" className="bg-white text-[15px] font-extrabold px-5 py-3 rounded-[14px]" style={{ color: primary }}>
+                Explorer les boutiques
+              </a>
+              <Link href="/auth/register" className="text-[15px] font-bold text-white px-5 py-3 rounded-[14px]" style={{ border: "1.5px solid rgba(255,255,255,.6)" }}>
+                {config["vendor_cta"] ? stripEmoji(config["vendor_cta"]) : "Devenir vendeur"}
+              </Link>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Contenu principal */}
-        <main className="flex-1 min-w-0">
+        {/* Recherche (mobile) */}
+        <div className="md:hidden relative mx-5 mt-6">
+          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Cherche une boutique…"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeBiz); }}
+            className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm bg-white focus:outline-none"
+            style={{ border: "1px solid #F1E4DB", boxShadow: "0 2px 8px rgba(15,23,42,.04)" }}
+          />
+        </div>
 
-          {/* Bannière */}
-          <div className="rounded-2xl p-6 sm:p-8 mb-6 text-white relative overflow-hidden" style={{ backgroundColor: primary }}>
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/10" />
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10" />
-            <h1 className="text-xl sm:text-2xl font-black mb-2 relative">
-              {stripEmoji(config["marketplace_banner_title"] || "Les meilleures boutiques du moment")}
-            </h1>
-            <p className="text-white/80 mb-4 relative text-sm sm:text-base">{config["marketplace_banner_subtitle"] || "Mode locale · Commande via WhatsApp"}</p>
-            <Link href="/auth/register" className="inline-flex items-center gap-2 bg-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-sm hover:opacity-90 transition-opacity relative" style={{ color: primary }}>
-              {config["vendor_cta"] || "Ouvrir ma boutique"} →
-            </Link>
-          </div>
-
-          {/* Search mobile */}
-          <div className="md:hidden relative mb-4">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Rechercher..." value={search}
-              onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeBiz); }}
-              className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none" />
-          </div>
-
-          {/* Filtres mobiles scroll */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
-            <button onClick={() => { setActiveBiz("all"); applyFilters(search, "all"); }}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all"
-              style={{ backgroundColor: activeBiz === "all" ? primary : "white", borderColor: activeBiz === "all" ? primary : "#e5e7eb", color: activeBiz === "all" ? "white" : "#555" }}>
-              Tout ({shops.length})
+        {/* ── CATÉGORIES ── */}
+        <div className="flex gap-3 sm:gap-3.5 px-5 sm:px-10 mt-6 mb-6 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => { setActiveBiz("all"); applyFilters(search, "all"); }}
+            className="flex-shrink-0 text-sm font-bold px-5 py-2.5 rounded-full transition"
+            style={activeBiz === "all"
+              ? { background: "#0F172A", color: "#fff" }
+              : { background: "#fff", color: "#475569", boxShadow: "0 2px 8px rgba(15,23,42,.05)", fontWeight: 600 }}
+          >
+            🏪 Tout
+          </button>
+          {presentBizTypes.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => { setActiveBiz(b.id); applyFilters(search, b.id); }}
+              className="flex-shrink-0 text-sm px-5 py-2.5 rounded-full transition whitespace-nowrap"
+              style={activeBiz === b.id
+                ? { background: "#0F172A", color: "#fff", fontWeight: 700 }
+                : { background: "#fff", color: "#475569", boxShadow: "0 2px 8px rgba(15,23,42,.05)", fontWeight: 600 }}
+            >
+              {b.emoji} {b.label}
             </button>
-            {presentBizTypes.map((b) => (
-              <button key={b.id} onClick={() => { setActiveBiz(b.id); applyFilters(search, b.id); }}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all"
-                style={{ backgroundColor: activeBiz === b.id ? BIZ_COLORS[b.id] : "white", borderColor: activeBiz === b.id ? BIZ_COLORS[b.id] : "#e5e7eb", color: activeBiz === b.id ? "white" : "#555" }}>
-                {b.emoji} {b.label}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* Count + tri */}
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500 font-medium">
-              <span className="font-bold text-gray-900">{filtered.length}</span> boutique{filtered.length > 1 ? "s" : ""}
-              {activeBiz !== "all" && <span className="ml-1 text-gray-400">· {BUSINESS_TYPES.find(b => b.id === activeBiz)?.label}</span>}
-            </p>
-          </div>
+        {/* ── SECTION ── */}
+        <div id="boutiques" className="flex justify-between items-baseline px-5 sm:px-10 mb-4">
+          <h2 className="text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900">
+            {activeBiz === "all" ? "Boutiques près de toi" : BUSINESS_TYPES.find((b) => b.id === activeBiz)?.label}
+          </h2>
+          <span className="text-sm font-bold" style={{ color: CORAL }}>
+            {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
+          </span>
+        </div>
 
-          {/* Grid boutiques */}
+        {/* ── GRILLE ── */}
+        <div className="px-5 sm:px-10 pb-12">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
-                  <div className="h-14 bg-gray-100" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-gray-100 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[22px]">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-white rounded-[22px] overflow-hidden animate-pulse" style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
+                  <div className="h-[120px] bg-slate-100" />
+                  <div className="p-4 pt-7 space-y-2">
+                    <div className="h-4 bg-slate-100 rounded w-3/4" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
                   </div>
                 </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Search size={36} className="text-gray-300" />
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-4" style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
+                <Search size={34} className="text-slate-300" />
               </div>
-              <p className="font-bold text-gray-500 text-lg">Aucune boutique trouvée</p>
-              <p className="text-sm text-gray-400 mt-1">Essaie un autre terme ou une autre catégorie</p>
+              <p className="font-extrabold text-slate-600 text-lg">Aucune boutique trouvée</p>
+              <p className="text-sm text-slate-400 mt-1">Essaie un autre nom ou une autre catégorie</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[22px]">
               {filtered.map((shop) => {
                 const biz = BUSINESS_TYPES.find((b) => b.id === shop.business_type) || BUSINESS_TYPES[0];
-                const accentColor = BIZ_COLORS[shop.business_type || "autre"] || primary;
+                const accent = BIZ_COLORS[shop.business_type || "autre"] || primary;
                 return (
                   <Link key={shop.id} href={`/shop/${shop.id}`}
-                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all group">
+                    className="bg-white rounded-[22px] overflow-hidden transition-transform hover:-translate-y-1 block"
+                    style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
 
-                    {/* Bandeau couleur */}
-                    <div className="h-14 relative flex items-end px-4 pb-0 overflow-hidden"
-                      style={{ backgroundColor: accentColor + "20" }}>
-                      <div className="absolute top-2 left-3">
-                        <span className="text-xs font-bold text-white px-2.5 py-1 rounded-full" style={{ backgroundColor: accentColor }}>
-                          {biz.emoji} {biz.label}
-                        </span>
+                    {/* Cover */}
+                    <div className="h-[120px] relative flex items-center justify-center"
+                      style={shop.shop_cover_url ? undefined : { background: `linear-gradient(135deg, ${accent}, ${accent}aa)` }}>
+                      {shop.shop_cover_url ? (
+                        <img src={optimizeImage(shop.shop_cover_url, 700)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[44px]">{biz.emoji}</span>
+                      )}
+
+                      {/* Badge type */}
+                      <span className="absolute top-2.5 right-2.5 text-[11px] font-bold text-white px-2.5 py-1 rounded-[10px]"
+                        style={{ background: "rgba(15,23,42,.5)" }}>
+                        {biz.label}
+                      </span>
+
+                      {/* Logo coin bas-gauche */}
+                      <div className="absolute left-3.5 -bottom-5 w-[52px] h-[52px] rounded-2xl border-[3px] border-white bg-white overflow-hidden flex items-center justify-center font-extrabold text-[22px]"
+                        style={{ color: accent, boxShadow: "0 6px 14px rgba(15,23,42,.14)" }}>
+                        {shop.shop_logo_url ? (
+                          <img src={optimizeImage(shop.shop_logo_url, 150)} className="w-full h-full object-cover" alt={shop.shop_name} />
+                        ) : (
+                          shop.shop_name[0].toUpperCase()
+                        )}
                       </div>
-                      <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ backgroundColor: accentColor }} />
                     </div>
 
-                    <div className="p-4 pt-0">
-                      {/* Logo + nom */}
-                      <div className="flex items-start gap-3 -mt-5 mb-3">
-                        <div className="w-12 h-12 rounded-2xl border-2 border-white flex items-center justify-center text-white font-black flex-shrink-0 overflow-hidden shadow-md"
-                          style={{ backgroundColor: accentColor }}>
-                          {shop.shop_logo_url ? (
-                            <img src={shop.shop_logo_url} className="w-full h-full object-cover" alt={shop.shop_name} />
-                          ) : (
-                            <span className="text-lg">{shop.shop_name[0].toUpperCase()}</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0 mt-6">
-                          <p className="font-black text-gray-900 truncate group-hover:underline">{shop.shop_name}</p>
-                          {shop.avg_rating > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-yellow-500">
-                              <Star size={11} fill="currentColor" />
-                              <span className="font-bold">{shop.avg_rating.toFixed(1)}</span>
-                              <span className="text-gray-400">({shop.rating_count})</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {shop.slogan && (
-                        <p className="text-xs italic mb-2 font-medium" style={{ color: accentColor }}>&quot;{shop.slogan}&quot;</p>
+                    {/* Corps */}
+                    <div className="pt-7 px-4 pb-[18px]">
+                      <p className="text-base font-extrabold text-slate-900 truncate">{shop.shop_name}</p>
+                      {shop.avg_rating > 0 ? (
+                        <p className="text-xs font-bold text-amber-500 mt-0.5 flex items-center gap-1">
+                          <Star size={11} fill="currentColor" /> {shop.avg_rating.toFixed(1).replace(".", ",")} · {shop.rating_count} avis
+                        </p>
+                      ) : (
+                        <p className="text-xs font-bold text-emerald-500 mt-0.5">Nouveau</p>
                       )}
-                      {shop.description && (
-                        <p className="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed">{shop.description}</p>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <Package size={11} />
-                          <span>{shop.product_count > 0 ? `${shop.product_count} ${biz.ui.itemLabel}${shop.product_count > 1 ? "s" : ""}` : "Bientôt disponible"}</span>
-                        </div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full text-white transition-colors"
-                          style={{ backgroundColor: accentColor }}>
-                          Voir →
-                        </span>
-                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 truncate">
+                        {shop.product_count > 0
+                          ? `${shop.product_count} ${biz.ui.itemLabel}${shop.product_count > 1 ? "s" : ""}`
+                          : "Bientôt disponible"}
+                        {shop.city ? ` · 📍 ${shop.city}` : ""}
+                      </p>
                     </div>
                   </Link>
                 );
               })}
             </div>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );

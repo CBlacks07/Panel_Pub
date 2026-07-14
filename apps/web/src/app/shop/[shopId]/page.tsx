@@ -8,6 +8,9 @@ import { useCart } from "@/hooks/useCart";
 import { optimizeImage } from "@/lib/image";
 import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
 
+/** Accent chaleureux de la direction visuelle (dégradé bleu -> corail). */
+const CORAL = "#F2764B";
+
 type Product = {
   id: string; title: string; price: number; compare_at_price: number | null; description: string | null;
   category: string; image_url: string | null; images: string[] | null;
@@ -81,6 +84,15 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     setSelected(null);
   };
 
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try { await navigator.share({ title: shop?.shop_name ?? "Boutique", url }); } catch { /* annulé */ }
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try { await navigator.clipboard.writeText(url); } catch { /* ignore */ }
+    }
+  };
+
   const handleWhatsApp = () => {
     if (!shop?.phone_whatsapp) return;
     const lines = cart.map((i) => `• ${i.title}${i.size ? ` (${i.size})` : ""}${i.color ? ` - ${i.color}` : ""} x${i.qty} = ${(i.price * i.qty).toLocaleString("fr-FR")} FCFA`);
@@ -110,156 +122,148 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "#FFF8F4" }}>
 
-      {/* ── NAV ── */}
-      <nav className="bg-white/90 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <Link href="/marketplace" className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">
-            <ChevronLeft size={16} /> Marketplace
-          </Link>
-          <Link href="/" className="font-black text-gray-900 text-sm">{appName}</Link>
-          <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            <div className="relative">
-              <ShoppingCart size={22} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-white text-xs flex items-center justify-center font-black" style={{ backgroundColor: primary }}>
-                  {cart.length}
-                </span>
-              )}
-            </div>
-            {cart.length > 0 && <span className="hidden sm:block">{total.toLocaleString("fr-FR")} FCFA</span>}
-          </button>
-        </div>
-      </nav>
-
-      {/* ── HERO HEADER ── */}
-      <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary} 0%, ${primary}cc 100%)` }}>
+      {/* ── COVER ── */}
+      <div className="relative overflow-hidden h-[190px] sm:h-[230px]"
+        style={{ background: `linear-gradient(120deg, ${primary}, #3b5bdb 55%, ${CORAL})` }}>
         {shop.shop_cover_url ? (
           <>
             <img src={optimizeImage(shop.shop_cover_url, 1600)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-slate-900/55 to-slate-900/85" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/25 via-slate-900/45 to-slate-900/70" />
           </>
         ) : (
-          <>
-            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10" />
-            <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/08" />
-          </>
+          <div className="absolute w-[300px] h-[300px] rounded-full bg-white/10 -top-[120px] -left-10" />
         )}
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Logo */}
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl border-4 border-white/40 flex items-center justify-center text-white font-black text-3xl overflow-hidden flex-shrink-0 shadow-xl"
-              style={{ backgroundColor: "rgba(255,255,255,0.25)" }}>
-              {shop.shop_logo_url
-                ? <img src={optimizeImage(shop.shop_logo_url, 220)} className="w-full h-full object-cover" alt={shop.shop_name} />
-                : shop.shop_name[0].toUpperCase()}
-            </div>
+        <Link href="/marketplace"
+          className="absolute top-5 left-5 sm:left-6 flex items-center gap-1 text-[13px] font-bold text-white px-3.5 py-2 rounded-xl backdrop-blur-sm"
+          style={{ background: "rgba(255,255,255,.2)" }}>
+          <ChevronLeft size={15} /> Marketplace
+        </Link>
 
-            {/* Infos */}
-            <div className="text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-black text-white mb-1">{shop.shop_name}</h1>
-              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-2">
-                <span className="text-xs font-bold text-white/90 bg-white/20 px-3 py-1 rounded-full">
-                  {biz.emoji} {biz.label}
-                </span>
-                <span className="text-xs font-medium text-white/80 bg-white/15 px-3 py-1 rounded-full">
-                  {products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}
-                </span>
-                {shop.avg_rating !== undefined && shop.avg_rating > 0 && (
-                  <span className="text-xs font-bold text-yellow-200 bg-white/15 px-3 py-1 rounded-full flex items-center gap-1">
-                    <Star size={11} fill="currentColor" /> {shop.avg_rating.toFixed(1)} ({shop.rating_count})
-                  </span>
-                )}
-              </div>
-              {shop.slogan && <p className="text-white/85 italic text-sm mb-1">&quot;{shop.slogan}&quot;</p>}
-              {shop.description && <p className="text-white/70 text-sm max-w-lg">{shop.description}</p>}
-            </div>
-          </div>
+        <div className="absolute top-5 right-5 sm:right-6 flex gap-2.5">
+          <button onClick={handleShare}
+            className="text-[13px] font-bold text-white px-3.5 py-2 rounded-xl backdrop-blur-sm"
+            style={{ background: "rgba(255,255,255,.2)" }}>
+            ⤴ Partager
+          </button>
+          <button onClick={() => setCartOpen(true)}
+            className="text-[13px] font-extrabold px-3.5 py-2 rounded-xl bg-white flex items-center gap-1.5"
+            style={{ color: primary }}>
+            <ShoppingCart size={14} /> Panier{cart.length > 0 ? ` · ${cart.length}` : ""}
+          </button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      {/* ── EN-TÊTE BOUTIQUE ── */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-11 -mt-12 sm:-mt-14 relative flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-[22px]">
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[30px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white"
+          style={{ border: "5px solid #FFF8F4", color: primary, boxShadow: "0 14px 30px rgba(15,23,42,.16)" }}>
+          {shop.shop_logo_url
+            ? <img src={optimizeImage(shop.shop_logo_url, 260)} className="w-full h-full object-cover" alt={shop.shop_name} />
+            : shop.shop_name[0].toUpperCase()}
+        </div>
 
-        {/* Filtres */}
+        <div className="flex-1 sm:pb-2 min-w-0">
+          <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-slate-900">{shop.shop_name}</h1>
+          {shop.slogan && <p className="text-sm italic text-slate-500 mt-0.5">&quot;{shop.slogan}&quot;</p>}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: CORAL, boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+              {biz.emoji} {biz.label}
+            </span>
+            {shop.avg_rating !== undefined && shop.avg_rating > 0 && (
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-amber-500 flex items-center gap-1" style={{ boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+                <Star size={11} fill="currentColor" /> {shop.avg_rating.toFixed(1).replace(".", ",")} · {shop.rating_count} avis
+              </span>
+            )}
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-slate-500" style={{ boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+              {products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}
+            </span>
+          </div>
+          {shop.description && <p className="text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">{shop.description}</p>}
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-11 pt-6">
+
+        {/* Filtres catégories */}
         {categories.length > 2 && (
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-1 mb-6 scrollbar-hide">
             {categories.map((cat) => (
               <button key={cat} onClick={() => filterCategory(cat)}
-                className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all"
-                style={{
-                  backgroundColor: activeCategory === cat ? "#1a1a1a" : "white",
-                  borderColor: activeCategory === cat ? "#1a1a1a" : "#e5e7eb",
-                  color: activeCategory === cat ? "white" : "#555",
-                }}>
+                className="flex-shrink-0 px-[18px] py-2.5 rounded-full text-[13px] transition whitespace-nowrap"
+                style={activeCategory === cat
+                  ? { background: "#0F172A", color: "#fff", fontWeight: 700 }
+                  : { background: "#fff", color: "#475569", fontWeight: 600, boxShadow: "0 2px 8px rgba(15,23,42,.05)" }}>
                 {cat}
               </button>
             ))}
           </div>
         )}
 
-        {/* Résultats */}
-        <p className="text-sm text-gray-400 mb-4 font-medium">
-          <span className="text-gray-700 font-bold">{filtered.length}</span> {biz.ui.itemLabel}{filtered.length > 1 ? "s" : ""}
-          {activeCategory !== "Tout" && <span className="ml-1">· {activeCategory}</span>}
-        </p>
-
         {/* Grille produits */}
         {products.length === 0 ? (
           <div className="py-20 text-center">
             <div className="text-6xl mb-4">{biz.emoji}</div>
-            <p className="text-xl font-black text-gray-700 mb-2">{biz.ui.emptyTitle}</p>
-            <p className="text-sm text-gray-400">{biz.ui.emptySubtitle}</p>
+            <p className="text-xl font-extrabold text-slate-700 mb-2">{biz.ui.emptyTitle}</p>
+            <p className="text-sm text-slate-400">{biz.ui.emptySubtitle}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-2">{biz.emoji}</div>
-            <p className="text-gray-500">Aucun {biz.ui.itemLabel} dans cette catégorie</p>
+            <p className="text-slate-500">Aucun {biz.ui.itemLabel} dans cette catégorie</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {filtered.map((product) => (
-              <button key={product.id} onClick={() => { setSelected(product); setImgIndex(0); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
-                className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all group">
-                <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative">
-                  {product.image_url ? (
-                    <img src={optimizeImage(product.image_url, 500)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} loading="lazy" />
-                  ) : (
-                    <span className="text-4xl">{biz.emoji}</span>
-                  )}
-                  {/* Badge promo */}
-                  {product.compare_at_price && product.compare_at_price > product.price ? (
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-red-500 text-white text-xs font-black shadow-md">
-                      -{Math.round((1 - product.price / product.compare_at_price) * 100)}%
-                    </div>
-                  ) : null}
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-bold text-gray-900 truncate mb-1">{product.title}</p>
-                  <div className="flex items-baseline gap-1.5 flex-wrap">
-                    <span className="text-sm font-black" style={{ color: primary }}>{product.price.toLocaleString("fr-FR")} F</span>
-                    {product.compare_at_price && product.compare_at_price > product.price ? (
-                      <span className="text-xs text-gray-400 line-through">{product.compare_at_price.toLocaleString("fr-FR")} F</span>
-                    ) : null}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[22px]">
+            {filtered.map((product) => {
+              const hasPromo = !!product.compare_at_price && product.compare_at_price > product.price;
+              return (
+                <button key={product.id} onClick={() => { setSelected(product); setImgIndex(0); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
+                  className="text-left bg-white rounded-[22px] overflow-hidden transition-transform hover:-translate-y-1 group"
+                  style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
+                  <div className="h-[150px] sm:h-[190px] flex items-center justify-center overflow-hidden relative" style={{ background: "#FFEFE6" }}>
+                    {product.image_url ? (
+                      <img src={optimizeImage(product.image_url, 500)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} loading="lazy" />
+                    ) : (
+                      <span className="text-5xl sm:text-6xl">{biz.emoji}</span>
+                    )}
+                    {hasPromo && (
+                      <span className="absolute top-2.5 left-2.5 text-[11px] font-extrabold text-white px-2.5 py-1 rounded-[10px]" style={{ background: CORAL }}>
+                        -{Math.round((1 - product.price / product.compare_at_price!) * 100)}%
+                      </span>
+                    )}
                   </div>
-                </div>
-              </button>
-            ))}
+                  <div className="px-4 pt-3.5 pb-[18px]">
+                    <p className="text-sm font-bold text-slate-900 leading-snug truncate">{product.title}</p>
+                    <div className="flex items-baseline gap-1.5 flex-wrap mt-1.5">
+                      <span className="text-[17px] font-extrabold" style={{ color: primary }}>{product.price.toLocaleString("fr-FR")} F</span>
+                      {hasPromo && (
+                        <span className="text-xs text-slate-400 line-through">{product.compare_at_price!.toLocaleString("fr-FR")}</span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* ── BARRE PANIER FLOTTANTE ── */}
+      {/* ── BARRE PANIER COLLANTE (WhatsApp) ── */}
       {cart.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 w-full max-w-sm px-4">
-          <button onClick={() => setCartOpen(true)}
-            className="w-full flex items-center gap-3 text-white px-5 py-3.5 rounded-2xl shadow-2xl font-semibold"
-            style={{ backgroundColor: "#1a1a1a" }}>
-            <ShoppingCart size={18} className="flex-shrink-0" />
-            <span className="flex-1 text-sm text-left">{cart.length} article{cart.length > 1 ? "s" : ""}</span>
-            <span className="font-black">{total.toLocaleString("fr-FR")} FCFA</span>
-            <span className="text-sm text-gray-400">→</span>
+        <div className="sticky bottom-5 z-20 mx-5 sm:mx-11 mb-6 rounded-[20px] flex items-center justify-between gap-3 pl-5 sm:pl-6 pr-3.5 py-3.5"
+          style={{ background: "#25D366", boxShadow: "0 16px 34px rgba(37,211,102,.34)" }}>
+          <button onClick={() => setCartOpen(true)} className="text-left min-w-0">
+            <p className="text-xs text-white/90">{cart.length} article{cart.length > 1 ? "s" : ""} · panier</p>
+            <p className="text-lg sm:text-xl font-extrabold text-white truncate">{total.toLocaleString("fr-FR")} FCFA</p>
+          </button>
+          <button
+            onClick={() => (shop.phone_whatsapp ? handleWhatsApp() : setCartOpen(true))}
+            className="bg-white text-[13px] sm:text-[15px] font-extrabold px-4 sm:px-5 py-3 rounded-[15px] whitespace-nowrap flex items-center gap-2 flex-shrink-0"
+            style={{ color: "#128C4A" }}>
+            <MessageCircle size={16} /> Commander
+            <span className="hidden sm:inline">sur WhatsApp</span>
           </button>
         </div>
       )}
