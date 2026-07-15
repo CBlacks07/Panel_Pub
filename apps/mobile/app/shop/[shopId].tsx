@@ -490,8 +490,8 @@ export default function ShopScreen() {
                   <Text style={[styles.modalPriceText, { color: primary }]}>
                     {selected.price.toLocaleString("fr-FR")} FCFA
                   </Text>
-                  <View style={[styles.modalCatBadge, { backgroundColor: primary + "15" }]}>
-                    <Text style={[styles.modalCatText, { color: primary }]}>{selected.category}</Text>
+                  <View style={styles.modalCatBadge}>
+                    <Text style={styles.modalCatText}>{selected.category}</Text>
                   </View>
                 </View>
                 <Text style={styles.modalTitle}>{selected.title}</Text>
@@ -604,11 +604,13 @@ const styles = StyleSheet.create({
   shopMetaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" },
   shopMetaChip: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: "#fff", borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 5,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12, shadowRadius: 8, elevation: 2,
   },
-  rateChip: { backgroundColor: "rgba(245,158,11,0.2)" },
-  shopMetaChipText: { fontSize: 11, color: "#fff", fontWeight: "600" },
+  rateChip: { backgroundColor: "#fff" },
+  shopMetaChipText: { fontSize: 11, color: colors.text, fontWeight: "700" },
 
   // Catégories
   categoriesBar: { maxHeight: 52, backgroundColor: "#fff" },
@@ -714,8 +716,11 @@ const styles = StyleSheet.create({
   modalContent: { padding: 20, gap: 12 },
   modalPriceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   modalPriceText: { fontSize: 22, fontWeight: "900" },
-  modalCatBadge: { alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
-  modalCatText: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  modalCatBadge: {
+    alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4,
+    backgroundColor: brand.coralSoft,
+  },
+  modalCatText: { fontSize: 12, fontWeight: "700", color: brand.coral, textTransform: "uppercase", letterSpacing: 0.5 },
   modalTitle: { fontSize: 22, fontWeight: "900", color: "#1a1a1a", lineHeight: 28 },
   modalDescription: { fontSize: 14, color: "#666", lineHeight: 22 },
   varSection: { gap: 10 },

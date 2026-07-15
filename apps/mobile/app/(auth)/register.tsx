@@ -9,7 +9,7 @@ import { useConfig } from "../../context/ConfigContext";
 import { BUSINESS_TYPES } from "../../lib/businessTypes";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { colors } from "../../lib/theme";
+import { brand, colors } from "../../lib/theme";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -56,8 +56,8 @@ export default function RegisterScreen() {
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.dots}>
-          <View style={[styles.dot, { backgroundColor: primary, width: 22 }]} />
-          <View style={[styles.dot, step === 2 && { backgroundColor: primary, width: 22 }]} />
+          <View style={[styles.dot, styles.dotOn]} />
+          <View style={[styles.dot, step === 2 && styles.dotOn]} />
         </View>
         <View style={{ width: 36 }} />
       </View>
@@ -90,10 +90,10 @@ export default function RegisterScreen() {
                         activeOpacity={0.85}
                         accessibilityRole="button"
                         accessibilityState={{ selected: on }}
-                        style={[styles.bizCard, on && { borderColor: primary, backgroundColor: primary + "10" }]}
+                        style={[styles.bizCard, on && styles.bizCardOn]}
                       >
                         <Text style={styles.bizEmoji}>{b.emoji}</Text>
-                        <Text style={[styles.bizLabel, on && { color: primary, fontWeight: "700" }]}>{b.label}</Text>
+                        <Text style={[styles.bizLabel, on && styles.bizLabelOn]}>{b.label}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
   back: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.bgAlt, justifyContent: "center", alignItems: "center" },
   dots: { flexDirection: "row", gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 5, backgroundColor: colors.border },
+  dotOn: { width: 22, backgroundColor: brand.coral },
 
   scroll: { padding: 24, paddingTop: 12, flexGrow: 1 },
   title: { fontSize: 26, fontWeight: "800", color: colors.text, marginBottom: 4 },
@@ -161,8 +162,10 @@ const styles = StyleSheet.create({
     width: "31%", borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
     paddingVertical: 14, alignItems: "center", gap: 6, backgroundColor: colors.surface,
   },
+  bizCardOn: { borderColor: brand.coral, backgroundColor: brand.coralSoft },
   bizEmoji: { fontSize: 26 },
   bizLabel: { fontSize: 12, fontWeight: "600", color: colors.textSecondary, textAlign: "center" },
+  bizLabelOn: { color: brand.coral, fontWeight: "700" },
 
   linkBtn: { alignItems: "center", paddingVertical: 18, marginTop: "auto" },
   linkText: { color: colors.textSecondary, fontSize: 14 },
