@@ -47,21 +47,6 @@ function ProductThumb({ uri, emoji }: { uri: string | null; emoji: string }) {
 }
 const thumb = StyleSheet.create({ wrap: { width: CARD_W, height: IMG_H } });
 
-/* ── Carte stat ── */
-function StatCard({ icon, value, label, color, onPress }: {
-  icon: string; value: string | number; label: string; color: string; onPress?: () => void;
-}) {
-  return (
-    <TouchableOpacity style={[styles.statCard, { borderTopColor: color, borderTopWidth: 3 }]} onPress={onPress} activeOpacity={onPress ? 0.8 : 1}>
-      <View style={[styles.statIcon, { backgroundColor: color + "18" }]}>
-        <Ionicons name={icon as any} size={18} color={color} />
-      </View>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
 export default function DashboardScreen() {
   const { user, bizType, profile } = useAuth();
   const { primary, getPlanById } = useConfig();
@@ -229,7 +214,7 @@ export default function DashboardScreen() {
                     {shopLogo ? (
                       <Image source={{ uri: shopLogo }} style={styles.headerAvatarImg} resizeMode="cover" />
                     ) : (
-                      <Text style={styles.headerAvatarText}>{shopName[0].toUpperCase()}</Text>
+                      <Text style={[styles.headerAvatarText, { color: primary }]}>{shopName[0].toUpperCase()}</Text>
                     )}
                     <View style={styles.headerAvatarBadge}>
                       <Ionicons name="eye-outline" size={10} color="#fff" />
@@ -237,20 +222,43 @@ export default function DashboardScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Barre de progression plan */}
-                {isFreePlan && (
-                  <TouchableOpacity style={styles.planProgress} onPress={() => router.push("/(app)/plans")} activeOpacity={0.8}>
-                    <View style={styles.planProgressTop}>
-                      <Text style={styles.planProgressLabel}>{totalCreated}/{PLAN_LIMIT} articles créés</Text>
-                      <Text style={styles.planProgressLink}>Upgrader →</Text>
-                    </View>
-                    <View style={styles.planProgressBar}>
-                      <View style={[styles.planProgressFill, { width: `${usagePct}%` as any, backgroundColor: usagePct >= 90 ? "#ef4444" : "#fff" }]} />
-                    </View>
-                  </TouchableOpacity>
-                )}
+                {/* Stats « en verre » dans l'en-tête */}
+                <View style={styles.glassRow}>
+                  <View style={styles.glassCard}>
+                    <Text style={styles.glassValue}>{products.length}</Text>
+                    <Text style={styles.glassLabel}>Articles</Text>
+                  </View>
+                  <View style={styles.glassCard}>
+                    <Text style={styles.glassValue}>
+                      {totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews}
+                    </Text>
+                    <Text style={styles.glassLabel}>Vues 👁</Text>
+                  </View>
+                  <View style={styles.glassCard}>
+                    <Text style={styles.glassValue}>
+                      {avgRating > 0 ? `${avgRating.toFixed(1).replace(".", ",")}★` : "—"}
+                    </Text>
+                    <Text style={styles.glassLabel}>Note</Text>
+                  </View>
+                </View>
               </LinearGradient>
             </View>
+
+            {/* ── UPSELL PRO (plan gratuit) ── */}
+            {isFreePlan && (
+              <TouchableOpacity style={styles.upsell} onPress={() => router.push("/(app)/plans")} activeOpacity={0.85}>
+                <View style={styles.upsellIcon}>
+                  <Text style={{ fontSize: 18 }}>🚀</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.upsellTitle}>Passe au Pro</Text>
+                  <Text style={styles.upsellText}>
+                    {totalCreated}/{PLAN_LIMIT} articles · Articles illimités + stats détaillées
+                  </Text>
+                </View>
+                <Text style={styles.upsellArrow}>→</Text>
+              </TouchableOpacity>
+            )}
 
             {/* ── RAPPEL WHATSAPP (si non renseigné) ── */}
             {!profile?.phone_whatsapp && (
@@ -288,28 +296,6 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* ── STATS ── */}
-            <View style={styles.statsRow}>
-              <StatCard
-                icon="cube-outline"
-                value={products.length}
-                label="Articles"
-                color={primary}
-                onPress={() => {}}
-              />
-              <StatCard
-                icon="eye-outline"
-                value={totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews}
-                label="Vues totales"
-                color="#3b82f6"
-              />
-              <StatCard
-                icon="star-outline"
-                value={avgRating > 0 ? avgRating.toFixed(1) : "—"}
-                label="Note moy."
-                color="#f59e0b"
-              />
-            </View>
 
             {/* ── SEARCH ── */}
             {products.length > 0 && (
@@ -452,6 +438,31 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: 16, paddingTop: 0 },
   row: { gap: 12, marginBottom: 12 },
 
+  // Stats « en verre » dans l'en-tête dégradé
+  glassRow: { flexDirection: "row", gap: 8, marginTop: 16 },
+  glassCard: {
+    flex: 1, backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 16, paddingHorizontal: 12, paddingVertical: 11,
+  },
+  glassValue: { fontSize: 20, fontWeight: "800", color: "#fff" },
+  glassLabel: { fontSize: 10, color: "rgba(255,255,255,0.8)", fontWeight: "600", marginTop: 1 },
+
+  // Carte upsell Pro
+  upsell: {
+    flexDirection: "row", alignItems: "center", gap: 11,
+    backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 16,
+    borderWidth: 1, borderColor: brand.coralBorder,
+    shadowColor: brand.coral, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14, shadowRadius: 18, elevation: 3,
+  },
+  upsellIcon: {
+    width: 38, height: 38, borderRadius: 12, backgroundColor: brand.coralSoft,
+    justifyContent: "center", alignItems: "center",
+  },
+  upsellTitle: { fontSize: 13, fontWeight: "800", color: colors.text },
+  upsellText: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
+  upsellArrow: { color: brand.coral, fontWeight: "800", fontSize: 16 },
+
   // Rappel WhatsApp
   waReminder: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -485,12 +496,14 @@ const styles = StyleSheet.create({
   },
   planBadgeText: { fontSize: 11, color: "#fff", fontWeight: "700" },
   headerAvatar: {
-    width: 52, height: 52, borderRadius: 20, overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.25)", justifyContent: "center", alignItems: "center",
-    borderWidth: 2, borderColor: "rgba(255,255,255,0.4)", position: "relative",
+    width: 52, height: 52, borderRadius: 18, overflow: "hidden",
+    backgroundColor: "#fff", justifyContent: "center", alignItems: "center",
+    position: "relative",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2, shadowRadius: 16, elevation: 6,
   },
   headerAvatarImg: { width: 52, height: 52 },
-  headerAvatarText: { fontSize: 22, fontWeight: "900", color: "#fff" },
+  headerAvatarText: { fontSize: 22, fontWeight: "900" },
   headerAvatarBadge: {
     position: "absolute", bottom: 0, right: 0, width: 18, height: 18,
     borderRadius: 9, backgroundColor: "#22c55e", justifyContent: "center", alignItems: "center",
