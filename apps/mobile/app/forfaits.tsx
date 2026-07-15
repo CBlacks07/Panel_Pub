@@ -132,7 +132,7 @@ export default function ForfaitsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9fb" },
+  container: { flex: 1, backgroundColor: "#FFF8F4" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",

@@ -4,13 +4,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
-import { colors, radius, shadow, sizing } from "../../lib/theme";
+import { brand, colors, radius, shadow, sizing } from "../../lib/theme";
 
-type Variant = "primary" | "soft" | "outline" | "ghost";
+type Variant = "primary" | "coral" | "soft" | "outline" | "ghost";
 
 /**
- * Bouton standard de l'app (bleu de marque par défaut).
- * Variantes : primary (plein), soft (fond bleu clair), outline, ghost.
+ * Bouton standard de l'app.
+ * Variantes : primary (bleu de marque), coral (CTA commerce — Direction B),
+ * soft (fond bleu clair), outline, ghost.
  */
 export function Button({
   label, onPress, variant = "primary", icon, loading, disabled, fullWidth = true, style,
@@ -29,11 +30,18 @@ export function Button({
 
   const bg =
     variant === "primary" ? primary :
+    variant === "coral" ? brand.coral :
     variant === "soft" ? primary + "18" :
     "transparent";
   const fg =
-    variant === "primary" ? "#fff" : primary;
+    variant === "primary" || variant === "coral" ? "#fff" : primary;
   const border = variant === "outline" ? { borderWidth: 1.5, borderColor: primary } : null;
+  const glow =
+    variant === "primary" ? shadow.button :
+    variant === "coral" ? {
+      shadowColor: brand.coral, shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.34, shadowRadius: 26, elevation: 8,
+    } : null;
 
   return (
     <TouchableOpacity
@@ -48,7 +56,7 @@ export function Button({
         fullWidth && { alignSelf: "stretch" },
         { backgroundColor: bg },
         border,
-        variant === "primary" && shadow.button,
+        glow,
         isDisabled && { opacity: 0.5 },
         style,
       ]}

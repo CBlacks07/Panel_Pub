@@ -10,7 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { optimizeImage } from "../../lib/cloudinary";
 import { EmptyState } from "../../components/EmptyState";
-import { PRODUCT_IMAGE_RATIO } from "../../lib/theme";
+import { PRODUCT_IMAGE_RATIO, brand, colors, heroGradient } from "../../lib/theme";
 import { useCartStore, CartItem } from "../../store/cartStore";
 import { buildWhatsAppMessage, openWhatsApp } from "../../lib/whatsapp";
 import CartModal from "../../components/CartModal";
@@ -71,7 +71,7 @@ function ProductImage({ uri, size, fallbackEmoji }: { uri: string | null; size: 
 }
 
 const productImageStyles = StyleSheet.create({
-  placeholder: { justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },
+  placeholder: { justifyContent: "center", alignItems: "center", backgroundColor: colors.pastelWarm },
   shimmer: { position: "absolute", backgroundColor: "#e8e8e8", zIndex: 1 },
 });
 
@@ -269,6 +269,13 @@ export default function ShopScreen() {
           </>
         ) : (
           <>
+            <LinearGradient
+              colors={heroGradient(primary)}
+              locations={[0, 0.55, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.coverBg}
+            />
             <View style={styles.headerCircle1} />
             <View style={styles.headerCircle2} />
           </>
@@ -529,7 +536,7 @@ export default function ShopScreen() {
                   </View>
                 )}
 
-                <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: primary, shadowColor: primary }]} onPress={handleAddToCart}>
+                <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: brand.coral, shadowColor: brand.coral }]} onPress={handleAddToCart}>
                   <Ionicons name="bag-add-outline" size={20} color="#fff" />
                   <Text style={styles.addToCartBtnText}>
                     {shopBizType.id === "alimentation" ? "Ajouter à ma commande" : "Ajouter au panier"}
@@ -546,8 +553,8 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  outerContainer: { flex: 1, backgroundColor: "#f0f2f5", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#f0f2f5", width: "100%", maxWidth: 680 },
+  outerContainer: { flex: 1, backgroundColor: "#FFF8F4", alignItems: "center" },
+  container: { flex: 1, backgroundColor: "#FFF8F4", width: "100%", maxWidth: 680 },
   loadingScreen: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
 
   // Header
@@ -631,7 +638,7 @@ const styles = StyleSheet.create({
   priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "800" },
   discountBadge: {
     position: "absolute", top: 8, left: 8,
-    backgroundColor: "#ef4444", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: brand.coral, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
   },
   discountBadgeText: { color: "#fff", fontSize: 11, fontWeight: "800" },
   cardInfo: { padding: 10, gap: 4 },

@@ -1,7 +1,7 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { optimizeImage } from "../../lib/cloudinary";
-import { colors } from "../../lib/theme";
+import { brand, colors } from "../../lib/theme";
 
 export type HomeProduct = {
   id: string;
@@ -22,10 +22,13 @@ export function CategoryCircle({
 }: { emoji: string; label: string; selected: boolean; accent: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.catWrap} onPress={onPress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={label}>
-      <View style={[styles.catCircle, selected && { borderColor: accent, backgroundColor: accent + "12" }]}>
+      <View style={[
+        styles.catCircle,
+        selected && { backgroundColor: accent, shadowColor: accent, shadowOpacity: 0.3, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
+      ]}>
         <Text style={styles.catEmoji}>{emoji}</Text>
       </View>
-      <Text style={[styles.catLabel, selected && { color: accent, fontWeight: "800" }]} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.catLabel, selected && { color: colors.text, fontWeight: "800" }]} numberOfLines={1}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -72,26 +75,28 @@ export function ProductMiniCard({
 
 const styles = StyleSheet.create({
   // Catégorie ronde
-  catWrap: { width: 72, alignItems: "center", gap: 6 },
+  catWrap: { width: 66, alignItems: "center", gap: 5 },
   catCircle: {
-    width: 60, height: 60, borderRadius: 30, backgroundColor: colors.surface,
-    borderWidth: 1.5, borderColor: colors.border, justifyContent: "center", alignItems: "center",
+    width: 58, height: 58, borderRadius: 20, backgroundColor: colors.surface,
+    justifyContent: "center", alignItems: "center",
+    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07, shadowRadius: 12, elevation: 2,
   },
-  catEmoji: { fontSize: 26 },
-  catLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
+  catEmoji: { fontSize: 24 },
+  catLabel: { fontSize: 10, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
 
   // Carte produit
   card: { width: CARD_W },
   imageWrap: {
     width: CARD_W, height: CARD_W, borderRadius: 14, overflow: "hidden",
-    backgroundColor: colors.bgAlt, position: "relative",
+    backgroundColor: colors.pastelWarm, position: "relative",
     borderWidth: 1, borderColor: colors.border,
   },
   image: { width: "100%", height: "100%" },
-  imageFallback: { justifyContent: "center", alignItems: "center", backgroundColor: colors.bgAlt },
+  imageFallback: { justifyContent: "center", alignItems: "center", backgroundColor: colors.pastelWarm },
   discount: {
     position: "absolute", top: 8, left: 8,
-    backgroundColor: "#ef4444", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 2,
+    backgroundColor: brand.coral, borderRadius: 9, paddingHorizontal: 7, paddingVertical: 2,
   },
   discountText: { color: "#fff", fontSize: 10, fontWeight: "800" },
   vendorPill: {

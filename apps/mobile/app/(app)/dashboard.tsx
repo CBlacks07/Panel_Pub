@@ -10,7 +10,7 @@ import { DashboardSkeleton } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
 import { Chip } from "../../components/ui/Chip";
 import { useToast } from "../../components/ui/Toast";
-import { PRODUCT_IMAGE_RATIO, colors } from "../../lib/theme";
+import { PRODUCT_IMAGE_RATIO, colors, brand, heroGradient } from "../../lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -36,7 +36,7 @@ function ProductThumb({ uri, emoji }: { uri: string | null; emoji: string }) {
   const [err, setErr] = useState(false);
   if (!uri || err) {
     return (
-      <View style={[thumb.wrap, { backgroundColor: "#f5f6fa", justifyContent: "center", alignItems: "center" }]}>
+      <View style={[thumb.wrap, { backgroundColor: colors.pastelWarm, justifyContent: "center", alignItems: "center" }]}>
         <Text style={{ fontSize: CARD_W * 0.28 }}>{emoji}</Text>
       </View>
     );
@@ -213,7 +213,7 @@ export default function DashboardScreen() {
           <>
             {/* ── HEADER ── */}
             <View style={styles.header}>
-              <LinearGradient colors={[primary, primary + "cc"]} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <LinearGradient colors={heroGradient(primary)} locations={[0, 0.55, 1]} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 0.9, y: 1 }}>
                 <View style={styles.headerCircle1} />
                 <View style={styles.headerCircle2} />
 
@@ -448,7 +448,7 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f5f6fa" },
+  safeArea: { flex: 1, backgroundColor: "#FFF8F4" },
   listContent: { paddingHorizontal: 16, paddingTop: 0 },
   row: { gap: 12, marginBottom: 12 },
 

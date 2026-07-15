@@ -12,6 +12,8 @@ import AnimatedShopCard from "../components/AnimatedShopCard";
 import { MarketplaceSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
 import { CategoryCircle, ProductMiniCard, HomeProduct } from "../components/marketplace/HomeBits";
+import { LinearGradient } from "expo-linear-gradient";
+import { brand, heroGradient } from "../lib/theme";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
@@ -302,6 +304,13 @@ export default function MarketplaceScreen() {
       {/* Bannière CTA vendeur — masquée pour les vendeurs connectés ou si déjà fermée */}
       {!session && !bannerHidden && (
         <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
+          <LinearGradient
+            colors={heroGradient(primary)}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.bannerGradient}
+          />
           <TouchableOpacity
             style={styles.bannerClose}
             onPress={dismissBanner}
@@ -343,7 +352,7 @@ export default function MarketplaceScreen() {
           <View style={styles.prodSectionHead}>
             <Text style={styles.prodSectionTitle}>{biz.emoji} {biz.label}</Text>
             <TouchableOpacity onPress={() => handleBizFilter(biz.id)}>
-              <Text style={[styles.prodSectionLink, { color: primary }]}>Voir tout ›</Text>
+              <Text style={[styles.prodSectionLink, { color: brand.coral }]}>Voir tout ›</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.prodSectionScroll} keyboardShouldPersistTaps="handled">
@@ -465,7 +474,7 @@ export default function MarketplaceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9fb" },
+  container: { flex: 1, backgroundColor: "#FFF8F4" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   header: {
@@ -497,6 +506,7 @@ const styles = StyleSheet.create({
   },
   bannerTitle: { fontSize: 17, fontWeight: "800", color: "#fff", lineHeight: 24 },
   bannerSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.75)" },
+  bannerGradient: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   bannerActions: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 10, flexWrap: "wrap" },
   bannerBtn: {
     backgroundColor: "#fff",

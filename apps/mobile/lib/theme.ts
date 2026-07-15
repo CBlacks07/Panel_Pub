@@ -9,7 +9,15 @@ export const brand = {
   blue: "#2563EB",
   blueDark: "#1E40AF",
   blueSoft: "#EFF4FF",
+  // Direction B « Chaleureux » : le corail porte les actions commerce
+  // (ajouter un article / au panier), les accents et les badges promo.
+  coral: "#F2764B",
+  coralSoft: "#FFF1EA",
+  coralBorder: "#FFE2D3",
 } as const;
+
+/** Dégradé d'en-tête bleu -> corail (LinearGradient colors). */
+export const heroGradient = (primary: string): [string, string, string] => [primary, "#3b5bdb", brand.coral];
 
 export const colors = {
   text: "#0F172A",        // slate-900 — titres / texte principal
@@ -20,10 +28,14 @@ export const colors = {
   border: "#E2E8F0",      // slate-200
   borderLight: "#EEF2F7",
 
-  bg: "#F8FAFC",          // slate-50 — fond d'écran
+  bg: "#FFF8F4",          // crème — fond d'écran (Direction B)
   bgAlt: "#F1F5F9",       // slate-100
   surface: "#FFFFFF",
   surfaceAlt: "#F8FAFC",
+
+  // Fonds pastel des visuels produit
+  pastelWarm: "#FFEFE6",
+  pastelBlue: "#EAF0FF",
 
   danger: "#EF4444",
   warning: "#F59E0B",

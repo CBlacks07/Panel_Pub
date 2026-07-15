@@ -278,7 +278,7 @@ export default function AddProductScreen() {
         )}
 
         {/* ── BOUTON PUBLIER ── */}
-        <Button label="Publier l'article" icon="cloud-upload-outline" loading={loading} onPress={handleSubmit} />
+        <Button label="Publier l'article" icon="cloud-upload-outline" variant="coral" loading={loading} onPress={handleSubmit} />
 
       </KeyboardAwareScrollView>
     </SafeAreaView>
@@ -286,7 +286,7 @@ export default function AddProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f6fa" },
+  container: { flex: 1, backgroundColor: "#FFF8F4" },
 
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
