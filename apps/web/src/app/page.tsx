@@ -55,7 +55,7 @@ function PhoneMockup({ children, className = "" }: { children: React.ReactNode; 
 function SplashScreen({ primary }: { primary: string }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center"
-      style={{ background: `linear-gradient(160deg, #fff 0%, #b3e5fc 30%, ${primary} 100%)` }}>
+      style={{ background: `linear-gradient(160deg, #fff 0%, #DCE4FF 32%, ${primary} 100%)` }}>
       <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-3"
         style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
         <span style={{ color: primary, fontSize: 28, fontWeight: 900 }}>B</span>

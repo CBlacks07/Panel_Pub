@@ -8,8 +8,11 @@ import { useCart } from "@/hooks/useCart";
 import { optimizeImage } from "@/lib/image";
 import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
 
-/** Accent chaleureux de la direction visuelle (dégradé bleu -> corail). */
-const CORAL = "#F2764B";
+/** Identité « Design Pro » — bleu profond, fonds neutres, sans corail. */
+const BLUE_DARK = "#142B6B";
+const BG = "#F7F8FA";
+const BORDER = "#E5E8EC";
+const WHATSAPP = "#16A34A";
 
 type Product = {
   id: string; title: string; price: number; compare_at_price: number | null; description: string | null;
@@ -122,18 +125,16 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#FFF8F4" }}>
+    <div className="min-h-screen" style={{ background: BG }}>
 
       {/* ── COVER ── */}
       <div className="relative overflow-hidden h-[190px] sm:h-[230px]"
-        style={{ background: `linear-gradient(120deg, ${primary}, #3b5bdb 55%, ${CORAL})` }}>
-        {shop.shop_cover_url ? (
+        style={{ background: `linear-gradient(135deg, ${BLUE_DARK}, ${primary})` }}>
+        {shop.shop_cover_url && (
           <>
             <img src={optimizeImage(shop.shop_cover_url, 1600)} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/25 via-slate-900/45 to-slate-900/70" />
           </>
-        ) : (
-          <div className="absolute w-[300px] h-[300px] rounded-full bg-white/10 -top-[120px] -left-10" />
         )}
 
         <Link href="/marketplace"
@@ -146,7 +147,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
           <button onClick={handleShare}
             className="text-[13px] font-bold text-white px-3.5 py-2 rounded-xl backdrop-blur-sm"
             style={{ background: "rgba(255,255,255,.2)" }}>
-            ⤴ Partager
+            Partager
           </button>
           <button onClick={() => setCartOpen(true)}
             className="text-[13px] font-extrabold px-3.5 py-2 rounded-xl bg-white flex items-center gap-1.5"
@@ -158,8 +159,8 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* ── EN-TÊTE BOUTIQUE ── */}
       <div className="max-w-[1400px] mx-auto px-5 sm:px-11 -mt-12 sm:-mt-14 relative flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-[22px]">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[30px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white"
-          style={{ border: "5px solid #FFF8F4", color: primary, boxShadow: "0 14px 30px rgba(15,23,42,.16)" }}>
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white"
+          style={{ border: `5px solid ${BG}`, color: primary, boxShadow: "0 10px 24px rgba(14,21,38,.14)" }}>
           {shop.shop_logo_url
             ? <img src={optimizeImage(shop.shop_logo_url, 260)} className="w-full h-full object-cover" alt={shop.shop_name} />
             : shop.shop_name[0].toUpperCase()}
@@ -169,15 +170,15 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
           <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-slate-900">{shop.shop_name}</h1>
           {shop.slogan && <p className="text-sm italic text-slate-500 mt-0.5">&quot;{shop.slogan}&quot;</p>}
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: CORAL, boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: primary, border: `1px solid ${BORDER}` }}>
               {biz.emoji} {biz.label}
             </span>
             {shop.avg_rating !== undefined && shop.avg_rating > 0 && (
-              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-amber-500 flex items-center gap-1" style={{ boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-amber-500 flex items-center gap-1" style={{ border: `1px solid ${BORDER}` }}>
                 <Star size={11} fill="currentColor" /> {shop.avg_rating.toFixed(1).replace(".", ",")} · {shop.rating_count} avis
               </span>
             )}
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-slate-500" style={{ boxShadow: "0 2px 8px rgba(15,23,42,.06)" }}>
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-slate-500" style={{ border: `1px solid ${BORDER}` }}>
               {products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}
             </span>
           </div>
@@ -194,8 +195,8 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
               <button key={cat} onClick={() => filterCategory(cat)}
                 className="flex-shrink-0 px-[18px] py-2.5 rounded-full text-[13px] transition whitespace-nowrap"
                 style={activeCategory === cat
-                  ? { background: "#0F172A", color: "#fff", fontWeight: 700 }
-                  : { background: "#fff", color: "#475569", fontWeight: 600, boxShadow: "0 2px 8px rgba(15,23,42,.05)" }}>
+                  ? { background: primary, color: "#fff", fontWeight: 700 }
+                  : { background: "#fff", color: "#5B6472", fontWeight: 600, border: `1px solid ${BORDER}` }}>
                 {cat}
               </button>
             ))}
@@ -220,16 +221,16 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
               const hasPromo = !!product.compare_at_price && product.compare_at_price > product.price;
               return (
                 <button key={product.id} onClick={() => { setSelected(product); setImgIndex(0); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
-                  className="text-left bg-white rounded-[22px] overflow-hidden transition-transform hover:-translate-y-1 group"
-                  style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
-                  <div className="h-[150px] sm:h-[190px] flex items-center justify-center overflow-hidden relative" style={{ background: "#FFEFE6" }}>
+                  className="text-left bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 group"
+                  style={{ border: `1px solid ${BORDER}` }}>
+                  <div className="h-[150px] sm:h-[190px] flex items-center justify-center overflow-hidden relative" style={{ background: "#EEF2FF" }}>
                     {product.image_url ? (
                       <img src={optimizeImage(product.image_url, 500)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} loading="lazy" />
                     ) : (
                       <span className="text-5xl sm:text-6xl">{biz.emoji}</span>
                     )}
                     {hasPromo && (
-                      <span className="absolute top-2.5 left-2.5 text-[11px] font-extrabold text-white px-2.5 py-1 rounded-[10px]" style={{ background: CORAL }}>
+                      <span className="absolute top-2.5 left-2.5 text-[11px] font-extrabold text-white px-2.5 py-1 rounded-[8px]" style={{ background: primary }}>
                         -{Math.round((1 - product.price / product.compare_at_price!) * 100)}%
                       </span>
                     )}
@@ -252,16 +253,16 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* ── BARRE PANIER COLLANTE (WhatsApp) ── */}
       {cart.length > 0 && (
-        <div className="sticky bottom-5 z-20 mx-5 sm:mx-11 mb-6 rounded-[20px] flex items-center justify-between gap-3 pl-5 sm:pl-6 pr-3.5 py-3.5"
-          style={{ background: "#25D366", boxShadow: "0 16px 34px rgba(37,211,102,.34)" }}>
+        <div className="sticky bottom-5 z-20 mx-5 sm:mx-11 mb-6 rounded-[18px] flex items-center justify-between gap-3 pl-5 sm:pl-6 pr-3.5 py-3"
+          style={{ background: "#0E1526", boxShadow: "0 16px 34px rgba(14,21,38,.28)" }}>
           <button onClick={() => setCartOpen(true)} className="text-left min-w-0">
-            <p className="text-xs text-white/90">{cart.length} article{cart.length > 1 ? "s" : ""} · panier</p>
+            <p className="text-xs text-white/60">{cart.length} article{cart.length > 1 ? "s" : ""} · panier</p>
             <p className="text-lg sm:text-xl font-extrabold text-white truncate">{total.toLocaleString("fr-FR")} FCFA</p>
           </button>
           <button
             onClick={() => (shop.phone_whatsapp ? handleWhatsApp() : setCartOpen(true))}
-            className="bg-white text-[13px] sm:text-[15px] font-extrabold px-4 sm:px-5 py-3 rounded-[15px] whitespace-nowrap flex items-center gap-2 flex-shrink-0"
-            style={{ color: "#128C4A" }}>
+            className="text-[13px] sm:text-[15px] font-extrabold px-4 sm:px-5 py-3 rounded-[14px] whitespace-nowrap flex items-center gap-2 flex-shrink-0 text-white"
+            style={{ background: WHATSAPP }}>
             <MessageCircle size={16} /> Commander
             <span className="hidden sm:inline">sur WhatsApp</span>
           </button>
@@ -452,7 +453,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                   {shop.phone_whatsapp ? (
                     <button onClick={handleWhatsApp}
                       className="w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: "#25D366" }}>
+                      style={{ backgroundColor: WHATSAPP }}>
                       <MessageCircle size={20} /> Commander via WhatsApp
                     </button>
                   ) : (

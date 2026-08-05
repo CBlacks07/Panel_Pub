@@ -9,8 +9,11 @@ import { BUSINESS_TYPES } from "@/lib/businessTypes";
 const stripEmoji = (str: string) =>
   str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
 
-/** Accent chaleureux de la direction visuelle (dégradé bleu -> corail). */
-const CORAL = "#F2764B";
+/** Identité « Design Pro » — bleu profond, fonds neutres, sans corail. */
+const INK = "#0E1526";
+const BLUE_DARK = "#142B6B";
+const BG = "#F7F8FA";
+const BORDER = "#E5E8EC";
 
 type Shop = {
   id: string; shop_name: string; slogan: string | null;
@@ -74,20 +77,20 @@ export default function MarketplacePage() {
     setFiltered(result);
   };
 
-  const heroGradient = `linear-gradient(120deg, ${primary} 0%, #3b5bdb 45%, ${CORAL} 120%)`;
+  const heroGradient = `linear-gradient(135deg, ${BLUE_DARK} 0%, ${primary} 100%)`;
 
   return (
-    <div className="min-h-screen" style={{ background: "#FFF8F4" }}>
+    <div className="min-h-screen" style={{ background: BG }}>
 
       {/* ── NAV ── */}
-      <nav className="sticky top-0 z-30 backdrop-blur-md" style={{ background: "rgba(255,255,255,.9)", borderBottom: "1px solid #F1E4DB" }}>
+      <nav className="sticky top-0 z-30 backdrop-blur-md" style={{ background: "rgba(255,255,255,.9)", borderBottom: `1px solid ${BORDER}` }}>
         <div className="max-w-[1400px] mx-auto px-5 sm:px-10 py-3.5 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
             {logoUrl ? (
               <img src={optimizeImage(logoUrl, 120)} className="w-9 h-9 rounded-xl object-cover" alt={appName} />
             ) : (
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-lg"
-                style={{ background: `linear-gradient(135deg, ${primary}, ${CORAL})` }}>
+                style={{ background: `linear-gradient(135deg, ${BLUE_DARK}, ${primary})` }}>
                 {appName[0]}
               </div>
             )}
@@ -103,7 +106,7 @@ export default function MarketplacePage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeBiz); }}
               className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-sm bg-white focus:outline-none focus:ring-2 transition"
-              style={{ border: "1px solid #F1E4DB", boxShadow: "0 2px 8px rgba(15,23,42,.04)", ["--tw-ring-color" as string]: primary + "40" }}
+              style={{ border: `1px solid ${BORDER}`, boxShadow: "0 1px 3px rgba(14,21,38,.04)", ["--tw-ring-color" as string]: primary + "40" }}
             />
             {search && (
               <button onClick={() => { setSearch(""); applyFilters("", activeBiz); }}
@@ -127,12 +130,10 @@ export default function MarketplacePage() {
       <div className="max-w-[1400px] mx-auto">
 
         {/* ── HERO ── */}
-        <div className="relative overflow-hidden mx-5 sm:mx-10 mt-6 sm:mt-8 rounded-[28px] px-7 py-10 sm:px-11 sm:py-12" style={{ background: heroGradient }}>
-          <div className="absolute w-[280px] h-[280px] rounded-full bg-white/10 -top-24 -right-10" />
-          <div className="absolute w-[160px] h-[160px] rounded-full bg-white/[.08] -bottom-16 right-44" />
+        <div className="relative overflow-hidden mx-5 sm:mx-10 mt-6 sm:mt-8 rounded-[24px] px-7 py-10 sm:px-11 sm:py-12" style={{ background: heroGradient }}>
           <div className="relative max-w-[560px]">
             <h1 className="text-[28px] sm:text-[38px] font-extrabold text-white leading-[1.12] tracking-tight">
-              {stripEmoji(config["marketplace_banner_title"] || "Les pépites mode locales, à portée de WhatsApp")} ✨
+              {stripEmoji(config["marketplace_banner_title"] || "Les pépites mode locales, à portée de WhatsApp")}
             </h1>
             <p className="text-[15px] sm:text-base text-white/[.88] mt-3.5 leading-relaxed">
               {config["marketplace_banner_subtitle"] || "Découvre les créateurs et boutiques près de toi. Commande en un clic, directement auprès du vendeur."}
@@ -157,7 +158,7 @@ export default function MarketplacePage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeBiz); }}
             className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm bg-white focus:outline-none"
-            style={{ border: "1px solid #F1E4DB", boxShadow: "0 2px 8px rgba(15,23,42,.04)" }}
+            style={{ border: `1px solid ${BORDER}`, boxShadow: "0 1px 3px rgba(14,21,38,.04)" }}
           />
         </div>
 
@@ -167,8 +168,8 @@ export default function MarketplacePage() {
             onClick={() => { setActiveBiz("all"); applyFilters(search, "all"); }}
             className="flex-shrink-0 text-sm font-bold px-5 py-2.5 rounded-full transition"
             style={activeBiz === "all"
-              ? { background: "#0F172A", color: "#fff" }
-              : { background: "#fff", color: "#475569", boxShadow: "0 2px 8px rgba(15,23,42,.05)", fontWeight: 600 }}
+              ? { background: primary, color: "#fff" }
+              : { background: "#fff", color: "#5B6472", border: `1px solid ${BORDER}`, fontWeight: 600 }}
           >
             🏪 Tout
           </button>
@@ -178,8 +179,8 @@ export default function MarketplacePage() {
               onClick={() => { setActiveBiz(b.id); applyFilters(search, b.id); }}
               className="flex-shrink-0 text-sm px-5 py-2.5 rounded-full transition whitespace-nowrap"
               style={activeBiz === b.id
-                ? { background: "#0F172A", color: "#fff", fontWeight: 700 }
-                : { background: "#fff", color: "#475569", boxShadow: "0 2px 8px rgba(15,23,42,.05)", fontWeight: 600 }}
+                ? { background: primary, color: "#fff", fontWeight: 700 }
+                : { background: "#fff", color: "#5B6472", border: `1px solid ${BORDER}`, fontWeight: 600 }}
             >
               {b.emoji} {b.label}
             </button>
@@ -191,7 +192,7 @@ export default function MarketplacePage() {
           <h2 className="text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900">
             {activeBiz === "all" ? "Boutiques près de toi" : BUSINESS_TYPES.find((b) => b.id === activeBiz)?.label}
           </h2>
-          <span className="text-sm font-bold" style={{ color: CORAL }}>
+          <span className="text-sm font-bold" style={{ color: primary }}>
             {filtered.length} boutique{filtered.length > 1 ? "s" : ""}
           </span>
         </div>
@@ -201,7 +202,7 @@ export default function MarketplacePage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[22px]">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-[22px] overflow-hidden animate-pulse" style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
+                <div key={i} className="bg-white rounded-[18px] overflow-hidden animate-pulse" style={{ border: `1px solid ${BORDER}` }}>
                   <div className="h-[120px] bg-slate-100" />
                   <div className="p-4 pt-7 space-y-2">
                     <div className="h-4 bg-slate-100 rounded w-3/4" />
@@ -225,8 +226,8 @@ export default function MarketplacePage() {
                 const accent = BIZ_COLORS[shop.business_type || "autre"] || primary;
                 return (
                   <Link key={shop.id} href={`/shop/${shop.id}`}
-                    className="bg-white rounded-[22px] overflow-hidden transition-transform hover:-translate-y-1 block"
-                    style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
+                    className="bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 block"
+                    style={{ border: `1px solid ${BORDER}` }}>
 
                     {/* Cover */}
                     <div className="h-[120px] relative flex items-center justify-center"
