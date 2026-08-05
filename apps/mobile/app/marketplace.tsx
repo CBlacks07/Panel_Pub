@@ -13,7 +13,7 @@ import { MarketplaceSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
 import { CategoryCircle, ProductMiniCard, HomeProduct } from "../components/marketplace/HomeBits";
 import { LinearGradient } from "expo-linear-gradient";
-import { brand, heroGradient } from "../lib/theme";
+import { heroGradient } from "../lib/theme";
 import { getAppConfig, AppConfig } from "../lib/config";
 import { useConfig } from "../context/ConfigContext";
 import { BUSINESS_TYPES } from "../lib/businessTypes";
@@ -306,7 +306,7 @@ export default function MarketplaceScreen() {
         <Animated.View style={[styles.banner, { backgroundColor: primary, transform: [{ translateY: bannerAnim }], opacity: bannerOpacity }]}>
           <LinearGradient
             colors={heroGradient(primary)}
-            locations={[0, 0.5, 1]}
+            locations={[0, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.bannerGradient}
@@ -352,7 +352,7 @@ export default function MarketplaceScreen() {
           <View style={styles.prodSectionHead}>
             <Text style={styles.prodSectionTitle}>{biz.emoji} {biz.label}</Text>
             <TouchableOpacity onPress={() => handleBizFilter(biz.id)}>
-              <Text style={[styles.prodSectionLink, { color: brand.coral }]}>Voir tout ›</Text>
+              <Text style={[styles.prodSectionLink, { color: primary }]}>Voir tout ›</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.prodSectionScroll} keyboardShouldPersistTaps="handled">
@@ -474,7 +474,7 @@ export default function MarketplaceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8F4" },
+  container: { flex: 1, backgroundColor: "#F7F8FA" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   header: {

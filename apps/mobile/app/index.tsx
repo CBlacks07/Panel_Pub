@@ -61,8 +61,8 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={["#ffffff", "#5ec8f5", primaryColor]}
-      locations={[0, 0.3, 1]}
+      colors={["#ffffff", "#DCE4FF", primaryColor]}
+      locations={[0, 0.35, 1]}
       style={styles.container}
     >
       <Animated.View style={[styles.circle1, { transform: [{ scale: bgScale }] }]} />

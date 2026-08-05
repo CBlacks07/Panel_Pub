@@ -268,17 +268,13 @@ export default function ShopScreen() {
             />
           </>
         ) : (
-          <>
-            <LinearGradient
-              colors={heroGradient(primary)}
-              locations={[0, 0.55, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.coverBg}
-            />
-            <View style={styles.headerCircle1} />
-            <View style={styles.headerCircle2} />
-          </>
+          <LinearGradient
+            colors={heroGradient(primary)}
+            locations={[0, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.coverBg}
+          />
         )}
 
         {/* Boutons flottants */}
@@ -536,7 +532,7 @@ export default function ShopScreen() {
                   </View>
                 )}
 
-                <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: brand.coral, shadowColor: brand.coral }]} onPress={handleAddToCart}>
+                <TouchableOpacity style={[styles.addToCartBtn, { backgroundColor: primary, shadowColor: primary }]} onPress={handleAddToCart}>
                   <Ionicons name="bag-add-outline" size={20} color="#fff" />
                   <Text style={styles.addToCartBtnText}>
                     {shopBizType.id === "alimentation" ? "Ajouter à ma commande" : "Ajouter au panier"}
@@ -553,8 +549,8 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  outerContainer: { flex: 1, backgroundColor: "#FFF8F4", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#FFF8F4", width: "100%", maxWidth: 680 },
+  outerContainer: { flex: 1, backgroundColor: colors.bg, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.bg, width: "100%", maxWidth: 680 },
   loadingScreen: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
 
   // Header
@@ -640,7 +636,7 @@ const styles = StyleSheet.create({
   priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "800" },
   discountBadge: {
     position: "absolute", top: 8, left: 8,
-    backgroundColor: brand.coral, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: brand.blue, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3,
   },
   discountBadgeText: { color: "#fff", fontSize: 11, fontWeight: "800" },
   cardInfo: { padding: 10, gap: 4 },
@@ -659,20 +655,20 @@ const styles = StyleSheet.create({
   // Barre panier
   cartBar: {
     position: "absolute", left: 16, right: 16,
-    backgroundColor: "#1a1a1a", borderRadius: 22,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3, shadowRadius: 20, elevation: 14,
+    backgroundColor: colors.ink, borderRadius: 18,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.28, shadowRadius: 28, elevation: 14,
     overflow: "hidden",
   },
   cartBarInner: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingLeft: 20, paddingRight: 8, paddingVertical: 12,
+    paddingLeft: 18, paddingRight: 8, paddingVertical: 12,
   },
   cartBarLeft: { gap: 2 },
-  cartBarCount: { fontSize: 11, color: "#aaa", fontWeight: "500" },
-  cartBarTotal: { fontSize: 17, fontWeight: "900", color: "#fff" },
+  cartBarCount: { fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: "600" },
+  cartBarTotal: { fontSize: 16, fontWeight: "800", color: "#fff" },
   whatsappBtn: {
-    backgroundColor: "#25D366", borderRadius: 16,
+    backgroundColor: colors.whatsapp, borderRadius: 14,
     paddingHorizontal: 16, paddingVertical: 10,
     flexDirection: "row", alignItems: "center", gap: 6,
   },
@@ -717,10 +713,10 @@ const styles = StyleSheet.create({
   modalPriceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   modalPriceText: { fontSize: 22, fontWeight: "900" },
   modalCatBadge: {
-    alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4,
-    backgroundColor: brand.coralSoft,
+    alignSelf: "flex-start", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4,
+    backgroundColor: brand.blueSoft,
   },
-  modalCatText: { fontSize: 12, fontWeight: "700", color: brand.coral, textTransform: "uppercase", letterSpacing: 0.5 },
+  modalCatText: { fontSize: 12, fontWeight: "700", color: brand.blue, textTransform: "uppercase", letterSpacing: 0.5 },
   modalTitle: { fontSize: 22, fontWeight: "900", color: "#1a1a1a", lineHeight: 28 },
   modalDescription: { fontSize: 14, color: "#666", lineHeight: 22 },
   varSection: { gap: 10 },

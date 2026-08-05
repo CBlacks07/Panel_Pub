@@ -1,7 +1,7 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { optimizeImage } from "../../lib/cloudinary";
-import { brand, colors } from "../../lib/theme";
+import { colors } from "../../lib/theme";
 
 export type HomeProduct = {
   id: string;
@@ -50,7 +50,7 @@ export function ProductMiniCard({
         )}
 
         {hasPromo && (
-          <View style={styles.discount}>
+          <View style={[styles.discount, { backgroundColor: accent }]}>
             <Text style={styles.discountText}>-{Math.round((1 - product.price / product.compare_at_price!) * 100)}%</Text>
           </View>
         )}
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   imageFallback: { justifyContent: "center", alignItems: "center", backgroundColor: colors.pastelWarm },
   discount: {
     position: "absolute", top: 8, left: 8,
-    backgroundColor: brand.coral, borderRadius: 9, paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2,
   },
   discountText: { color: "#fff", fontSize: 10, fontWeight: "800" },
   vendorPill: {

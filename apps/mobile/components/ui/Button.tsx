@@ -4,13 +4,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useConfig } from "../../context/ConfigContext";
-import { brand, colors, radius, shadow, sizing } from "../../lib/theme";
+import { colors, radius, shadow, sizing } from "../../lib/theme";
 
-type Variant = "primary" | "coral" | "soft" | "outline" | "ghost";
+type Variant = "primary" | "whatsapp" | "soft" | "outline" | "ghost";
 
 /**
  * Bouton standard de l'app.
- * Variantes : primary (bleu de marque), coral (CTA commerce — Direction B),
+ * Variantes : primary (bleu de marque), whatsapp (CTA commande — vert),
  * soft (fond bleu clair), outline, ghost.
  */
 export function Button({
@@ -30,17 +30,17 @@ export function Button({
 
   const bg =
     variant === "primary" ? primary :
-    variant === "coral" ? brand.coral :
+    variant === "whatsapp" ? colors.whatsapp :
     variant === "soft" ? primary + "18" :
     "transparent";
   const fg =
-    variant === "primary" || variant === "coral" ? "#fff" : primary;
+    variant === "primary" || variant === "whatsapp" ? "#fff" : primary;
   const border = variant === "outline" ? { borderWidth: 1.5, borderColor: primary } : null;
   const glow =
     variant === "primary" ? shadow.button :
-    variant === "coral" ? {
-      shadowColor: brand.coral, shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.34, shadowRadius: 26, elevation: 8,
+    variant === "whatsapp" ? {
+      shadowColor: colors.whatsapp, shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.24, shadowRadius: 18, elevation: 6,
     } : null;
 
   return (

@@ -90,54 +90,59 @@ export default function PlansScreen() {
         {plans.map((plan) => {
           const isCurrent = plan.id === currentPlan;
           const isPopular = plan.is_popular;
+          // Le plan recommandé se distingue par un fond sombre (rendu « SaaS »),
+          // pas par un contour coloré — sauf s'il est déjà le plan actuel.
+          const dark = isPopular && !isCurrent;
 
           return (
             <View
               key={plan.id}
               style={[
                 styles.card,
-                isPopular && { borderColor: primary, borderWidth: 2 },
-                isCurrent && { borderColor: primary, borderWidth: 2 },
+                dark && styles.cardDark,
+                isCurrent && { borderColor: primary, borderWidth: 1.5 },
               ]}
             >
-              {isPopular && (
+              {(isPopular || isCurrent) && (
                 <View style={[styles.popularBadge, { backgroundColor: primary }]}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Ionicons name="star" size={10} color="#fff" />
-                    <Text style={styles.popularBadgeText}>Recommandé</Text>
-                  </View>
+                  <Text style={styles.popularBadgeText}>{isCurrent ? "Plan actuel" : "Recommandé"}</Text>
                 </View>
               )}
 
               <View style={styles.cardHeader}>
                 <View>
-                  <Text style={styles.planName}>{plan.name}</Text>
-                  <Text style={styles.planLimit}>
+                  <Text style={[styles.planName, dark && { color: "#fff" }]}>{plan.name}</Text>
+                  <Text style={[styles.planLimit, dark && { color: "rgba(255,255,255,0.55)" }]}>
                     {getPlanFeatures(plan).slice(0, 2).join(" · ")}
                   </Text>
                 </View>
                 <View style={styles.priceWrap}>
                   {plan.price === 0 ? (
                     <>
-                      <Text style={[styles.planPrice, { color: primary }]}>Gratuit</Text>
-                      <Text style={styles.planCurrency}>pour toujours</Text>
+                      <Text style={[styles.planPrice, { color: dark ? "#fff" : primary }]}>Gratuit</Text>
+                      <Text style={[styles.planCurrency, dark && { color: "rgba(255,255,255,0.55)" }]}>pour toujours</Text>
                     </>
                   ) : (
                     <>
-                      <Text style={[styles.planPrice, { color: primary }]}>
+                      <Text style={[styles.planPrice, { color: dark ? "#fff" : primary }]}>
                         {plan.price.toLocaleString("fr-FR")}
                       </Text>
-                      <Text style={styles.planCurrency}>{plan.currency}/{plan.billing}</Text>
+                      <Text style={[styles.planCurrency, dark && { color: "rgba(255,255,255,0.55)" }]}>{plan.currency}/{plan.billing}</Text>
                     </>
                   )}
                 </View>
               </View>
 
+              <View style={[styles.divider, dark && { backgroundColor: "rgba(255,255,255,0.12)" }]} />
+
               <View style={styles.features}>
                 {getPlanFeatures(plan).map((f, i) => (
                   <View key={i} style={styles.featureRow}>
-                    <Ionicons name="checkmark" size={14} color={primary} />
-                    <Text style={[styles.featureText, i < 2 && { fontWeight: "600", color: "#333" }]}>{f}</Text>
+                    <Ionicons name="checkmark" size={14} color={dark ? "#fff" : primary} />
+                    <Text style={[
+                      styles.featureText,
+                      dark ? { color: "rgba(255,255,255,0.85)" } : (i < 2 && { fontWeight: "600", color: "#333" }),
+                    ]}>{f}</Text>
                   </View>
                 ))}
               </View>
@@ -169,7 +174,7 @@ export default function PlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8F4" },
+  container: { flex: 1, backgroundColor: "#F7F8FA" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -182,25 +187,25 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 12, color: "#aaa", marginTop: 1 },
   scroll: { padding: 16, gap: 16, paddingBottom: 40 },
   card: {
-    backgroundColor: "#fff", borderRadius: 20,
-    borderWidth: 1, borderColor: "#f0f0f0",
-    padding: 20, gap: 16,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    backgroundColor: "#fff", borderRadius: 16,
+    borderWidth: 1, borderColor: "#E5E8EC",
+    padding: 18, gap: 14,
     overflow: "hidden",
   },
+  cardDark: { backgroundColor: "#0E1526", borderColor: "#0E1526" },
   popularBadge: {
     position: "absolute", top: 0, right: 0,
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderBottomLeftRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 5,
+    borderBottomLeftRadius: 10,
   },
-  popularBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
+  popularBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  planName: { fontSize: 20, fontWeight: "800", color: "#1a1a1a" },
-  planLimit: { fontSize: 12, color: "#888", marginTop: 2 },
+  planName: { fontSize: 18, fontWeight: "800", color: "#0E1526" },
+  planLimit: { fontSize: 11, color: "#97A1AD", marginTop: 2 },
   priceWrap: { alignItems: "flex-end", flexDirection: "column", gap: 2 },
-  planPrice: { fontSize: 22, fontWeight: "800" },
-  planCurrency: { fontSize: 11, color: "#aaa" },
+  planPrice: { fontSize: 19, fontWeight: "800" },
+  planCurrency: { fontSize: 10, color: "#97A1AD" },
+  divider: { height: 1, backgroundColor: "#EDEFF2" },
   features: { gap: 8 },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   featureCheck: { fontSize: 14, fontWeight: "700", width: 16 },

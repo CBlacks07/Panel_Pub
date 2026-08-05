@@ -198,13 +198,10 @@ export default function DashboardScreen() {
           <>
             {/* ── HEADER ── */}
             <View style={styles.header}>
-              <LinearGradient colors={heroGradient(primary)} locations={[0, 0.55, 1]} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 0.9, y: 1 }}>
-                <View style={styles.headerCircle1} />
-                <View style={styles.headerCircle2} />
-
+              <LinearGradient colors={heroGradient(primary)} locations={[0, 1]} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 0.9, y: 1 }}>
                 <View style={styles.headerTop}>
                   <View style={styles.headerLeft}>
-                    <Text style={styles.headerGreeting}>Bonjour 👋</Text>
+                    <Text style={styles.headerGreeting}>Bonjour</Text>
                     <Text style={styles.headerShopName} numberOfLines={1}>{shopName}</Text>
                     <View style={styles.planBadge}>
                       <Text style={styles.planBadgeText}>Plan {currentPlan.name}</Text>
@@ -232,11 +229,11 @@ export default function DashboardScreen() {
                     <Text style={styles.glassValue}>
                       {totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews}
                     </Text>
-                    <Text style={styles.glassLabel}>Vues 👁</Text>
+                    <Text style={styles.glassLabel}>Vues</Text>
                   </View>
                   <View style={styles.glassCard}>
                     <Text style={styles.glassValue}>
-                      {avgRating > 0 ? `${avgRating.toFixed(1).replace(".", ",")}★` : "—"}
+                      {avgRating > 0 ? avgRating.toFixed(1).replace(".", ",") : "—"}
                     </Text>
                     <Text style={styles.glassLabel}>Note</Text>
                   </View>
@@ -248,15 +245,15 @@ export default function DashboardScreen() {
             {isFreePlan && (
               <TouchableOpacity style={styles.upsell} onPress={() => router.push("/(app)/plans")} activeOpacity={0.85}>
                 <View style={styles.upsellIcon}>
-                  <Text style={{ fontSize: 18 }}>🚀</Text>
+                  <Ionicons name="flash" size={17} color={primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.upsellTitle}>Passe au Pro</Text>
+                  <Text style={styles.upsellTitle}>Passer au forfait Pro</Text>
                   <Text style={styles.upsellText}>
-                    {totalCreated}/{PLAN_LIMIT} articles · Articles illimités + stats détaillées
+                    {totalCreated}/{PLAN_LIMIT} articles · Illimité + statistiques
                   </Text>
                 </View>
-                <Text style={styles.upsellArrow}>→</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </TouchableOpacity>
             )}
 
@@ -434,34 +431,32 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFF8F4" },
+  safeArea: { flex: 1, backgroundColor: colors.bg },
   listContent: { paddingHorizontal: 16, paddingTop: 0 },
   row: { gap: 12, marginBottom: 12 },
 
   // Stats « en verre » dans l'en-tête dégradé
-  glassRow: { flexDirection: "row", gap: 8, marginTop: 16 },
+  glassRow: { flexDirection: "row", gap: 8, marginTop: 18 },
   glassCard: {
-    flex: 1, backgroundColor: "rgba(255,255,255,0.16)",
-    borderRadius: 16, paddingHorizontal: 12, paddingVertical: 11,
+    flex: 1, backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
   },
-  glassValue: { fontSize: 20, fontWeight: "800", color: "#fff" },
-  glassLabel: { fontSize: 10, color: "rgba(255,255,255,0.8)", fontWeight: "600", marginTop: 1 },
+  glassValue: { fontSize: 19, fontWeight: "800", color: "#fff" },
+  glassLabel: { fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: "600", marginTop: 1 },
 
   // Carte upsell Pro
   upsell: {
     flexDirection: "row", alignItems: "center", gap: 11,
-    backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 16,
-    borderWidth: 1, borderColor: brand.coralBorder,
-    shadowColor: brand.coral, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14, shadowRadius: 18, elevation: 3,
+    backgroundColor: colors.surface, borderRadius: 14, padding: 12, marginBottom: 16,
+    borderWidth: 1, borderColor: colors.border,
   },
   upsellIcon: {
-    width: 38, height: 38, borderRadius: 12, backgroundColor: brand.coralSoft,
+    width: 36, height: 36, borderRadius: 10, backgroundColor: brand.blueSoft,
     justifyContent: "center", alignItems: "center",
   },
-  upsellTitle: { fontSize: 13, fontWeight: "800", color: colors.text },
+  upsellTitle: { fontSize: 13, fontWeight: "700", color: colors.text },
   upsellText: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
-  upsellArrow: { color: brand.coral, fontWeight: "800", fontSize: 16 },
+  upsellArrow: { color: colors.textMuted, fontWeight: "800", fontSize: 16 },
 
   // Rappel WhatsApp
   waReminder: {

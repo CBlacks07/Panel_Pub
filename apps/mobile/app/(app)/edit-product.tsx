@@ -301,7 +301,7 @@ export default function EditProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8F4" },
+  container: { flex: 1, backgroundColor: "#F7F8FA" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   header: {
