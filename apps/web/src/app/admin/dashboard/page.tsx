@@ -1,771 +1,252 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Briefcase, ExternalLink, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, Store, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { getPlanFeatures } from "@/lib/planFeatures";
-import { Upload, Store, Shirt, Star, Settings, Briefcase, CheckCircle, Eye, Key, Check, Ban, Trash2, Pencil, X, TrendingUp, Sparkles, Calendar, Tag, MousePointer } from "lucide-react";
+import { BG, BORDER, ConfirmDialog, ConfirmState, INK, ToastHost, useToasts } from "./_components/ui";
+import Overview from "./_components/Overview";
+import ShopsSection from "./_components/ShopsSection";
+import PlansSection from "./_components/PlansSection";
+import ConfigSection from "./_components/ConfigSection";
+import SecuritySection from "./_components/SecuritySection";
+import { EMPTY_STATS, type Config, type Plan, type SectionId, type Shop, type Stats } from "./_components/types";
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dmiuhdvmf";
-const UPLOAD_PRESET = "panel_pub_unsigned";
+const NAV: { id: SectionId; label: string; icon: typeof Store }[] = [
+  { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { id: "shops", label: "Boutiques", icon: Store },
+  { id: "plans", label: "Forfaits", icon: Briefcase },
+  { id: "config", label: "Configuration", icon: Settings },
+  { id: "security", label: "Sécurité", icon: ShieldCheck },
+];
+const isSection = (v: string): v is SectionId => NAV.some((n) => n.id === v);
 
-function UploadLogoBtn({ onUploaded }: { onUploaded: (url: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const form = new FormData();
-    form.append("file", file);
-    form.append("upload_preset", UPLOAD_PRESET);
-    form.append("folder", "boutiki/logo");
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: form });
-    const data = await res.json();
-    onUploaded(data.secure_url);
-    setUploading(false);
-  };
-
-  return (
-    <>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 text-white"
-      style={{ backgroundColor: uploading ? "#aaa" : "#9333ea" }}
-      >
-        {uploading ? "Upload en cours..." : <><Upload size={14} className="inline mr-1" />Uploader une image</>}
-      </button>
-    </>
-  );
-}
-
-type Config = Record<string, string>;
-type Shop = {
-  id: string;
-  shop_name: string;
-  email: string;
-  plan: string;
-  created_at: string;
-  suspended?: boolean;
-  product_count?: number;
-  avg_rating?: number;
-  is_demo?: boolean;
-};
-type Stats = {
-  shops: number; products: number; ratings: number;
-  newShops7d: number; newShops30d: number;
-  planCount: Record<string, number>;
-  bizCount: Record<string, number>;
-};
-
-const CONFIG_LABELS: Record<string, { label: string; description: string; type: "text" | "color" | "toggle" | "image" }> = {
-  app_name:                  { label: "Nom de l'application", description: "Affiché sur le splash screen", type: "text" },
-  logo_url:                  { label: "Logo de l'application", description: "Image affichée sur le splash screen (URL Cloudinary)", type: "image" },
-  app_tagline:               { label: "Tagline principale", description: "Slogan sous le logo splash", type: "text" },
-  splash_title:              { label: "Titre splash screen", description: "Grand titre au démarrage", type: "text" },
-  splash_subtitle:           { label: "Sous-titre splash screen", description: "Texte descriptif au démarrage", type: "text" },
-  marketplace_banner_title:  { label: "Titre bannière marketplace", description: "Titre de la bannière d'accueil", type: "text" },
-  marketplace_banner_subtitle: { label: "Sous-titre bannière", description: "Description sous le titre de la bannière", type: "text" },
-  primary_color:             { label: "Couleur principale", description: "Couleur des boutons et accents", type: "color" },
-  vendor_cta:                { label: "Texte CTA vendeur", description: "Bouton d'inscription vendeur", type: "text" },
-  marketplace_enabled:       { label: "Marketplace activé", description: "Activer/désactiver le marketplace", type: "toggle" },
-  ratings_enabled:           { label: "Notation activée", description: "Permettre aux clients de noter", type: "toggle" },
-  support_whatsapp:          { label: "WhatsApp Support", description: "Numéro pour les abonnements (ex: +22893914694)", type: "text" },
-};
-
-function ChangePasswordCard() {
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirmNext, setConfirmNext] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg(null);
-    if (next.length < 10) { setMsg({ ok: false, text: "Le nouveau mot de passe doit faire au moins 10 caractères." }); return; }
-    if (next !== confirmNext) { setMsg({ ok: false, text: "La confirmation ne correspond pas." }); return; }
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ current, next }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setMsg({ ok: false, text: data.error || "Échec du changement." }); return; }
-      setCurrent(""); setNext(""); setConfirmNext("");
-      setMsg({ ok: true, text: "Mot de passe modifié. Utilise-le à ta prochaine connexion." });
-    } catch {
-      setMsg({ ok: false, text: "Erreur réseau, réessaie." });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-100 mt-4 sm:mt-6 overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-gray-50">
-        <h2 className="font-black text-gray-900">Mot de passe admin</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Au moins 10 caractères. Le mot de passe actuel est demandé.</p>
-      </div>
-      <div className="p-4 sm:p-6 grid gap-3 sm:grid-cols-3">
-        <input type="password" autoComplete="current-password" placeholder="Mot de passe actuel" value={current} onChange={(e) => setCurrent(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
-        <input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe" value={next} onChange={(e) => setNext(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
-        <input type="password" autoComplete="new-password" placeholder="Confirmer" value={confirmNext} onChange={(e) => setConfirmNext(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
-      </div>
-      <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex items-center gap-4">
-        <button type="submit" disabled={busy || !current || !next}
-          className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-gray-900 disabled:opacity-40">
-          {busy ? "Enregistrement..." : "Changer le mot de passe"}
-        </button>
-        {msg && <span className={`text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`} role="status">{msg.text}</span>}
-      </div>
-    </form>
-  );
+async function postJson(url: string, body: unknown): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (res.ok) return { ok: true };
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, error: data.error };
+  } catch {
+    return { ok: false, error: "Erreur réseau" };
+  }
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [tab, setTab] = useState<"config" | "shops" | "stats" | "plans">("config");
-  const [config, setConfig] = useState<Config>({});
-  const primary = config["primary_color"] || "#9333ea";
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [filteredShops, setFilteredShops] = useState<Shop[]>([]);
-  const [shopSearch, setShopSearch] = useState("");
-  const [hideDemo, setHideDemo] = useState(false);
-  const [stats, setStats] = useState<Stats>({ shops: 0, products: 0, ratings: 0, newShops7d: 0, newShops30d: 0, planCount: {}, bizCount: {} });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [section, setSection] = useState<SectionId>("overview");
+  const [navOpen, setNavOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
-  const [plans, setPlans] = useState<any[]>([]);
-  const [editingPlan, setEditingPlan] = useState<any | null>(null);
+  const [config, setConfig] = useState<Config>({});
+  const [savedConfig, setSavedConfig] = useState<Config>({});
+  const [saving, setSaving] = useState(false);
+  const [shops, setShops] = useState<Shop[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
+  const [includeDemo, setIncludeDemo] = useState(false);
+  const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const { toasts, push } = useToasts();
 
+  const primary = savedConfig["primary_color"] || "#2563EB";
+  const appName = savedConfig["app_name"] || "Boutiki";
+
+  // Section mémorisée dans l'URL (#shops…) : le rechargement garde la page courante.
   useEffect(() => {
-    // La protection est assurée par le middleware Next.js (cookie httpOnly)
-    // Plus de vérification sessionStorage côté client
-    loadAll();
+    const read = () => {
+      const h = window.location.hash.replace("#", "");
+      if (isSection(h)) setSection(h);
+    };
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
+  const go = useCallback((id: SectionId) => {
+    setSection(id); setNavOpen(false);
+    window.history.replaceState(null, "", `#${id}`);
+    window.scrollTo({ top: 0 });
   }, []);
 
-  const loadAll = async () => {
-    const [{ data: configData }, shopsRes, { data: plansData }] = await Promise.all([
-      supabase.from("app_config").select("key, value"),
-      fetch("/api/admin/shops").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      supabase.from("plans").select("*").order("sort_order"),
-    ]);
-    const shopsData: Shop[] | null = shopsRes?.shops ?? null;
+  const loadStats = useCallback(async (withDemo: boolean) => {
+    const res = await fetch(`/api/admin/stats${withDemo ? "?include_demo=1" : ""}`).catch(() => null);
+    if (!res?.ok) return;
+    const s = await res.json();
+    setStats({
+      shops: s.totalShops || 0, products: s.totalProducts || 0, ratings: s.totalRatings || 0,
+      newShops7d: s.newShops7d || 0, newShops30d: s.newShops30d || 0,
+      planCount: s.planCount || {}, bizCount: s.bizCount || {},
+    });
+  }, []);
 
-    if (configData) {
-      const map: Config = {};
-      configData.forEach((r) => { map[r.key] = r.value; });
-      setConfig(map);
-    }
+  useEffect(() => {
+    (async () => {
+      // La protection est assurée par le middleware (cookie httpOnly) ; les données sensibles passent par l'API serveur.
+      const [{ data: cfg }, shopsRes, { data: plansData }] = await Promise.all([
+        supabase.from("app_config").select("key, value"),
+        fetch("/api/admin/shops").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        supabase.from("plans").select("*").order("sort_order"),
+      ]);
+      if (cfg) {
+        const map: Config = {};
+        cfg.forEach((r) => { map[r.key] = r.value; });
+        setConfig(map); setSavedConfig(map);
+      }
+      if (shopsRes?.shops) setShops(shopsRes.shops);
+      else push("Impossible de charger les boutiques.", false);
+      if (plansData) setPlans(plansData as Plan[]);
+      await loadStats(false);
+      setLoading(false);
+    })();
+  }, [loadStats, push]);
 
-    if (shopsData) {
-      setShops(shopsData);
-      setFilteredShops(shopsData);
-    }
+  const toggleDemo = (v: boolean) => { setIncludeDemo(v); loadStats(v); };
 
-    // Charger les stats enrichies depuis l'API
-    const statsRes = await fetch("/api/admin/stats").catch(() => null);
-    if (statsRes?.ok) {
-      const s = await statsRes.json();
-      setStats({ shops: s.totalShops || 0, products: s.totalProducts || 0, ratings: s.totalRatings || 0, newShops7d: s.newShops7d || 0, newShops30d: s.newShops30d || 0, planCount: s.planCount || {}, bizCount: s.bizCount || {} });
-    } else {
-      setStats({ shops: shopsData?.length || 0, products: 0, ratings: 0, newShops7d: 0, newShops30d: 0, planCount: {}, bizCount: {} });
-    }
-    if (plansData) setPlans(plansData);
-    setLoading(false);
+  // ── Actions boutiques ──
+  const patchShop = (id: string, patch: Partial<Shop>) => setShops((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+
+  const changePlan = async (shop: Shop, plan: string) => {
+    const r = await postJson("/api/admin/update-plan", { userId: shop.id, plan });
+    if (!r.ok) { push(r.error || "Changement de forfait impossible.", false); return; }
+    patchShop(shop.id, { plan });
+    push(`Forfait de « ${shop.shop_name} » mis à jour`);
+    loadStats(includeDemo);
   };
 
-  const handleSave = async () => {
+  const toggleSuspend = async (shop: Shop) => {
+    const suspended = !shop.suspended;
+    const r = await postJson("/api/admin/update-shop", { userId: shop.id, data: { suspended } });
+    if (!r.ok) { push(r.error || "Action impossible.", false); return; }
+    patchShop(shop.id, { suspended });
+    push(suspended ? `« ${shop.shop_name} » suspendue` : `« ${shop.shop_name} » réactivée`);
+  };
+
+  const deleteShop = (shop: Shop) => setConfirm({
+    title: "Supprimer cette boutique ?",
+    message: `Le compte « ${shop.shop_name} » et tous ses articles seront supprimés définitivement. Cette action est irréversible.`,
+    confirmLabel: "Supprimer définitivement",
+    requireText: shop.shop_name,
+    onConfirm: async () => {
+      const r = await postJson("/api/admin/delete-user", { userId: shop.id });
+      if (!r.ok) { push(r.error || "Suppression impossible.", false); return; }
+      setShops((prev) => prev.filter((s) => s.id !== shop.id));
+      push(`« ${shop.shop_name} » supprimée`);
+      loadStats(includeDemo);
+    },
+  });
+
+  const sendReset = async (shop: Shop) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(shop.email, { redirectTo: `${window.location.origin}/reset-password` });
+    push(error ? `Envoi impossible : ${error.message}` : `Lien envoyé à ${shop.email}`, !error);
+  };
+
+  // ── Forfaits ──
+  const togglePlan = async (plan: Plan) => {
+    const r = await postJson("/api/admin/plans", { id: plan.id, data: { active: !plan.active } });
+    if (!r.ok) { push(r.error || "Modification impossible.", false); return; }
+    setPlans((prev) => prev.map((p) => (p.id === plan.id ? { ...p, active: !p.active } : p)));
+  };
+  const savePlan = async (plan: Plan, data: Partial<Plan>) => {
+    const r = await postJson("/api/admin/plans", { id: plan.id, data });
+    if (!r.ok) { push(r.error || "Enregistrement impossible.", false); return false; }
+    setPlans((prev) => prev.map((p) => (p.id === plan.id ? { ...p, ...data } : p)));
+    push(`Forfait « ${data.name ?? plan.name} » enregistré`);
+    return true;
+  };
+
+  // ── Configuration ──
+  const saveConfig = async () => {
     setSaving(true);
-    const res = await fetch("/api/admin/config", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries: config }),
-    }).catch(() => null);
+    const r = await postJson("/api/admin/config", { entries: config });
     setSaving(false);
-    if (!res?.ok) {
-      const err = await res?.json().catch(() => ({}));
-      alert(`Enregistrement impossible${err?.error ? ` : ${err.error}` : "."}`);
-      return;
-    }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!r.ok) { push(r.error ? `Enregistrement impossible : ${r.error}` : "Enregistrement impossible.", false); return; }
+    setSavedConfig(config);
+    push("Configuration enregistrée");
   };
 
-  const handleDeleteShop = async (id: string, name: string) => {
-    if (!confirm(`Supprimer définitivement la boutique "${name}" et tous ses articles ?\n\nCette action est IRRÉVERSIBLE — le compte sera supprimé.`)) return;
+  const logout = () => setConfirm({
+    title: "Se déconnecter ?", message: "Tu devras ressaisir le mot de passe admin pour revenir.", confirmLabel: "Se déconnecter",
+    onConfirm: async () => { await fetch("/api/admin/logout", { method: "POST" }).catch(() => null); router.push("/admin"); },
+  });
 
-    const res = await fetch("/api/admin/delete-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: id }),
-    });
+  const logo = useMemo(() => savedConfig["logo_url"], [savedConfig]);
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert(`Erreur: ${err.error}`);
-      return;
-    }
-
-    setShops((prev) => prev.filter((s) => s.id !== id));
-    setFilteredShops((prev) => prev.filter((s) => s.id !== id));
-    setSelectedShop(null);
-    alert(`Boutique "${name}" supprimée définitivement.`);
-  };
-
-  const handleToggleSuspend = async (shop: Shop) => {
-    const newStatus = !shop.suspended;
-    const res = await fetch("/api/admin/update-shop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: shop.id, data: { suspended: newStatus } }),
-    });
-    if (!res.ok) { alert("Erreur lors de la suspension"); return; }
-    const updated = (s: Shop) => s.id === shop.id ? { ...s, suspended: newStatus } : s;
-    setShops((prev) => prev.map(updated));
-    setFilteredShops((prev) => prev.map(updated));
-    if (selectedShop?.id === shop.id) setSelectedShop({ ...selectedShop, suspended: newStatus });
-  };
-
-  const handleChangePlan = async (shop: Shop, plan: string) => {
-    const res = await fetch("/api/admin/update-plan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: shop.id, plan }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert(`Erreur: ${err.error}`);
-      return;
-    }
-
-    const updated = (s: Shop) => s.id === shop.id ? { ...s, plan } : s;
-    setShops((prev) => prev.map(updated));
-    setFilteredShops((prev) => prev.map(updated));
-    if (selectedShop?.id === shop.id) setSelectedShop({ ...selectedShop, plan });
-  };
-
-  const handleSendReset = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://panel-pub-web.vercel.app/reset-password",
-    });
-    alert(error ? `Erreur: ${error.message}` : `Email de réinitialisation envoyé à ${email}`);
-  };
-
-  const handleShopSearch = (q: string) => {
-    setShopSearch(q);
-    setFilteredShops(!q.trim() ? shops : shops.filter((s) =>
-      s.shop_name.toLowerCase().includes(q.toLowerCase()) ||
-      s.email.toLowerCase().includes(q.toLowerCase())
-    ));
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-purple-600 font-semibold animate-pulse">Chargement...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Topbar */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            {config["logo_url"] ? (
-              <img src={config["logo_url"]} alt="logo" className="w-9 h-9 rounded-xl object-cover" />
-            ) : (
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-lg"
-                style={{ backgroundColor: config["primary_color"] || "#9333ea" }}>
-                {(config["app_name"] || "B")[0].toUpperCase()}
-              </div>
-            )}
-            <div>
-              <span className="font-black text-gray-900">Admin — {config["app_name"] || "..."}</span>
-              <span className="text-xs text-gray-400 ml-2">Panel de contrôle</span>
-            </div>
-          </div>
-          <button
-            onClick={async () => {
-              if (confirm("Tu veux vraiment te déconnecter du panel admin ?")) {
-                await fetch("/api/admin/logout", { method: "POST" });
-                router.push("/admin");
-              }
-            }}
-            className="text-sm font-semibold px-4 py-2 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
-          >
-            Déconnexion
+  const Nav = ({ onDark = true }: { onDark?: boolean }) => (
+    <nav className="flex flex-col gap-1" aria-label="Navigation admin">
+      {NAV.map(({ id, label, icon: Icon }) => {
+        const active = section === id;
+        return (
+          <button key={id} onClick={() => go(id)} aria-current={active ? "page" : undefined}
+            className={`press relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left ${active ? "text-white" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+            style={active ? { background: "rgba(255,255,255,.10)" } : undefined}>
+            {active && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full" style={{ background: primary }} />}
+            <Icon size={18} />{label}
           </button>
-        </div>
-      </div>
+        );
+      })}
+    </nav>
+  );
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {[
-            { label: "Boutiques", value: stats.shops, icon: <Store size={28} /> },
-            { label: "Articles", value: stats.products, icon: <Shirt size={28} /> },
-            { label: "Avis clients", value: stats.ratings, icon: <Star size={28} /> },
-          ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-              <span className="text-3xl">{s.icon}</span>
-              <div>
-                <div className="text-2xl font-black text-gray-900">{s.value}</div>
-                <div className="text-xs text-gray-400 font-semibold uppercase tracking-wide">{s.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-          {(["config", "shops", "plans", "stats"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                tab === t ? "text-white" : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-100"
-              }`}
-              style={tab === t ? { backgroundColor: primary } : {}}
-            >
-              {t === "config" ? <><Settings size={14} className="inline mr-1" />Configuration</> : t === "shops" ? <><Store size={14} className="inline mr-1" />Boutiques</> : t === "plans" ? <><Briefcase size={14} className="inline mr-1" />Forfaits</> : <><TrendingUp size={14} className="inline mr-1" />Statistiques</>}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab: Config */}
-        {tab === "config" && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2">
-              <h2 className="font-black text-gray-900">Configuration de l&apos;application</h2>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-opacity"
-                style={{ backgroundColor: primary }}
-              >
-                {saving ? "Enregistrement..." : saved ? <><CheckCircle size={14} className="inline mr-1" />Enregistré !</> : "Enregistrer"}
-              </button>
-            </div>
-
-            <div className="divide-y divide-gray-50">
-              {Object.entries(CONFIG_LABELS).map(([key, meta]) => (
-                <div key={key} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-800 text-sm">{meta.label}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{meta.description}</div>
-                  </div>
-                  <div className="w-full sm:w-64 flex-shrink-0">
-                    {meta.type === "toggle" ? (
-                      <button
-                        onClick={() => setConfig((prev) => ({ ...prev, [key]: prev[key] === "true" ? "false" : "true" }))}
-                        className="relative inline-flex h-6 w-11 rounded-full transition-colors"
-                        style={{ backgroundColor: config[key] === "true" ? primary : "#e5e7eb" }}
-                      >
-                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform mt-0.5 ${
-                          config[key] === "true" ? "translate-x-5" : "translate-x-0.5"
-                        }`} />
-                      </button>
-                    ) : meta.type === "image" ? (
-                      <div className="flex flex-col gap-2">
-                        {config[key] && (
-                          <img src={config[key]} alt="logo" className="w-16 h-16 rounded-2xl object-cover border border-gray-100" />
-                        )}
-                        <input
-                          type="text"
-                          value={config[key] || ""}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                          placeholder="https://res.cloudinary.com/..."
-                        />
-                        <UploadLogoBtn onUploaded={(url) => setConfig((prev) => ({ ...prev, [key]: url }))} />
-                      </div>
-                    ) : meta.type === "color" ? (
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={config[key] || "#9333ea"}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={config[key] || ""}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-mono"
-                        />
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        value={config[key] || ""}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, [key]: e.target.value }))}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {tab === "config" && <ChangePasswordCard />}
-
-        {/* Tab: Boutiques */}
-        {tab === "shops" && (
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-            {/* Liste */}
-            <div className="flex-1 bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2 sm:gap-4">
-                <h2 className="font-black text-gray-900 whitespace-nowrap">Boutiques ({filteredShops.filter((s) => !hideDemo || !s.is_demo).length})</h2>
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={shopSearch}
-                  onChange={(e) => handleShopSearch(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                />
-                {shops.some((s) => s.is_demo) && (
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap cursor-pointer select-none">
-                    <input type="checkbox" checked={hideDemo} onChange={(e) => setHideDemo(e.target.checked)} />
-                    Masquer démo
-                  </label>
-                )}
-              </div>
-              <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                {filteredShops.filter((s) => !hideDemo || !s.is_demo).map((shop) => (
-                  <div
-                    key={shop.id}
-                    onClick={() => setSelectedShop(shop)}
-                    className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${selectedShop?.id === shop.id ? "bg-blue-50" : ""} ${shop.suspended ? "opacity-50" : ""}`}
-                  >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-black text-white" style={{ backgroundColor: primary }}>
-                      {shop.shop_name[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 text-sm truncate flex items-center gap-2">
-                        {shop.shop_name}
-                        {shop.suspended && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Suspendu</span>}
-                        {shop.is_demo && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Démo</span>}
-                      </div>
-                      <div className="text-xs text-gray-400 truncate">{shop.email}</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-xs font-bold" style={{ color: primary }}>{shop.product_count} art.</div>
-                      <div className="text-xs text-yellow-500 flex items-center gap-1">{shop.avg_rating ? <><Star size={10} fill="currentColor" />{shop.avg_rating.toFixed(1)}</> : "—"}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Détail boutique */}
-            {selectedShop ? (
-              <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 flex flex-col gap-4 self-start lg:sticky lg:top-24">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-lg" style={{ backgroundColor: primary }}>
-                    {selectedShop.shop_name[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-black text-gray-900">{selectedShop.shop_name}</div>
-                    <div className="text-xs text-gray-400">{selectedShop.email}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-gray-50 rounded-xl p-3 text-center">
-                    <div className="font-black text-gray-900 text-lg">{selectedShop.product_count}</div>
-                    <div className="text-xs text-gray-400">Articles</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-3 text-center">
-                    <div className="font-black text-gray-900 text-lg">{selectedShop.avg_rating ? selectedShop.avg_rating.toFixed(1) : "—"}</div>
-                    <div className="text-xs text-gray-400">Note moy.</div>
-                  </div>
-                </div>
-
-                <div className="text-xs text-gray-400">Inscrit le {new Date(selectedShop.created_at).toLocaleDateString("fr-FR")}</div>
-
-                {/* Plan */}
-                <div>
-                  <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Forfait</div>
-                  <div className="flex flex-col gap-2">
-                    {plans.map((p: any) => {
-                      const isCurrent = selectedShop.plan === p.id;
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => handleChangePlan(selectedShop, p.id)}
-                          className={`w-full py-3 px-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${isCurrent ? "text-white" : "bg-white border-gray-100 hover:border-gray-200"}`}
-                          style={isCurrent ? { backgroundColor: primary, borderColor: primary } : {}}
-                        >
-                          <div>
-                            <span className="font-bold text-sm">{p.name}</span>
-                            {isCurrent && <span className="ml-2 text-xs opacity-80">✓ Actuel</span>}
-                            <p className={`text-xs mt-0.5 ${isCurrent ? "opacity-70" : "text-gray-400"}`}>
-                              {p.article_limit >= 999 ? "Articles illimités" : `${p.article_limit} articles`}
-                            </p>
-                          </div>
-                          <span className={`text-sm font-black ${isCurrent ? "text-white" : ""}`} style={!isCurrent ? { color: primary } : {}}>
-                            {p.price === 0 ? "Gratuit" : `${p.price.toLocaleString("fr-FR")} ${p.currency}/${p.billing}`}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2 text-center">Clique sur un forfait pour l'attribuer</p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col gap-2">
-                  <a href={`/shop/${selectedShop.id}`} target="_blank" className="text-center py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: primary }}>
-                    <Eye size={14} className="inline mr-1" /> Voir la vitrine
-                  </a>
-                  <button
-                    onClick={() => handleSendReset(selectedShop.email)}
-                    className="py-2 rounded-xl text-sm font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                  >
-                    <Key size={14} className="inline mr-1" /> Envoyer reset mot de passe
-                  </button>
-                  <button
-                    onClick={() => handleToggleSuspend(selectedShop)}
-                    className={`py-2 rounded-xl text-sm font-semibold transition-colors ${selectedShop.suspended ? "bg-green-50 text-green-600 hover:bg-green-100" : "bg-orange-50 text-orange-600 hover:bg-orange-100"}`}
-                  >
-                    {selectedShop.suspended ? <><CheckCircle size={14} className="inline mr-1" />Réactiver la boutique</> : <><Ban size={14} className="inline mr-1" />Suspendre la boutique</>}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteShop(selectedShop.id, selectedShop.shop_name)}
-                    className="py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 size={14} className="inline mr-1" /> Supprimer définitivement
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-center text-gray-300 self-start hidden lg:flex">
-                <div className="text-center">
-                  <MousePointer size={36} className="mx-auto mb-2 text-gray-300" />
-                  <div className="text-sm">Sélectionne une boutique</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tab: Forfaits */}
-        {tab === "plans" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {plans.map((plan) => (
-                <div key={plan.id} className={`bg-white rounded-2xl border-2 p-4 sm:p-6 ${plan.is_popular ? "" : "border-gray-100"}`}
-                  style={plan.is_popular ? { borderColor: primary } : {}}>
-                  {plan.is_popular && (
-                    <div className="text-xs font-bold text-white px-3 py-1 rounded-full inline-block mb-3"
-                      style={{ backgroundColor: primary }}><Star size={10} className="inline mr-1" fill="white" />Recommandé</div>
-                  )}
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-black text-gray-900 text-lg">{plan.name}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {plan.article_limit >= 999 ? "Articles illimités" : `${plan.article_limit} articles max`}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-black" style={{ color: primary }}>
-                        {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} ${plan.currency}`}
-                      </p>
-                      {plan.price > 0 && <p className="text-xs text-gray-400">/{plan.billing}</p>}
-                    </div>
-                  </div>
-                  <ul className="space-y-1.5 mb-5">
-                    {getPlanFeatures(plan).map((f: string, i: number) => (
-                      <li key={i} className={`flex items-center gap-2 text-sm ${i < 2 ? "font-semibold text-gray-800" : "text-gray-500"}`}>
-                        <Check size={12} style={{ color: primary }} className="inline mr-1 flex-shrink-0" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingPlan({ ...plan, features_text: (plan.features as string[]).join("\n") })}
-                      className="flex-1 py-2 rounded-xl text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      <Pencil size={14} className="inline mr-1" />Modifier
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const r = await fetch("/api/admin/plans", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ id: plan.id, data: { active: !plan.active } }),
-                        });
-                        if (!r.ok) { alert("Modification impossible."); return; }
-                        setPlans((prev) => prev.map((p) => p.id === plan.id ? { ...p, active: !p.active } : p));
-                      }}
-                      className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors ${plan.active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
-                    >
-                      {plan.active ? "Actif" : "Inactif"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Modal édition plan */}
-            {editingPlan && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-black text-gray-900">Modifier — {editingPlan.name}</h3>
-                    <button onClick={() => setEditingPlan(null)} className="text-gray-400 hover:text-gray-700"><X size={16} /></button>
-                  </div>
-                  {[
-                    { key: "name", label: "Nom du plan", type: "text" },
-                    { key: "price", label: "Prix", type: "number" },
-                    { key: "currency", label: "Devise", type: "text" },
-                    { key: "billing", label: "Facturation (mois / an / toujours)", type: "text" },
-                    { key: "article_limit", label: "Limite articles (999 = illimité)", type: "number" },
-                  ].map(({ key, label, type }) => (
-                    <div key={key}>
-                      <label className="text-xs font-semibold text-gray-500 uppercase">{label}</label>
-                      <input type={type} value={editingPlan[key]}
-                        onChange={(e) => setEditingPlan((p: any) => ({ ...p, [key]: type === "number" ? Number(e.target.value) : e.target.value }))}
-                        className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2" />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Fonctionnalités (une par ligne)</label>
-                    <textarea value={editingPlan.features_text} rows={5}
-                      onChange={(e) => setEditingPlan((p: any) => ({ ...p, features_text: e.target.value }))}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={editingPlan.is_popular}
-                      onChange={(e) => setEditingPlan((p: any) => ({ ...p, is_popular: e.target.checked }))} />
-                    <label className="text-sm font-semibold text-gray-700">Afficher comme recommandé</label>
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => setEditingPlan(null)} className="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-semibold">Annuler</button>
-                    <button
-                      onClick={async () => {
-                        const features = editingPlan.features_text.split("\n").filter((f: string) => f.trim());
-                        const r = await fetch("/api/admin/plans", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            id: editingPlan.id,
-                            data: {
-                              name: editingPlan.name, price: editingPlan.price,
-                              currency: editingPlan.currency, billing: editingPlan.billing,
-                              article_limit: editingPlan.article_limit,
-                              features, is_popular: editingPlan.is_popular,
-                            },
-                          }),
-                        });
-                        if (!r.ok) { alert("Enregistrement impossible."); return; }
-                        setPlans((prev) => prev.map((p) => p.id === editingPlan.id ? { ...p, ...editingPlan, features } : p));
-                        setEditingPlan(null);
-                      }}
-                      className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: primary }}
-                    >
-                      Enregistrer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tab: Stats */}
-        {tab === "stats" && (
-          <div className="grid grid-cols-1 gap-6">
-            {/* Croissance */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-green-500" />Croissance</h3>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { label: "Nouvelles boutiques (7j)", value: stats.newShops7d, icon: <Sparkles size={24} className="text-purple-400" /> },
-                  { label: "Nouvelles boutiques (30j)", value: stats.newShops30d, icon: <Calendar size={24} className="text-blue-400" /> },
-                  { label: "Total boutiques", value: stats.shops, icon: <Store size={24} className="text-gray-400" /> },
-                ].map((s) => (
-                  <div key={s.label} className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">{s.icon}</div>
-                    <div className="text-3xl font-black" style={{ color: primary }}>{s.value}</div>
-                    <div className="text-xs text-gray-400 mt-1">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Plans */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><Briefcase size={18} className="text-gray-500" />Répartition par plan</h3>
-              <div className="flex gap-4">
-                {[
-                  { key: "free", label: "Gratuit", color: "#6b7280" },
-                  { key: "pro", label: "Pro", color: primary },
-                  { key: "annual", label: "Annuel", color: "#f59e0b" },
-                ].map((p) => {
-                  const count = stats.planCount[p.key] || 0;
-                  const pct = stats.shops > 0 ? Math.round((count / stats.shops) * 100) : 0;
-                  return (
-                    <div key={p.key} className="flex-1 bg-gray-50 rounded-xl p-4 text-center">
-                      <div className="text-2xl font-black" style={{ color: p.color }}>{count}</div>
-                      <div className="text-sm font-semibold text-gray-700">{p.label}</div>
-                      <div className="text-xs text-gray-400">{pct}%</div>
-                      <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: p.color }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Types de business */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2"><Tag size={18} className="text-gray-500" />Types de boutiques</h3>
-              <div className="flex flex-col gap-3">
-                {Object.entries(stats.bizCount)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([type, count]) => {
-                    const pct = stats.shops > 0 ? Math.round((count / stats.shops) * 100) : 0;
-                    const emojis: Record<string, string> = { mode: "👗", chaussures: "👟", beaute: "💆", sacs: "👜", bijoux: "💍", electronique: "📱", alimentation: "🍱", autre: "🏪" };
-                    return (
-                      <div key={type} className="flex items-center gap-3">
-                        <span className="text-xl w-8">{emojis[type] || "🏪"}</span>
-                        <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-semibold text-gray-700 capitalize">{type}</span>
-                            <span className="text-gray-400">{count} boutique{count > 1 ? "s" : ""} ({pct}%)</span>
-                          </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: primary }} />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          </div>
-        )}
+  const Brand = () => (
+    <div className="flex items-center gap-3 min-w-0">
+      {logo ? <img src={logo} alt="" className="w-9 h-9 rounded-xl object-cover bg-white flex-shrink-0" />
+        : <div className="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-white flex-shrink-0" style={{ background: primary }}>{appName[0]?.toUpperCase()}</div>}
+      <div className="min-w-0">
+        <div className="font-extrabold text-white truncate leading-tight">{appName}</div>
+        <div className="text-[11px] text-white/50 uppercase tracking-wide">Administration</div>
       </div>
     </div>
   );
-}
 
+  const Footer = () => (
+    <div className="flex flex-col gap-1 pt-4 border-t border-white/10">
+      <a href="/marketplace" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white hover:bg-white/5">
+        <ExternalLink size={18} /> Voir le site
+      </a>
+      <button onClick={logout} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-red-300 hover:text-red-200 hover:bg-white/5 text-left">
+        <LogOut size={18} /> Déconnexion
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen" style={{ background: BG, color: INK }}>
+      {/* Menu latéral (grands écrans) */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col p-5 gap-6 z-20" style={{ background: INK }}>
+        <Brand />
+        <div className="flex-1"><Nav /></div>
+        <Footer />
+      </aside>
+
+      {/* En-tête mobile */}
+      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3" style={{ background: INK }}>
+        <Brand />
+        <button onClick={() => setNavOpen(true)} aria-label="Ouvrir le menu" className="p-2 rounded-lg text-white hover:bg-white/10"><Menu size={22} /></button>
+      </header>
+      {navOpen && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-slate-900/50 animate-fade-in" onClick={() => setNavOpen(false)} />
+          <div className="absolute left-0 top-0 h-full w-72 max-w-[85%] flex flex-col p-5 gap-6" style={{ background: INK, animation: "drawerInLeft .3s var(--ease-out) both" }}>
+            <div className="flex items-center justify-between"><Brand />
+              <button onClick={() => setNavOpen(false)} aria-label="Fermer le menu" className="p-2 rounded-lg text-white hover:bg-white/10"><X size={20} /></button></div>
+            <div className="flex-1"><Nav /></div>
+            <Footer />
+          </div>
+        </div>
+      )}
+
+      <main className="lg:pl-64">
+        <div key={section} className="max-w-[1200px] mx-auto px-4 sm:px-8 py-6 sm:py-8 animate-fade-up">
+          {section === "overview" && <Overview stats={stats} shops={shops} loading={loading} includeDemo={includeDemo} onToggleDemo={toggleDemo} primary={primary} onNavigate={go} />}
+          {section === "shops" && <ShopsSection shops={shops} plans={plans} loading={loading} primary={primary} onChangePlan={changePlan} onToggleSuspend={toggleSuspend} onDelete={deleteShop} onSendReset={sendReset} />}
+          {section === "plans" && <PlansSection plans={plans} primary={primary} onToggleActive={togglePlan} onSave={savePlan} />}
+          {section === "config" && (
+            <ConfigSection config={config} savedConfig={savedConfig} primary={primary} saving={saving}
+              onChange={(k, v) => setConfig((c) => ({ ...c, [k]: v }))} onSave={saveConfig} onReset={() => setConfig(savedConfig)} />
+          )}
+          {section === "security" && <SecuritySection primary={primary} onLogout={logout} />}
+        </div>
+      </main>
+
+      <ConfirmDialog state={confirm} onClose={() => setConfirm(null)} />
+      <ToastHost toasts={toasts} />
+    </div>
+  );
+}
