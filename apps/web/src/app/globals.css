@@ -234,3 +234,7 @@ html { scroll-behavior: smooth; }
 /* Tiroirs (admin) */
 @keyframes drawerIn { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes drawerInLeft { from { transform: translateX(-32px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Masque la barre de défilement (rangées horizontales : catégories, listes) */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
