@@ -7,7 +7,9 @@ export function middleware(request: NextRequest) {
   // Protéger /admin/dashboard avec un cookie httpOnly signé par le serveur
   if (pathname.startsWith("/admin/dashboard")) {
     const adminToken = request.cookies.get("admin_session")?.value;
-    if (adminToken !== process.env.ADMIN_SESSION_SECRET) {
+    const secret = process.env.ADMIN_SESSION_SECRET;
+    // Fail closed : sans secret configuré (ou sans cookie), on refuse l'accès
+    if (!secret || secret.length < 16 || !adminToken || adminToken !== secret) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
   }

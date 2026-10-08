@@ -1,14 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/adminAuth";
 import { cookies } from "next/headers";
 
-function isAdminAuthenticated(request: NextRequest): boolean {
-  const sessionSecret = process.env.ADMIN_SESSION_SECRET || "boutiki-admin-secret-2026";
-  return request.cookies.get("admin_session")?.value === sessionSecret;
-}
 
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthenticated(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 

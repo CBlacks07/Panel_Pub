@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
-
-// Client Supabase avec la service role key (côté serveur uniquement)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { adminSessionSecret, safeEqual } from "@/lib/adminAuth";
 
 export async function POST(request: NextRequest) {
   try {
+    // Sans secret de session ni clé service, l'accès admin est désactivé (jamais de valeur par défaut)
+    const sessionSecret = adminSessionSecret();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!sessionSecret || !serviceKey) {
+      return NextResponse.json({ error: "Accès admin non configuré" }, { status: 503 });
+    }
+    // Client Supabase avec la service role key (côté serveur uniquement)
+    const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
+
     const { password } = await request.json();
     if (!password) {
       return NextResponse.json({ error: "Mot de passe requis" }, { status: 400 });
@@ -28,12 +32,9 @@ export async function POST(request: NextRequest) {
 
     // Comparer le hash SHA-256 du mot de passe entré avec celui stocké
     const inputHash = createHash("sha256").update(password).digest("hex");
-    if (inputHash !== data.value) {
+    if (!safeEqual(inputHash, data.value)) {
       return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
     }
-
-    // Générer la valeur du cookie de session
-    const sessionSecret = process.env.ADMIN_SESSION_SECRET || "boutiki-admin-secret-2026";
 
     const response = NextResponse.json({ success: true });
 
