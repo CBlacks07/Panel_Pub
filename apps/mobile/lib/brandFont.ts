@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TextInput, StyleSheet } from "react-native";
+import { Text, TextInput, StyleSheet, Platform } from "react-native";
 
 /**
  * Applique la police de marque (Plus Jakarta Sans) à TOUT le texte de l'app,
@@ -26,8 +26,10 @@ const WEIGHT_TO_FAMILY: Record<string, string> = {
   "900": "PlusJakartaSans_800ExtraBold",
 };
 
-function familyForStyle(style: unknown): string {
-  const flat = (StyleSheet.flatten(style as any) || {}) as { fontWeight?: string | number };
+/** Police de marque pour ce style, ou null s'il définit déjà sa police (ex. icônes Ionicons). */
+function familyForStyle(style: unknown): string | null {
+  const flat = (StyleSheet.flatten(style as any) || {}) as { fontWeight?: string | number; fontFamily?: string };
+  if (flat.fontFamily) return null;
   const fw = flat.fontWeight != null ? String(flat.fontWeight) : "400";
   return WEIGHT_TO_FAMILY[fw] || "PlusJakartaSans_400Regular";
 }
@@ -37,15 +39,32 @@ function patch(Component: any) {
   const original = Component.render;
   if (typeof original !== "function") return;
 
+  if (Platform.OS === "web") {
+    // Sur le web, render() renvoie déjà un élément DOM (<span>/<input>) dont
+    // le style est un objet résolu : y injecter un tableau fait planter React DOM.
+    // On modifie donc les props AVANT le rendu.
+    Component.render = function (props: any, ...rest: any[]) {
+      const style = props?.style;
+      const family = familyForStyle(style);
+      if (!family) return original.call(this, props, ...rest);
+      const next = { ...props, style: [style, { fontFamily: family, fontWeight: undefined }] };
+      return original.call(this, next, ...rest);
+    };
+    Component.__brandFontPatched = true;
+    return;
+  }
+
   Component.render = function (...args: any[]) {
     const element = original.apply(this, args);
     if (!element || !React.isValidElement(element)) return element;
     try {
       const style = (element.props as any).style;
+      const family = familyForStyle(style);
+      if (!family) return element;
       // fontWeight neutralisé : on a déjà choisi la bonne fonte, on évite
       // le faux-gras synthétique (Android) par-dessus.
       return React.cloneElement(element as any, {
-        style: [style, { fontFamily: familyForStyle(style), fontWeight: undefined }],
+        style: [style, { fontFamily: family, fontWeight: undefined }],
       });
     } catch {
       return element;
