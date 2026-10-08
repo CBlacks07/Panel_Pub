@@ -2,7 +2,7 @@
 /**
  * Données de démo Boutiki : 12 boutiques fictives avec produits, notes et vues.
  *
- *   node supabase/seed/demo-shops.mjs seed    [--dry-run] [--no-images] [--allow-production]
+ *   node supabase/seed/demo-shops.mjs seed    [--dry-run] [--no-images] [--with-ratings] [--allow-production]
  *   node supabase/seed/demo-shops.mjs clean   [--dry-run] [--allow-production]
  *
  * Variables d'environnement (volontairement distinctes de .env.local) :
@@ -30,6 +30,8 @@ const args = new Set(process.argv.slice(2));
 const command = process.argv[2];
 const DRY = args.has("--dry-run");
 const WITH_IMAGES = !args.has("--no-images");
+// Faux avis : désactivés par défaut (ils seraient affichés comme de vrais avis).
+const WITH_RATINGS = args.has("--with-ratings");
 
 // ── Catalogue de démo ───────────────────────────────────────────────────────
 // [titre, prix FCFA, catégorie, description courte, promo (ancien prix) | null]
@@ -236,7 +238,7 @@ async function seed() {
     for (const p of products) for (const [type, values] of VARIATIONS[shop.type] ?? []) for (const value of values) variations.push({ product_id: p.id, type, value, stock: rand(0, 12) });
     if (variations.length) await db.from("product_variations").insert(variations);
 
-    const ratings = Array.from({ length: rand(0, 8) }, () => ({ shop_id: id, rating: rand(3, 5), comment: pick(COMMENTS) }));
+    const ratings = !WITH_RATINGS ? [] : Array.from({ length: rand(0, 8) }, () => ({ shop_id: id, rating: rand(3, 5), comment: pick(COMMENTS) }));
     if (ratings.length) await db.from("shop_ratings").insert(ratings);
 
     const views = products.flatMap((p) => Array.from({ length: rand(2, 40) }, () => ({ product_id: p.id })));
