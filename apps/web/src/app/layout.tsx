@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import ScrollReveal from "@/components/ScrollReveal";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// Police hébergée dans le projet (SIL OFL) : le build ne dépend plus de Google Fonts.
+const jakarta = localFont({
+  src: [
+    { path: "./fonts/PlusJakartaSans_400Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/PlusJakartaSans_500Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/PlusJakartaSans_600SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/PlusJakartaSans_700Bold.ttf", weight: "700", style: "normal" },
+    { path: "./fonts/PlusJakartaSans_800ExtraBold.ttf", weight: "800", style: "normal" },
+  ],
   variable: "--font-jakarta",
   display: "swap",
 });
@@ -21,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={jakarta.variable}>
+    <html lang="fr" data-scroll-behavior="smooth" className={jakarta.variable}>
       <body className={jakarta.className}>
         {children}
         <ScrollReveal />
