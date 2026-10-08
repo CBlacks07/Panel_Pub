@@ -181,3 +181,52 @@
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 .btn-primary:active { transform: scale(0.97); }
+
+/* ─── MOUVEMENT PREMIUM ─────────────────────── */
+
+:root { --ease-out: cubic-bezier(.16,1,.3,1); }
+
+/* Révélation au scroll (activée seulement quand le JS est prêt) */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .7s var(--ease-out), transform .7s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.reveal-ready [data-reveal].is-visible { opacity: 1; transform: none; }
+
+/* Entrée en cascade (listes, grilles) */
+.stagger-in { animation: fadeUp .6s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+/* Squelettes avec reflet */
+.skeleton {
+  background: linear-gradient(100deg, #eef0f3 30%, #f8f9fb 50%, #eef0f3 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Retour tactile au toucher */
+.press { transition: transform .18s var(--ease-out); }
+.press:active { transform: scale(.97); }
+
+/* Carte cliquable : lévitation + zoom image */
+.card-lift { transition: transform .35s var(--ease-out), box-shadow .35s ease; }
+.card-lift:hover { transform: translateY(-5px); box-shadow: 0 18px 38px rgba(14,21,38,.12); }
+.card-lift .zoom-img { transition: transform .6s var(--ease-out); }
+.card-lift:hover .zoom-img { transform: scale(1.06); }
+
+/* Panneaux : montée douce */
+@keyframes sheetUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+.sheet-up { animation: sheetUp .4s var(--ease-out) both; }
+@keyframes pop { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+.pop { animation: pop .3s var(--ease-out) both; }
+
+/* Focus clavier visible et doux */
+:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 8px; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .reveal-ready [data-reveal] { opacity: 1; transform: none; }
+}

@@ -290,7 +290,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how" className="py-16 sm:py-24 bg-white">
+      <section data-reveal id="how" className="py-16 sm:py-24 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Simple comme bonjour</p>
@@ -318,7 +318,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── APP SCREENSHOTS ── */}
-      <section className="py-16 sm:py-24 overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary}08 0%, #fff 50%, #8b5cf608 100%)` }}>
+      <section data-reveal className="py-16 sm:py-24 overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary}08 0%, #fff 50%, #8b5cf608 100%)` }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>L&apos;appli dans ta poche</p>
@@ -373,7 +373,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="bg-gray-50 py-16 sm:py-24">
+      <section data-reveal id="features" className="bg-gray-50 py-16 sm:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Tout inclus</p>
@@ -396,7 +396,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── MARKETPLACE TEASER ── */}
-      <section className="py-16 bg-white">
+      <section data-reveal className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Déjà en ligne</p>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Découvre les boutiques de la communauté</h2>
@@ -409,7 +409,7 @@ export default function LandingPage() {
 
       {/* ── PRICING ── */}
       {plans.length > 0 && (
-        <section id="pricing" className="py-16 sm:py-24 bg-gray-50">
+        <section data-reveal id="pricing" className="py-16 sm:py-24 bg-gray-50">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
               <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Transparent</p>

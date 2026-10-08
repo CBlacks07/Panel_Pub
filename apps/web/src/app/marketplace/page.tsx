@@ -142,7 +142,7 @@ export default function MarketplacePage() {
 
         {/* ── HERO ── */}
         <div className="relative overflow-hidden mx-5 sm:mx-10 mt-6 sm:mt-8 rounded-[24px] px-7 py-10 sm:px-11 sm:py-12" style={{ background: heroGradient }}>
-          <div className="relative max-w-[560px]">
+          <div className="relative max-w-[560px] animate-fade-up">
             <h1 className="text-[28px] sm:text-[38px] font-extrabold text-white leading-[1.12] tracking-tight">
               {stripEmoji(config["marketplace_banner_title"] || "Les pépites mode locales, à portée de WhatsApp")}
             </h1>
@@ -177,7 +177,7 @@ export default function MarketplacePage() {
         <div className="flex gap-3 sm:gap-3.5 px-5 sm:px-10 mt-6 mb-6 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => { setActiveBiz("all"); applyFilters(search, "all"); }}
-            className="flex-shrink-0 text-sm font-bold px-5 py-2.5 rounded-full transition"
+            className="press flex-shrink-0 text-sm font-bold px-5 py-2.5 rounded-full transition"
             style={activeBiz === "all"
               ? { background: primary, color: "#fff" }
               : { background: "#fff", color: "#5B6472", border: `1px solid ${BORDER}`, fontWeight: 600 }}
@@ -188,7 +188,7 @@ export default function MarketplacePage() {
             <button
               key={b.id}
               onClick={() => { setActiveBiz(b.id); applyFilters(search, b.id); }}
-              className="flex-shrink-0 text-sm px-5 py-2.5 rounded-full transition whitespace-nowrap"
+              className="press flex-shrink-0 text-sm px-5 py-2.5 rounded-full transition whitespace-nowrap"
               style={activeBiz === b.id
                 ? { background: primary, color: "#fff", fontWeight: 700 }
                 : { background: "#fff", color: "#5B6472", border: `1px solid ${BORDER}`, fontWeight: 600 }}
@@ -213,11 +213,11 @@ export default function MarketplacePage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[22px]">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-[18px] overflow-hidden animate-pulse" style={{ border: `1px solid ${BORDER}` }}>
-                  <div className="h-[120px] bg-slate-100" />
+                <div key={i} className="bg-white rounded-[18px] overflow-hidden " style={{ border: `1px solid ${BORDER}` }}>
+                  <div className="h-[120px] skeleton" />
                   <div className="p-4 pt-7 space-y-2">
-                    <div className="h-4 bg-slate-100 rounded w-3/4" />
-                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    <div className="h-4 skeleton rounded w-3/4" />
+                    <div className="h-3 skeleton rounded w-1/2" />
                   </div>
                 </div>
               ))}
@@ -249,19 +249,19 @@ export default function MarketplacePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[22px]">
-              {filtered.map((shop) => {
+              {filtered.map((shop, idx) => {
                 const biz = BUSINESS_TYPES.find((b) => b.id === shop.business_type) || BUSINESS_TYPES[0];
                 const accent = BIZ_COLORS[shop.business_type || "autre"] || primary;
                 return (
                   <Link key={shop.id} href={`/shop/${shop.id}`}
-                    className="bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 flex flex-col h-full"
-                    style={{ border: `1px solid ${BORDER}` }}>
+                    className="stagger-in card-lift press bg-white rounded-[18px] overflow-hidden flex flex-col h-full"
+                    style={{ border: `1px solid ${BORDER}`, ["--i" as string]: Math.min(idx, 12) }}>
 
                     {/* Cover */}
                     <div className="h-[120px] relative flex items-center justify-center"
                       style={shop.shop_cover_url ? undefined : { background: `linear-gradient(135deg, ${accent}, ${accent}aa)` }}>
                       {shop.shop_cover_url ? (
-                        <img src={optimizeImage(shop.shop_cover_url, 700)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        <img src={optimizeImage(shop.shop_cover_url, 700)} alt="" className="zoom-img absolute inset-0 w-full h-full object-cover" />
                       ) : (
                         <span className="text-[44px]">{biz.emoji}</span>
                       )}

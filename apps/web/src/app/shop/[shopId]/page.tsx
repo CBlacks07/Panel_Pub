@@ -128,7 +128,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
     <div className="min-h-screen" style={{ background: BG }}>
 
       {/* ── COVER ── */}
-      <div className="relative overflow-hidden h-[190px] sm:h-[230px]"
+      <div className="animate-fade-in relative overflow-hidden h-[190px] sm:h-[230px]"
         style={{ background: `linear-gradient(135deg, ${BLUE_DARK}, ${primary})` }}>
         {shop.shop_cover_url && (
           <>
@@ -159,14 +159,14 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* ── EN-TÊTE BOUTIQUE ── */}
       <div className="max-w-[1400px] mx-auto px-5 sm:px-11 relative flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-[22px]">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white -mt-12 sm:-mt-14"
+        <div className="animate-scale-in w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white -mt-12 sm:-mt-14"
           style={{ border: `5px solid ${BG}`, color: primary, boxShadow: "0 10px 24px rgba(14,21,38,.14)" }}>
           {shop.shop_logo_url
             ? <img src={optimizeImage(shop.shop_logo_url, 260)} className="w-full h-full object-cover" alt={shop.shop_name} />
             : shop.shop_name[0].toUpperCase()}
         </div>
 
-        <div className="flex-1 sm:pt-3 min-w-0">
+        <div className="animate-fade-up delay-100 flex-1 sm:pt-3 min-w-0">
           <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-slate-900">{shop.shop_name}</h1>
           {shop.slogan && <p className="text-sm italic text-slate-500 mt-0.5">&quot;{shop.slogan}&quot;</p>}
           <div className="flex flex-wrap gap-2 mt-2">
@@ -217,15 +217,15 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[22px]">
-            {filtered.map((product) => {
+            {filtered.map((product, idx) => {
               const hasPromo = !!product.compare_at_price && product.compare_at_price > product.price;
               return (
                 <button key={product.id} onClick={() => { setSelected(product); setImgIndex(0); setSelectedSize(null); setSelectedColor(null); setNeedsVariant(false); }}
-                  className="text-left bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 group"
-                  style={{ border: `1px solid ${BORDER}` }}>
+                  className="stagger-in card-lift press text-left bg-white rounded-[18px] overflow-hidden group"
+                  style={{ border: `1px solid ${BORDER}`, ["--i" as string]: Math.min(idx, 12) }}>
                   <div className="h-[150px] sm:h-[190px] flex items-center justify-center overflow-hidden relative" style={{ background: "#EEF2FF" }}>
                     {product.image_url ? (
-                      <img src={optimizeImage(product.image_url, 500)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={product.title} loading="lazy" />
+                      <img src={optimizeImage(product.image_url, 500)} className="zoom-img w-full h-full object-cover" alt={product.title} loading="lazy" />
                     ) : (
                       <span className="text-5xl sm:text-6xl">{biz.emoji}</span>
                     )}
@@ -253,7 +253,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
 
       {/* ── BARRE PANIER COLLANTE (WhatsApp) ── */}
       {cart.length > 0 && (
-        <div className="sticky bottom-5 z-20 mx-5 sm:mx-11 mb-6 rounded-[18px] flex items-center justify-between gap-3 pl-5 sm:pl-6 pr-3.5 py-3"
+        <div className="sheet-up sticky bottom-5 z-20 mx-5 sm:mx-11 mb-6 rounded-[18px] flex items-center justify-between gap-3 pl-5 sm:pl-6 pr-3.5 py-3"
           style={{ background: "#0E1526", boxShadow: "0 16px 34px rgba(14,21,38,.28)" }}>
           <button onClick={() => setCartOpen(true)} className="text-left min-w-0">
             <p className="text-xs text-white/60">{cart.length} article{cart.length > 1 ? "s" : ""} · panier</p>
@@ -272,7 +272,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       {/* ── MODAL PRODUIT ── */}
       {selected && (
         <div className="fixed inset-0 bg-black/60 z-30 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet-up bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Galerie */}
             {(() => {
               const gallery = selected.images && selected.images.length > 0
@@ -402,7 +402,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       {/* ── MODAL PANIER ── */}
       {cartOpen && (
         <div className="fixed inset-0 bg-black/60 z-30 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setCartOpen(false)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet-up bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-black">Mon panier <span className="text-gray-400 font-normal text-sm ml-1">({cart.length})</span></h2>
               <div className="flex items-center gap-3">

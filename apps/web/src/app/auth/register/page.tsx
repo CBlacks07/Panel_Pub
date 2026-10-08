@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ChevronLeft, Star, Users, TrendingUp } from "lucide-react";
+import { ChevronLeft, Star, Users, TrendingUp, Check, Eye, EyeOff } from "lucide-react";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 
 type Config = Record<string, string>;
@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [config, setConfig] = useState<Config>({});
   const [step, setStep] = useState<1 | 2>(1);
+  const [showPwd, setShowPwd] = useState(false);
   const [shopName, setShopName] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [email, setEmail] = useState("");
@@ -135,7 +136,7 @@ export default function RegisterPage() {
           </div>
 
           {step === 1 ? (
-            <div>
+            <div key="step1" className="animate-fade-up">
               <h2 className="text-2xl font-black text-gray-900 mb-1">Nomme ta boutique 🛍️</h2>
               <p className="text-gray-500 text-sm mb-6">Choisis un nom et ton type d&apos;activité commerciale</p>
 
@@ -143,7 +144,8 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nom de ta boutique</label>
                   <input type="text" value={shopName} onChange={(e) => setShopName(e.target.value)}
-                    className="input" placeholder="Ex: Awa Fashion, Style by Kofi..." autoFocus />
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("step1-next")?.click(); } }}
+                    className="input" autoComplete="organization" maxLength={60} placeholder="Ex: Awa Fashion, Style by Kofi..." autoFocus />
                 </div>
 
                 <div>
@@ -151,11 +153,17 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1">
                     {BUSINESS_TYPES.map((b) => (
                       <button key={b.id} type="button" onClick={() => setBusinessType(b.id)}
-                        className="p-3 rounded-xl border-2 transition-all text-left hover:border-current"
+                        className="press relative p-3 rounded-xl border-2 transition-all text-left hover:-translate-y-0.5 hover:shadow-md"
+                        aria-pressed={businessType === b.id}
                         style={{
                           borderColor: businessType === b.id ? primary : "#e5e7eb",
                           backgroundColor: businessType === b.id ? primary + "12" : "#fafafa",
                         }}>
+                        {businessType === b.id && (
+                          <span className="pop absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: primary }}>
+                            <Check size={12} strokeWidth={3} />
+                          </span>
+                        )}
                         <div className="text-2xl mb-1">{b.emoji}</div>
                         <div className="text-xs font-bold text-gray-800 leading-tight">{b.label}</div>
                       </button>
@@ -165,7 +173,7 @@ export default function RegisterPage() {
 
                 {error && <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3"><p className="text-red-600 text-sm">{error}</p></div>}
 
-                <button type="button" onClick={() => {
+                <button id="step1-next" type="button" onClick={() => {
                   if (!shopName.trim()) { setError("Entre le nom de ta boutique"); return; }
                   if (!businessType) { setError("Choisis ton type de boutique"); return; }
                   setError(""); setStep(2);
@@ -175,20 +183,32 @@ export default function RegisterPage() {
               </div>
             </div>
           ) : (
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 mb-1">Crée ton accès</h2>
-              <p className="text-gray-500 text-sm mb-6">Gratuit · Prêt en 30 secondes · Sans carte bancaire</p>
+            <div key="step2" className="animate-fade-up">
+              <h2 className="text-2xl font-black text-gray-900 mb-1">Dernière étape</h2>
+              <p className="text-gray-500 text-sm mb-3">Crée ton accès pour gérer ta boutique et recevoir tes commandes.</p>
+              <div className="inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full mb-5" style={{ backgroundColor: primary + "12", color: primary }}>
+                <Check size={12} strokeWidth={3} /> {shopName.trim()}
+              </div>
 
               <form onSubmit={handleRegister} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="input" placeholder="ton@email.com" autoFocus />
+                    className="input" placeholder="ton@email.com" autoFocus autoComplete="email" inputMode="email" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mot de passe</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                    className="input" placeholder="6 caractères minimum" />
+                  <div className="relative">
+                    <input type={showPwd ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+                      className="input pr-12" placeholder="6 caractères minimum" autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowPwd((v) => !v)} aria-label={showPwd ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600">
+                      {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <p className="text-xs mt-1.5 transition-colors" style={{ color: password.length >= 6 ? "#16a34a" : "#9ca3af" }}>
+                    {password.length >= 6 ? "Mot de passe valide" : `${Math.max(0, 6 - password.length)} caractère(s) restant(s)`}
+                  </p>
                 </div>
                 {error && <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3"><p className="text-red-600 text-sm">{error}</p></div>}
                 <button type="submit" disabled={loading}
