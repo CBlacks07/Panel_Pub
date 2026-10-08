@@ -77,8 +77,8 @@ export default function RegisterPage() {
 
           <div className="space-y-4">
             {[
-              { icon: Star, value: "500+", label: "Boutiques actives" },
-              { icon: Users, value: "5 000+", label: "Articles publiés" },
+              { icon: Star, value: "30 secondes", label: "Pour créer ta boutique" },
+              { icon: Users, value: "1 lien", label: "Pour partager ton catalogue" },
               { icon: TrendingUp, value: "Gratuit", label: "Pour commencer" },
             ].map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex items-center gap-4">

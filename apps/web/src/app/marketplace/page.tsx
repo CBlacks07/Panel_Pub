@@ -9,6 +9,13 @@ import { BUSINESS_TYPES } from "@/lib/businessTypes";
 const stripEmoji = (str: string) =>
   str.replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, "").trim();
 
+/** Retire les codes de localisation bruts (ex. « 652Q+X54 ») et ne garde qu'un lieu lisible. */
+const cleanPlace = (raw: string | null) => {
+  if (!raw) return "";
+  const parts = raw.split(",").map((p) => p.trim()).filter((p) => p && !/^[A-Z0-9]{4,8}\+[A-Z0-9]{2,}/i.test(p));
+  return parts.slice(0, 2).join(", ");
+};
+
 /** Identité « Design Pro » — bleu profond, fonds neutres, sans corail. */
 const INK = "#0E1526";
 const BLUE_DARK = "#142B6B";
@@ -34,11 +41,14 @@ export default function MarketplacePage() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [filtered, setFiltered] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
   const [activeBiz, setActiveBiz] = useState("all");
   const [config, setConfig] = useState<Config>({});
 
   useEffect(() => {
+    setLoading(true); setError(false);
     Promise.all([
       supabase.from("app_config").select("key, value"),
       supabase.from("users").select("id, shop_name, slogan, description, shop_logo_url, shop_cover_url, city, business_type"),
@@ -61,9 +71,10 @@ export default function MarketplacePage() {
         })).sort((a, b) => b.avg_rating - a.avg_rating || b.product_count - a.product_count);
         setShops(enriched); setFiltered(enriched);
       }
+      if (!shopsData) setError(true);
       setLoading(false);
-    });
-  }, []);
+    }).catch(() => { setError(true); setLoading(false); });
+  }, [reloadKey]);
 
   const primary = config["primary_color"] || "#2563EB";
   const appName = config["app_name"] || "Boutiki";
@@ -211,6 +222,23 @@ export default function MarketplacePage() {
                 </div>
               ))}
             </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <p className="font-extrabold text-slate-600 text-lg">Impossible de charger les boutiques</p>
+              <p className="text-sm text-slate-400 mt-1">Vérifie ta connexion puis réessaie.</p>
+              <button onClick={() => setReloadKey((k) => k + 1)}
+                className="mt-5 text-sm font-bold text-white px-5 py-2.5 rounded-[13px]" style={{ backgroundColor: primary }}>
+                Réessayer
+              </button>
+            </div>
+          ) : filtered.length === 0 && shops.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="font-extrabold text-slate-600 text-lg">Aucune boutique pour le moment</p>
+              <p className="text-sm text-slate-400 mt-1">Sois la première personne à ouvrir la sienne.</p>
+              <Link href="/auth/register" className="inline-block mt-5 text-sm font-bold text-white px-5 py-2.5 rounded-[13px]" style={{ backgroundColor: primary }}>
+                Ouvrir ma boutique
+              </Link>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-4" style={{ boxShadow: "0 10px 26px rgba(15,23,42,.08)" }}>
@@ -226,7 +254,7 @@ export default function MarketplacePage() {
                 const accent = BIZ_COLORS[shop.business_type || "autre"] || primary;
                 return (
                   <Link key={shop.id} href={`/shop/${shop.id}`}
-                    className="bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 block"
+                    className="bg-white rounded-[18px] overflow-hidden transition-transform hover:-translate-y-1 flex flex-col h-full"
                     style={{ border: `1px solid ${BORDER}` }}>
 
                     {/* Cover */}
@@ -238,9 +266,15 @@ export default function MarketplacePage() {
                         <span className="text-[44px]">{biz.emoji}</span>
                       )}
 
+                      {/* Voile pour garder le badge lisible sur toute image */}
+                      {shop.shop_cover_url && (
+                        <div className="absolute inset-x-0 top-0 h-14 pointer-events-none"
+                          style={{ background: "linear-gradient(180deg, rgba(15,23,42,.55), transparent)" }} />
+                      )}
+
                       {/* Badge type */}
-                      <span className="absolute top-2.5 right-2.5 text-[11px] font-bold text-white px-2.5 py-1 rounded-[10px]"
-                        style={{ background: "rgba(15,23,42,.5)" }}>
+                      <span className="absolute top-2.5 right-2.5 text-[11px] font-bold text-white px-2.5 py-1 rounded-[10px] backdrop-blur-sm"
+                        style={{ background: "rgba(15,23,42,.72)" }}>
                         {biz.label}
                       </span>
 
@@ -256,7 +290,7 @@ export default function MarketplacePage() {
                     </div>
 
                     {/* Corps */}
-                    <div className="pt-7 px-4 pb-[18px]">
+                    <div className="pt-7 px-4 pb-[18px] flex-1">
                       <p className="text-base font-extrabold text-slate-900 truncate">{shop.shop_name}</p>
                       {shop.avg_rating > 0 ? (
                         <p className="text-xs font-bold text-amber-500 mt-0.5 flex items-center gap-1">
@@ -265,11 +299,11 @@ export default function MarketplacePage() {
                       ) : (
                         <p className="text-xs font-bold text-emerald-500 mt-0.5">Nouveau</p>
                       )}
-                      <p className="text-xs text-slate-500 mt-1.5 truncate">
+                      <p className="text-xs text-slate-500 mt-1.5 truncate min-h-[16px]">
                         {shop.product_count > 0
                           ? `${shop.product_count} ${biz.ui.itemLabel}${shop.product_count > 1 ? "s" : ""}`
                           : "Bientôt disponible"}
-                        {shop.city ? ` · 📍 ${shop.city}` : ""}
+                        {cleanPlace(shop.city) ? ` · ${cleanPlace(shop.city)}` : ""}
                       </p>
                     </div>
                   </Link>

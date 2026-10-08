@@ -158,15 +158,15 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       </div>
 
       {/* ── EN-TÊTE BOUTIQUE ── */}
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-11 -mt-12 sm:-mt-14 relative flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-[22px]">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white"
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-11 relative flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-[22px]">
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] flex items-center justify-center font-extrabold text-4xl sm:text-5xl overflow-hidden flex-shrink-0 bg-white -mt-12 sm:-mt-14"
           style={{ border: `5px solid ${BG}`, color: primary, boxShadow: "0 10px 24px rgba(14,21,38,.14)" }}>
           {shop.shop_logo_url
             ? <img src={optimizeImage(shop.shop_logo_url, 260)} className="w-full h-full object-cover" alt={shop.shop_name} />
             : shop.shop_name[0].toUpperCase()}
         </div>
 
-        <div className="flex-1 sm:pb-2 min-w-0">
+        <div className="flex-1 sm:pt-3 min-w-0">
           <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-slate-900">{shop.shop_name}</h1>
           {shop.slogan && <p className="text-sm italic text-slate-500 mt-0.5">&quot;{shop.slogan}&quot;</p>}
           <div className="flex flex-wrap gap-2 mt-2">

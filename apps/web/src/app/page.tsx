@@ -244,8 +244,8 @@ export default function LandingPage() {
             {/* Trust badges */}
             <div className="animate-fade-up delay-500 flex flex-wrap gap-4 mt-8 justify-center lg:justify-start">
               {[
-                { icon: Users,     label: "500+ boutiques actives" },
-                { icon: Package,   label: "5 000+ articles publiés" },
+                { icon: Users,     label: "Catalogue partageable par lien" },
+                { icon: Package,   label: "Boutique en ligne gratuite" },
                 { icon: TrendingUp, label: "Commandes via WhatsApp" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2 text-xs text-gray-500 font-medium">
@@ -275,10 +275,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {[
-              { val: "500+",  label: "Boutiques créées" },
-              { val: "5 000+", label: "Articles publiés" },
               { val: "30s",   label: "Pour démarrer" },
               { val: "0 F",   label: "Pour commencer" },
+              { val: "1 lien", label: "Pour partager ton catalogue" },
+              { val: "WhatsApp", label: "Pour recevoir tes commandes" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-2xl sm:text-3xl font-black" style={{ color: primary }}>{s.val}</p>
@@ -395,40 +395,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF ── */}
+      {/* ── MARKETPLACE TEASER ── */}
       <section className="py-16 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Ils nous font confiance</p>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Ce que disent nos vendeurs</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              { name: "Awa K.", shop: "Awa Fashion",     text: "J'ai créé ma boutique en 2 minutes. Maintenant mes clients commandent directement sur WhatsApp, c'est incroyable !", stars: 5, location: "Lomé" },
-              { name: "Kofi B.", shop: "Style by Kofi",  text: "Avant je perdais des commandes. Avec Boutiki, tout est organisé et mes ventes ont doublé en un mois.", stars: 5, location: "Abidjan" },
-              { name: "Fatou D.", shop: "Fatou Cosmetics", text: "Simple, rapide, efficace. Je recommande à toutes mes amies vendeuses !", stars: 5, location: "Dakar" },
-            ].map((t) => (
-              <div key={t.name} className="hover-lift bg-white rounded-2xl p-6 border border-gray-100"
-                style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-                <div className="flex gap-0.5 mb-4">
-                  {Array(t.stars).fill(0).map((_, i) => (
-                    <Star key={i} size={14} fill={primary} style={{ color: primary }} />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-                    style={{ backgroundColor: primary }}>
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-500">{t.shop} · {t.location}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Déjà en ligne</p>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Découvre les boutiques de la communauté</h2>
+          <p className="text-gray-500 mt-3 mb-7">Parcours les catalogues des vendeurs et vois à quoi ressemblera ta boutique.</p>
+          <Link href="/marketplace" className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-2xl border border-gray-200 text-gray-900 hover:bg-gray-50 transition-colors">
+            Voir les boutiques
+          </Link>
         </div>
       </section>
 
