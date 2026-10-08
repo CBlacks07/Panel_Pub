@@ -37,7 +37,7 @@ export default function RegisterScreen() {
     });
     if (error) { Alert.alert("Erreur", error.message); setLoading(false); return; }
     if (data.user) {
-      await supabase.from("users").upsert({ id: data.user.id, email, shop_name: shopName, business_type: businessType });
+      await supabase.from("users").update({ shop_name: shopName, business_type: businessType }).eq("id", data.user.id);
     }
     setLoading(false);
     // La session active redirige automatiquement vers le dashboard (cf. _layout)

@@ -52,6 +52,7 @@ type Shop = {
   suspended?: boolean;
   product_count?: number;
   avg_rating?: number;
+  is_demo?: boolean;
 };
 type Stats = {
   shops: number; products: number; ratings: number;
@@ -75,6 +76,61 @@ const CONFIG_LABELS: Record<string, { label: string; description: string; type: 
   support_whatsapp:          { label: "WhatsApp Support", description: "Numéro pour les abonnements (ex: +22893914694)", type: "text" },
 };
 
+function ChangePasswordCard() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirmNext, setConfirmNext] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (next.length < 10) { setMsg({ ok: false, text: "Le nouveau mot de passe doit faire au moins 10 caractères." }); return; }
+    if (next !== confirmNext) { setMsg({ ok: false, text: "La confirmation ne correspond pas." }); return; }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current, next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setMsg({ ok: false, text: data.error || "Échec du changement." }); return; }
+      setCurrent(""); setNext(""); setConfirmNext("");
+      setMsg({ ok: true, text: "Mot de passe modifié. Utilise-le à ta prochaine connexion." });
+    } catch {
+      setMsg({ ok: false, text: "Erreur réseau, réessaie." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-100 mt-4 sm:mt-6 overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-50">
+        <h2 className="font-black text-gray-900">Mot de passe admin</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Au moins 10 caractères. Le mot de passe actuel est demandé.</p>
+      </div>
+      <div className="p-4 sm:p-6 grid gap-3 sm:grid-cols-3">
+        <input type="password" autoComplete="current-password" placeholder="Mot de passe actuel" value={current} onChange={(e) => setCurrent(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+        <input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe" value={next} onChange={(e) => setNext(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+        <input type="password" autoComplete="new-password" placeholder="Confirmer" value={confirmNext} onChange={(e) => setConfirmNext(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+      </div>
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex items-center gap-4">
+        <button type="submit" disabled={busy || !current || !next}
+          className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-gray-900 disabled:opacity-40">
+          {busy ? "Enregistrement..." : "Changer le mot de passe"}
+        </button>
+        {msg && <span className={`text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`} role="status">{msg.text}</span>}
+      </div>
+    </form>
+  );
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState<"config" | "shops" | "stats" | "plans">("config");
@@ -83,6 +139,7 @@ export default function AdminDashboard() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [filteredShops, setFilteredShops] = useState<Shop[]>([]);
   const [shopSearch, setShopSearch] = useState("");
+  const [hideDemo, setHideDemo] = useState(false);
   const [stats, setStats] = useState<Stats>({ shops: 0, products: 0, ratings: 0, newShops7d: 0, newShops30d: 0, planCount: {}, bizCount: {} });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -98,13 +155,12 @@ export default function AdminDashboard() {
   }, []);
 
   const loadAll = async () => {
-    const [{ data: configData }, { data: shopsData }, { data: productsData }, { data: ratingsData }, { data: plansData }] = await Promise.all([
+    const [{ data: configData }, shopsRes, { data: plansData }] = await Promise.all([
       supabase.from("app_config").select("key, value"),
-      supabase.from("users").select("id, shop_name, email, plan, created_at, suspended").order("created_at", { ascending: false }),
-      supabase.from("products").select("user_id"),
-      supabase.from("shop_ratings").select("shop_id, rating"),
+      fetch("/api/admin/shops").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       supabase.from("plans").select("*").order("sort_order"),
     ]);
+    const shopsData: Shop[] | null = shopsRes?.shops ?? null;
 
     if (configData) {
       const map: Config = {};
@@ -113,23 +169,8 @@ export default function AdminDashboard() {
     }
 
     if (shopsData) {
-      const countMap: Record<string, number> = {};
-      productsData?.forEach((p) => { countMap[p.user_id] = (countMap[p.user_id] || 0) + 1; });
-
-      const ratingMap: Record<string, { sum: number; count: number }> = {};
-      ratingsData?.forEach((r) => {
-        if (!ratingMap[r.shop_id]) ratingMap[r.shop_id] = { sum: 0, count: 0 };
-        ratingMap[r.shop_id].sum += r.rating;
-        ratingMap[r.shop_id].count += 1;
-      });
-
-      const enriched = shopsData.map((s) => ({
-        ...s,
-        product_count: countMap[s.id] || 0,
-        avg_rating: ratingMap[s.id] ? ratingMap[s.id].sum / ratingMap[s.id].count : 0,
-      }));
-      setShops(enriched);
-      setFilteredShops(enriched);
+      setShops(shopsData);
+      setFilteredShops(shopsData);
     }
 
     // Charger les stats enrichies depuis l'API
@@ -138,7 +179,7 @@ export default function AdminDashboard() {
       const s = await statsRes.json();
       setStats({ shops: s.totalShops || 0, products: s.totalProducts || 0, ratings: s.totalRatings || 0, newShops7d: s.newShops7d || 0, newShops30d: s.newShops30d || 0, planCount: s.planCount || {}, bizCount: s.bizCount || {} });
     } else {
-      setStats({ shops: shopsData?.length || 0, products: productsData?.length || 0, ratings: ratingsData?.length || 0, newShops7d: 0, newShops30d: 0, planCount: {}, bizCount: {} });
+      setStats({ shops: shopsData?.length || 0, products: 0, ratings: 0, newShops7d: 0, newShops30d: 0, planCount: {}, bizCount: {} });
     }
     if (plansData) setPlans(plansData);
     setLoading(false);
@@ -146,11 +187,17 @@ export default function AdminDashboard() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Batch upsert — une seule requête au lieu de N séquentielles
-    await supabase.from("app_config").upsert(
-      Object.entries(config).map(([key, value]) => ({ key, value }))
-    );
+    const res = await fetch("/api/admin/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries: config }),
+    }).catch(() => null);
     setSaving(false);
+    if (!res?.ok) {
+      const err = await res?.json().catch(() => ({}));
+      alert(`Enregistrement impossible${err?.error ? ` : ${err.error}` : "."}`);
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -376,13 +423,15 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {tab === "config" && <ChangePasswordCard />}
+
         {/* Tab: Boutiques */}
         {tab === "shops" && (
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
             {/* Liste */}
             <div className="flex-1 bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2 sm:gap-4">
-                <h2 className="font-black text-gray-900 whitespace-nowrap">Boutiques ({filteredShops.length})</h2>
+                <h2 className="font-black text-gray-900 whitespace-nowrap">Boutiques ({filteredShops.filter((s) => !hideDemo || !s.is_demo).length})</h2>
                 <input
                   type="text"
                   placeholder="Rechercher..."
@@ -390,9 +439,15 @@ export default function AdminDashboard() {
                   onChange={(e) => handleShopSearch(e.target.value)}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
                 />
+                {shops.some((s) => s.is_demo) && (
+                  <label className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap cursor-pointer select-none">
+                    <input type="checkbox" checked={hideDemo} onChange={(e) => setHideDemo(e.target.checked)} />
+                    Masquer démo
+                  </label>
+                )}
               </div>
               <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                {filteredShops.map((shop) => (
+                {filteredShops.filter((s) => !hideDemo || !s.is_demo).map((shop) => (
                   <div
                     key={shop.id}
                     onClick={() => setSelectedShop(shop)}
@@ -405,6 +460,7 @@ export default function AdminDashboard() {
                       <div className="font-semibold text-gray-900 text-sm truncate flex items-center gap-2">
                         {shop.shop_name}
                         {shop.suspended && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Suspendu</span>}
+                        {shop.is_demo && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Démo</span>}
                       </div>
                       <div className="text-xs text-gray-400 truncate">{shop.email}</div>
                     </div>
@@ -550,7 +606,12 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       onClick={async () => {
-                        await supabase.from("plans").update({ active: !plan.active }).eq("id", plan.id);
+                        const r = await fetch("/api/admin/plans", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: plan.id, data: { active: !plan.active } }),
+                        });
+                        if (!r.ok) { alert("Modification impossible."); return; }
                         setPlans((prev) => prev.map((p) => p.id === plan.id ? { ...p, active: !p.active } : p));
                       }}
                       className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors ${plan.active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
@@ -600,12 +661,20 @@ export default function AdminDashboard() {
                     <button
                       onClick={async () => {
                         const features = editingPlan.features_text.split("\n").filter((f: string) => f.trim());
-                        await supabase.from("plans").update({
-                          name: editingPlan.name, price: editingPlan.price,
-                          currency: editingPlan.currency, billing: editingPlan.billing,
-                          article_limit: editingPlan.article_limit,
-                          features, is_popular: editingPlan.is_popular,
-                        }).eq("id", editingPlan.id);
+                        const r = await fetch("/api/admin/plans", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            id: editingPlan.id,
+                            data: {
+                              name: editingPlan.name, price: editingPlan.price,
+                              currency: editingPlan.currency, billing: editingPlan.billing,
+                              article_limit: editingPlan.article_limit,
+                              features, is_popular: editingPlan.is_popular,
+                            },
+                          }),
+                        });
+                        if (!r.ok) { alert("Enregistrement impossible."); return; }
                         setPlans((prev) => prev.map((p) => p.id === editingPlan.id ? { ...p, ...editingPlan, features } : p));
                         setEditingPlan(null);
                       }}
