@@ -62,7 +62,7 @@ const SHOPS = [
       ["Baskets running", 22000, "Chaussures de sport", "Amorti renforcé.", null],
       ["Talons carrés", 11000, "Talons", "Talon 6 cm, très stable.", null],
     ] },
-  { slug: "naida-cosmetiques", name: "NAIDA Cosmétiques", type: "beaute", city: "Lomé", lat: 6.1856, lng: 1.2090, plan: "pro",
+  { slug: "naida-cosmetiques", name: "Naïda Beauté", type: "beaute", city: "Lomé", lat: 6.1856, lng: 1.2090, plan: "pro",
     slogan: "Prenez soin de vous", description: "Soins visage, corps et cheveux. Produits sélectionnés.",
     products: [
       ["Gel de visage", 25500, "Cosmétiques", "Hydratant, tous types de peau.", null],
@@ -85,7 +85,7 @@ const SHOPS = [
       ["Sac à dos urbain", 22000, "Sacs à dos", "Compartiment ordinateur 15 pouces.", null],
       ["Portefeuille homme", 8000, "Portefeuilles", "Cuir pleine fleur.", null],
     ] },
-  { slug: "cote-d-or", name: "Côte D'Or", type: "bijoux", city: "Lomé", lat: 6.1500, lng: 1.2400, plan: "pro",
+  { slug: "cote-d-or", name: "Atelier Côte d'Or", type: "bijoux", city: "Lomé", lat: 6.1500, lng: 1.2400, plan: "pro",
     slogan: "L'éclat qui se transmet", description: "Bagues, colliers et bracelets plaqués or.",
     products: [
       ["Bague de fiançailles", 150000, "Bagues", "Plaqué or 18 carats, zircons.", 230000],
@@ -103,7 +103,7 @@ const SHOPS = [
       ["Coque antichoc", 3500, "Coques", "Compatible plusieurs modèles.", null],
       ["Disque dur 1 To", 55000, "Accessoires", "USB 3.0, format poche.", 65000],
     ] },
-  { slug: "drey-sweet", name: "Drey'Sweet", type: "alimentation", city: "Lomé", lat: 6.1750, lng: 1.2000, plan: "free",
+  { slug: "drey-sweet", name: "Douceurs de Lomé", type: "alimentation", city: "Lomé", lat: 6.1750, lng: 1.2000, plan: "free",
     slogan: "Fait maison, livré chaud", description: "Pâtisseries et plats locaux sur commande.",
     products: [
       ["Pack pastels (12)", 7000, "Snacks", "Pastels croustillants, sauce piquante.", null],
