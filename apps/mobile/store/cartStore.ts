@@ -23,6 +23,8 @@ type CartStore = {
   getItems: (shopId: string) => CartItem[];
   addItem: (shopId: string, item: CartItem) => void;
   removeItem: (shopId: string, itemId: string) => void;
+  /** Ajuste la quantité d'une ligne (même article + taille + couleur). Minimum 1. */
+  changeQuantity: (shopId: string, item: CartItem, delta: number) => void;
   clear: (shopId: string) => void;
   total: (shopId: string) => number;
   count: (shopId: string) => number;
@@ -51,6 +53,16 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           carts: { ...state.carts, [shopId]: { items: updated } },
         }));
+      },
+
+      changeQuantity: (shopId, item, delta) => {
+        const current = get().carts[shopId]?.items ?? [];
+        const updated = current.map((i) =>
+          i.id === item.id && i.selectedSize === item.selectedSize && i.selectedColor === item.selectedColor
+            ? { ...i, quantity: Math.min(99, Math.max(1, i.quantity + delta)) }
+            : i
+        );
+        set((state) => ({ carts: { ...state.carts, [shopId]: { items: updated } } }));
       },
 
       removeItem: (shopId, itemId) => {

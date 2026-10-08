@@ -114,8 +114,25 @@ export default function CartModal({ visible, onClose, shopId, shopName, whatsapp
                     </View>
                     <Text style={[styles.itemPrice, { color: primary }]}>
                       {(item.price * item.quantity).toLocaleString("fr-FR")} FCFA
-                      {item.quantity > 1 && <Text style={styles.itemQty}> ×{item.quantity}</Text>}
                     </Text>
+                    <View style={styles.stepper}>
+                      <TouchableOpacity
+                        onPress={() => cartStore.changeQuantity(shopId, item, -1)}
+                        disabled={item.quantity <= 1}
+                        style={[styles.stepBtn, item.quantity <= 1 && { opacity: 0.35 }]}
+                        accessibilityRole="button" accessibilityLabel={`Diminuer la quantité de ${item.title}`}
+                      >
+                        <Ionicons name="remove" size={16} color="#1a1a1a" />
+                      </TouchableOpacity>
+                      <Text style={styles.stepValue} accessibilityLabel={`Quantité ${item.quantity}`}>{item.quantity}</Text>
+                      <TouchableOpacity
+                        onPress={() => cartStore.changeQuantity(shopId, item, 1)}
+                        style={styles.stepBtn}
+                        accessibilityRole="button" accessibilityLabel={`Augmenter la quantité de ${item.title}`}
+                      >
+                        <Ionicons name="add" size={16} color="#1a1a1a" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeBtn} accessibilityRole="button" accessibilityLabel={`Retirer ${item.title}`}>
                     <Ionicons name="trash-outline" size={18} color="#ef4444" />
@@ -254,7 +271,12 @@ const styles = StyleSheet.create({
   varTag: { backgroundColor: "#f0f0f0", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   varTagText: { fontSize: 11, color: "#555", fontWeight: "600" },
   itemPrice: { fontSize: 14, fontWeight: "800" },
-  itemQty: { fontSize: 12, color: "#aaa", fontWeight: "400" },
+  stepper: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 4, marginTop: 2 },
+  stepBtn: {
+    width: 32, height: 32, borderRadius: 10, backgroundColor: "#fff",
+    borderWidth: 1, borderColor: "#e5e5e5", justifyContent: "center", alignItems: "center",
+  },
+  stepValue: { minWidth: 28, textAlign: "center", fontSize: 14, fontWeight: "800", color: "#1a1a1a" },
   removeBtn: { padding: 8 },
 
   footer: {

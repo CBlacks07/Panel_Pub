@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   shopMetaChipText: { fontSize: 11, color: colors.text, fontWeight: "700" },
 
   // Catégories
-  categoriesBar: { maxHeight: 52, backgroundColor: "#fff" },
+  categoriesBar: { height: 52, flexGrow: 0, flexShrink: 0, backgroundColor: "#fff" },
   categoriesContent: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
   categoryPill: {
     paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
