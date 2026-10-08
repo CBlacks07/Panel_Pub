@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { authErrorMessage } from "@/lib/authErrors";
 import { Mail, Zap, MessageCircle, ShoppingBag, ArrowRight } from "lucide-react";
 
 type Config = Record<string, string>;
@@ -34,14 +35,14 @@ export default function LoginPage() {
     if (!email || !password) { setError("Remplis tous les champs"); return; }
     setLoading(true); setError("");
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err) { setError(err.message); setLoading(false); return; }
+    if (err) { setError(authErrorMessage(err)); setLoading(false); return; }
     router.push("/dashboard");
   };
 
   const handleForgotPassword = async () => {
     if (!email) { setError("Entre ton email d'abord"); return; }
     const { error: err } = await supabase.auth.resetPasswordForEmail(email);
-    if (err) setError(err.message);
+    if (err) setError(authErrorMessage(err));
     else setResetSent(true);
   };
 

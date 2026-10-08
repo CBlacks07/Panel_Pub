@@ -4,6 +4,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import { authErrorMessage } from "../../lib/authErrors";
 import { useConfig } from "../../context/ConfigContext";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -20,7 +21,7 @@ export default function LoginScreen() {
   const handleForgotPassword = async () => {
     if (!email) { Alert.alert("Email requis", "Entre ton email pour recevoir un lien de réinitialisation"); return; }
     const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) Alert.alert("Erreur", error.message);
+    if (error) Alert.alert("Erreur", authErrorMessage(error));
     else Alert.alert("Email envoyé !", `Un lien de réinitialisation a été envoyé à ${email}`);
   };
 
@@ -28,7 +29,7 @@ export default function LoginScreen() {
     if (!email || !password) { Alert.alert("Champs manquants", "Remplis l'email et le mot de passe"); return; }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) Alert.alert("Connexion impossible", error.message);
+    if (error) Alert.alert("Connexion impossible", authErrorMessage(error));
     setLoading(false);
   };
 
