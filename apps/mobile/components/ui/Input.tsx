@@ -7,8 +7,8 @@ import { colors, radius, sizing } from "../../lib/theme";
  * Champ de saisie standard, avec libellé et anneau de focus bleu.
  */
 export function Input({
-  label, multiline, ...props
-}: TextInputProps & { label?: string }) {
+  label, multiline, error, ...props
+}: TextInputProps & { label?: string; error?: string }) {
   const { primary } = useConfig();
   const [focused, setFocused] = useState(false);
 
@@ -24,10 +24,12 @@ export function Input({
         style={[
           styles.input,
           multiline && styles.multiline,
-          focused && { borderColor: primary, backgroundColor: "#fff", shadowColor: primary, shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 1 },
+          error ? { borderColor: "#DC2626", backgroundColor: "#FEF2F2" } : null,
+          focused && !error && { borderColor: primary, backgroundColor: "#fff", shadowColor: primary, shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 1 },
           props.style as any,
         ]}
       />
+      {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
     </View>
   );
 }
@@ -41,5 +43,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 14,
     fontSize: 15, color: colors.text, backgroundColor: colors.surfaceAlt,
   },
+  error: { fontSize: 12, fontWeight: "600", color: "#DC2626" },
   multiline: { minHeight: 90, textAlignVertical: "top" },
 });

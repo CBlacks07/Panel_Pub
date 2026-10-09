@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 13, color: "#aaa", fontWeight: "600", marginHorizontal: 16, marginBottom: 8 },
 
   // Accueil produits
-  catRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, gap: 14 },
+  catRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16, gap: 8 },
   prodSection: { marginBottom: 12 },
   prodSectionHead: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",

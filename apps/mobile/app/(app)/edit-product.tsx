@@ -11,7 +11,8 @@ import { getImageLimit } from "../../lib/plans";
 import { ProductImages } from "../../components/ProductImages";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Button } from "../../components/ui/Button";
-import { Chip } from "../../components/ui/Chip";
+import { OptionPicker } from "../../components/ui/OptionPicker";
+import { useCustomOptions } from "../../hooks/useCustomOptions";
 import { useToast } from "../../components/ui/Toast";
 import { useConfig } from "../../context/ConfigContext";
 import { useAuth } from "../../context/AuthContext";
@@ -26,6 +27,7 @@ export default function EditProductScreen() {
   const { user, profile, bizType } = useAuth();
   const { primary, getPlanById } = useConfig();
   const toast = useToast();
+  const custom = useCustomOptions(user?.id);
   const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState("");
@@ -242,11 +244,15 @@ export default function EditProductScreen() {
             <Ionicons name="pricetag-outline" size={18} color={primary} />
             <Text style={styles.sectionTitle}>Catégorie <Text style={{ color: "#ef4444" }}>*</Text></Text>
           </View>
-          <View style={styles.chips}>
-            {bizType.categories.map((cat) => (
-              <Chip key={cat} label={cat} selected={category === cat} onPress={() => setCategory(cat)} />
-            ))}
-          </View>
+          <OptionPicker
+            builtIn={bizType.categories}
+            custom={custom.options.category}
+            selected={category ? [category] : []}
+            onToggle={setCategory}
+            onCreate={(n) => custom.add("category", n)}
+            onDeleteCustom={(v) => custom.remove("category", v)}
+            placeholder="Nouvelle catégorie (ex : Pagnes)"
+          />
         </View>
 
         {/* ── VARIATIONS ── */}
@@ -260,33 +266,45 @@ export default function EditProductScreen() {
             {bizType.variationTypes.sizes && (
               <View style={styles.varGroup}>
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.sizes.label}</Text>
-                <View style={styles.chips}>
-                  {bizType.variationTypes.sizes.values.map((v) => (
-                    <Chip key={v} label={v} selected={isSelected("size", v)} onPress={() => toggleVariation("size", v)} />
-                  ))}
-                </View>
+                <OptionPicker
+                  builtIn={bizType.variationTypes.sizes.values}
+                  custom={custom.options.size}
+                  selected={variations.filter((x) => x.type === "size").map((x) => x.value)}
+                  onToggle={(v) => toggleVariation("size", v)}
+                  onCreate={(n) => custom.add("size", n)}
+                  onDeleteCustom={(v) => custom.remove("size", v)}
+                  placeholder="Nouvelle taille"
+                />
               </View>
             )}
 
             {bizType.variationTypes.colors && (
               <View style={styles.varGroup}>
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.colors.label}</Text>
-                <View style={styles.chips}>
-                  {bizType.variationTypes.colors.values.map((v) => (
-                    <Chip key={v} label={v} selected={isSelected("color", v)} onPress={() => toggleVariation("color", v)} />
-                  ))}
-                </View>
+                <OptionPicker
+                  builtIn={bizType.variationTypes.colors.values}
+                  custom={custom.options.color}
+                  selected={variations.filter((x) => x.type === "color").map((x) => x.value)}
+                  onToggle={(v) => toggleVariation("color", v)}
+                  onCreate={(n) => custom.add("color", n)}
+                  onDeleteCustom={(v) => custom.remove("color", v)}
+                  placeholder="Nouvelle couleur"
+                />
               </View>
             )}
 
             {bizType.variationTypes.custom && (
               <View style={styles.varGroup}>
                 <Text style={styles.varGroupLabel}>{bizType.variationTypes.custom.label}</Text>
-                <View style={styles.chips}>
-                  {bizType.variationTypes.custom.values.map((v) => (
-                    <Chip key={v} label={v} selected={isSelected("custom", v)} onPress={() => toggleVariation("custom", v)} />
-                  ))}
-                </View>
+                <OptionPicker
+                  builtIn={bizType.variationTypes.custom.values}
+                  custom={custom.options.custom}
+                  selected={variations.filter((x) => x.type === "custom").map((x) => x.value)}
+                  onToggle={(v) => toggleVariation("custom", v)}
+                  onCreate={(n) => custom.add("custom", n)}
+                  onDeleteCustom={(v) => custom.remove("custom", v)}
+                  placeholder="Nouvelle option"
+                />
               </View>
             )}
           </View>

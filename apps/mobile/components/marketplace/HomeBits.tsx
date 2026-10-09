@@ -28,7 +28,7 @@ export function CategoryCircle({
       ]}>
         <Text style={styles.catEmoji}>{emoji}</Text>
       </View>
-      <Text style={[styles.catLabel, selected && { color: colors.text, fontWeight: "800" }]} numberOfLines={1}>{label}</Text>
+      <Text style={[styles.catLabel, selected && { color: colors.text, fontWeight: "800" }]} numberOfLines={2}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -62,7 +62,7 @@ export function ProductMiniCard({
         </View>
       </View>
 
-      <Text style={styles.title} numberOfLines={1}>{product.title}</Text>
+      <Text style={styles.title} numberOfLines={2}>{product.title}</Text>
       <View style={styles.priceRow}>
         <Text style={[styles.price, { color: accent }]}>{product.price.toLocaleString("fr-FR")} F</Text>
         {hasPromo && (
@@ -75,7 +75,7 @@ export function ProductMiniCard({
 
 const styles = StyleSheet.create({
   // Catégorie ronde
-  catWrap: { width: 66, alignItems: "center", gap: 5 },
+  catWrap: { width: 78, alignItems: "center", gap: 5 },
   catCircle: {
     width: 58, height: 58, borderRadius: 20, backgroundColor: colors.surface,
     justifyContent: "center", alignItems: "center",
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07, shadowRadius: 12, elevation: 2,
   },
   catEmoji: { fontSize: 24 },
-  catLabel: { fontSize: 10, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
+  catLabel: { fontSize: 11, lineHeight: 14, minHeight: 28, color: colors.textSecondary, fontWeight: "600", textAlign: "center" },
 
   // Carte produit
   card: { width: CARD_W },
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7, paddingVertical: 4, alignSelf: "flex-start", maxWidth: CARD_W - 16,
   },
   vendorText: { fontSize: 10, fontWeight: "700", color: colors.text, flexShrink: 1 },
-  title: { fontSize: 13, fontWeight: "700", color: colors.text, marginTop: 6 },
+  title: { fontSize: 13, lineHeight: 17, minHeight: 34, fontWeight: "700", color: colors.text, marginTop: 6 },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" },
   price: { fontSize: 14, fontWeight: "900" },
   compare: { fontSize: 11, color: colors.textMuted, textDecorationLine: "line-through", fontWeight: "600" },

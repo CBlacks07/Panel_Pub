@@ -6,16 +6,18 @@ import { colors, radius } from "../../lib/theme";
  * Puce sélectionnable (filtres, catégories, options).
  */
 export function Chip({
-  label, selected, onPress,
+  label, selected, onPress, onLongPress,
 }: {
   label: string;
   selected?: boolean;
   onPress: () => void;
+  onLongPress?: () => void;
 }) {
   const { primary } = useConfig();
   return (
     <TouchableOpacity
       onPress={onPress}
+      onLongPress={onLongPress}
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected }}

@@ -14,22 +14,28 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const { config, primary } = useConfig();
   const appName = config.app_name || "Boutiki";
   const hasLogo = !!(config.logo_url && config.logo_url.trim().length > 0);
 
   const handleForgotPassword = async () => {
-    if (!email) { Alert.alert("Email requis", "Entre ton email pour recevoir un lien de réinitialisation"); return; }
+    if (!email.trim()) { setErrors({ email: "Entre ton email pour recevoir un lien de réinitialisation" }); return; }
+    setErrors({});
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) Alert.alert("Erreur", authErrorMessage(error));
     else Alert.alert("Email envoyé !", `Un lien de réinitialisation a été envoyé à ${email}`);
   };
 
   const handleLogin = async () => {
-    if (!email || !password) { Alert.alert("Champs manquants", "Remplis l'email et le mot de passe"); return; }
+    const next: typeof errors = {};
+    if (!email.trim()) next.email = "Entre ton email";
+    if (!password) next.password = "Entre ton mot de passe";
+    setErrors(next);
+    if (Object.keys(next).length) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) Alert.alert("Connexion impossible", authErrorMessage(error));
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) setErrors({ form: authErrorMessage(error) });
     setLoading(false);
   };
 
@@ -46,7 +52,7 @@ export default function LoginScreen() {
           <Text style={styles.appName}>{appName}</Text>
         </View>
 
-        <Text style={styles.title}>Bon retour 👋</Text>
+        <Text style={styles.title}>Bon retour</Text>
         <Text style={styles.subtitle}>Connecte-toi pour accéder à ta boutique.</Text>
 
         <View style={styles.form}>
@@ -54,7 +60,8 @@ export default function LoginScreen() {
             label="Email"
             placeholder="ton@email.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: undefined, form: undefined })); }}
+            error={errors.email}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -62,9 +69,11 @@ export default function LoginScreen() {
             label="Mot de passe"
             placeholder="••••••••"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: undefined, form: undefined })); }}
+            error={errors.password}
             secureTextEntry
           />
+          {errors.form ? <Text style={styles.formError} accessibilityLiveRegion="polite">{errors.form}</Text> : null}
           <Button label="Se connecter" loading={loading} onPress={handleLogin} />
           <TouchableOpacity onPress={handleForgotPassword} style={styles.forgot}>
             <Text style={[styles.forgotText, { color: primary }]}>Mot de passe oublié ?</Text>
@@ -98,6 +107,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "800", color: colors.text, marginBottom: 4 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
   form: { gap: 16 },
+  formError: { fontSize: 13, fontWeight: "600", color: "#DC2626", backgroundColor: "#FEF2F2", borderRadius: 12, padding: 12, lineHeight: 18 },
   forgot: { alignItems: "center", paddingVertical: 4 },
   forgotText: { fontSize: 13, fontWeight: "700" },
   linkBtn: { alignItems: "center", paddingTop: 24 },
