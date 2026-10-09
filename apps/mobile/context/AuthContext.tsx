@@ -67,8 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select("shop_name, business_type, plan, plan_expires_at, phone_whatsapp, total_articles_created, shop_logo_url")
         .eq("id", userId)
         .single();
-      if (error) throw error;
+      if (error) {
+        // Profil introuvable (compte supprimé) : la session locale n'est plus valable
+        if (error.code === "PGRST116") { await forceSignOut(); return; }
+        throw error;
+      }
       if (data) {
+        // Le compte auth peut aussi avoir été supprimé alors que le jeton local est encore valide
+        const { error: authError } = await supabase.auth.getUser();
+        if (authError && (authError.status === 401 || authError.status === 403 || authError.status === 404)) {
+          await forceSignOut();
+          return;
+        }
         // Plan effectif : un forfait payant expiré est traité comme gratuit
         const expired = data.plan !== "free"
           && !!data.plan_expires_at
@@ -80,6 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Déconnexion locale uniquement : le compte n'existe plus côté serveur
+  const forceSignOut = async () => {
+    await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+    profileLoadedRef.current = null;
+    setProfile(null);
+    setSession(null);
   };
 
   const refreshProfile = async () => {
