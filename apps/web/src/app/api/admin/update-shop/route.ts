@@ -8,8 +8,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const { userId, data } = await req.json();
-  if (!userId) return NextResponse.json({ error: "userId requis" }, { status: 400 });
+  const body = await req.json().catch(() => null);
+  const userId = body?.userId;
+  if (typeof userId !== "string" || !userId) return NextResponse.json({ error: "userId requis" }, { status: 400 });
+  // Seuls ces champs sont modifiables ici (le forfait passe par /api/admin/update-plan).
+  const data = Object.fromEntries(
+    Object.entries(body?.data ?? {}).filter(([k]) => k === "suspended")
+  );
+  if (!Object.keys(data).length) return NextResponse.json({ error: "Aucun champ modifiable" }, { status: 400 });
 
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -8,9 +8,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const { userId, plan } = await req.json();
+  const { userId, plan } = (await req.json().catch(() => ({}))) as { userId?: unknown; plan?: unknown };
 
-  if (!["free", "pro", "annual"].includes(plan)) {
+  if (typeof userId !== "string" || !userId) {
+    return NextResponse.json({ error: "userId requis" }, { status: 400 });
+  }
+  if (typeof plan !== "string" || !["free", "pro", "annual"].includes(plan)) {
     return NextResponse.json({ error: "Plan invalide" }, { status: 400 });
   }
 
