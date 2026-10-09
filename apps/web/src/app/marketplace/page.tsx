@@ -289,7 +289,7 @@ export default function MarketplacePage() {
 
       <footer className="border-t bg-white" style={{ borderColor: BORDER }}>
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-8 flex flex-wrap items-center justify-between gap-4 text-sm" style={{ color: MUTED }}>
-          <span>© {new Date().getFullYear()} {appName}</span>
+          <span>© {new Date().getFullYear()} {appName} · Propulsé par <b className="font-bold">OPS CORPORATION</b></span>
           <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Liens utiles">
             <Link href="/auth/register" className="hover:text-slate-900 inline-flex items-center gap-1">Devenir vendeur <ArrowUpRight size={13} /></Link>
             <Link href="/privacy" className="hover:text-slate-900">Confidentialité</Link>

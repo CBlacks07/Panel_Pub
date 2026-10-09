@@ -116,7 +116,7 @@ export default function LoginPage() {
             <span className="font-black text-gray-900 text-lg">{appName}</span>
           </div>
 
-          <h2 className="text-2xl font-black text-gray-900 mb-1">Bon retour 👋</h2>
+          <h2 className="text-2xl font-black text-gray-900 mb-1">Bon retour</h2>
           <p className="text-gray-500 text-sm mb-8">Connecte-toi pour accéder à ta boutique</p>
 
           {resetSent ? (

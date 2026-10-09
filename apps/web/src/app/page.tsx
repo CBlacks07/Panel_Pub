@@ -174,7 +174,7 @@ export default function LandingPage() {
   const part2 = rest.join(".").trim();
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+    <div className="min-h-screen bg-white" style={{ fontFamily: "var(--font-body)" }}>
 
       {/* ── NAV ── */}
       <nav className="border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
@@ -557,7 +557,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p>© {new Date().getFullYear()} {appName}. Tous droits réservés. — <span className="text-white font-semibold">OPS CORPORATION</span></p>
+            <p>© {new Date().getFullYear()} {appName}. Tous droits réservés. Propulsé par <span className="text-white font-semibold">OPS CORPORATION</span></p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-white transition-colors">Confidentialité</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Conditions</Link>

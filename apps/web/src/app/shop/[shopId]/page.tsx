@@ -293,7 +293,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
       </div>
 
       <footer className="max-w-[1400px] mx-auto px-5 sm:px-11 pt-12 pb-10 text-center text-xs text-slate-400">
-        Boutique propulsée par <Link href="/" className="font-bold hover:underline" style={{ color: primary }}>{appName}</Link>
+        Propulsé par <span className="font-bold text-slate-500">OPS CORPORATION</span>
         {" · "}
         <Link href="/marketplace" className="font-semibold hover:underline">Découvrir d&apos;autres boutiques</Link>
       </footer>

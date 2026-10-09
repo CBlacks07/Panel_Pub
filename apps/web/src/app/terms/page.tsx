@@ -158,7 +158,7 @@ export default function TermsPage() {
       </div>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400">
-        <p>© {new Date().getFullYear()} {appName} — <Link href="/privacy" className="hover:text-gray-600">Politique de confidentialité</Link></p>
+        <p>© {new Date().getFullYear()} {appName} · Propulsé par OPS CORPORATION — <Link href="/privacy" className="hover:text-gray-600">Politique de confidentialité</Link></p>
       </footer>
     </div>
   );

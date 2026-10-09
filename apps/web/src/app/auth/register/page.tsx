@@ -137,7 +137,7 @@ export default function RegisterPage() {
 
           {step === 1 ? (
             <div key="step1" className="animate-fade-up">
-              <h2 className="text-2xl font-black text-gray-900 mb-1">Nomme ta boutique 🛍️</h2>
+              <h2 className="text-2xl font-black text-gray-900 mb-1">Nomme ta boutique</h2>
               <p className="text-gray-500 text-sm mb-6">Choisis un nom et ton type d&apos;activité commerciale</p>
 
               <div className="space-y-5">

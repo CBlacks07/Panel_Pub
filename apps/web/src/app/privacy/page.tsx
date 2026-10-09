@@ -172,7 +172,7 @@ export default function PrivacyPage() {
       </div>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400">
-        <p>© {new Date().getFullYear()} {appName} — <Link href="/terms" className="hover:text-gray-600">Conditions d&apos;utilisation</Link></p>
+        <p>© {new Date().getFullYear()} {appName} · Propulsé par OPS CORPORATION — <Link href="/terms" className="hover:text-gray-600">Conditions d&apos;utilisation</Link></p>
       </footer>
     </div>
   );

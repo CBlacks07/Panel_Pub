@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 type Product = { id: string; title: string; price: number; category: string; image_url: string | null; created_at: string };
+const PLAN_LABEL: Record<string, string> = { free: "Gratuit", pro: "Pro", annual: "Annuel" };
 type Profile = { shop_name: string; plan: string; business_type: string | null };
 type Config = Record<string, string>;
 
@@ -174,7 +175,7 @@ export default function VendorDashboardPage() {
             <div className="min-w-0">
               <p className="font-black text-gray-900 truncate">{profile?.shop_name || "Ma boutique"}</p>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: planColor }}>
-                {profile?.plan || "free"}
+                {PLAN_LABEL[profile?.plan || "free"] || profile?.plan}
               </span>
             </div>
           </div>
@@ -264,16 +265,16 @@ export default function VendorDashboardPage() {
               { label: "Articles en ligne", value: <CountUp value={products.length} />, icon: Package, color: primary },
               { label: "Vues totales", value: <CountUp value={totalViews} />, icon: Eye, color: "#3b82f6" },
               { label: "Note moyenne", value: avgRating > 0 ? `${avgRating.toFixed(1).replace(".", ",")} / 5` : "Pas encore d'avis", icon: Star, color: "#f59e0b" },
-              { label: "Plan actuel", value: profile?.plan || "free", icon: BarChart3, color: planColor },
+              { label: "Plan actuel", value: PLAN_LABEL[profile?.plan || "free"] || profile?.plan, icon: BarChart3, color: planColor },
             ].map(({ label, value, icon: Icon, color }, i) => (
-              <div key={label} className="stagger-in card-lift bg-white rounded-2xl border border-gray-100 p-4 sm:p-5" style={{ borderTopColor: color, borderTopWidth: 3, ["--i" as string]: i }}>
+              <div key={label} className="stagger-in card-lift bg-white rounded-2xl border border-gray-200 p-4 sm:p-5" style={{ ["--i" as string]: i }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + "15" }}>
                     <Icon size={18} style={{ color }} />
                   </div>
                 </div>
-                <p className="text-xl font-black text-gray-900 truncate">{value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                <p className="text-xl font-extrabold text-gray-900 truncate">{value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
               </div>
             ))}
           </div>
