@@ -6,8 +6,8 @@ import { BUSINESS_TYPES } from "@/lib/businessTypes";
 
 export const INK = "#0E1526";
 export const MUTED = "#5B6472";
-export const BORDER = "#E5E8EC";
-export const BG = "#F7F8FA";
+export const BORDER = "#DCE1E7";
+export const BG = "#EDF0F4";
 
 export type Shop = {
   id: string; shop_name: string; slogan: string | null;

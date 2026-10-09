@@ -26,7 +26,7 @@ export const colors = {
   border: "#E5E8EC",      // bordure fine des cartes
   borderLight: "#EDEFF2", // séparateurs internes
 
-  bg: "#F7F8FA",          // fond d'écran neutre
+  bg: "#EDF0F4",          // fond d'écran neutre
   bgAlt: "#F0F2F5",
   surface: "#FFFFFF",
   surfaceAlt: "#FAFBFC",  // fond des champs de saisie

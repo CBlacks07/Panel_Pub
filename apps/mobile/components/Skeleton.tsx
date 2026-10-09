@@ -98,7 +98,7 @@ export function MarketplaceSkeleton() {
 }
 
 const sk = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F8FA" },
+  container: { flex: 1, backgroundColor: "#EDF0F4" },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     padding: 20, backgroundColor: "#fff", marginBottom: 12,

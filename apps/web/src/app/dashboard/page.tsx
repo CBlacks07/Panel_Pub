@@ -123,7 +123,7 @@ export default function VendorDashboardPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8" aria-busy="true" aria-label="Chargement de ta boutique">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-8" aria-busy="true" aria-label="Chargement de ta boutique">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="h-8 w-56 skeleton rounded-xl" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -144,7 +144,7 @@ export default function VendorDashboardPage() {
   const planColor = profile?.plan === "pro" ? "#8b5cf6" : profile?.plan === "annual" ? "#f59e0b" : "#6b7280";
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-100 flex">
 
       {/* ── SIDEBAR (desktop) ── */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 fixed top-0 left-0 h-full z-20">

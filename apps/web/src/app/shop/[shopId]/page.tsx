@@ -10,8 +10,8 @@ import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLef
 
 /** Identité « Design Pro » — bleu profond, fonds neutres, sans corail. */
 const BLUE_DARK = "#142B6B";
-const BG = "#F7F8FA";
-const BORDER = "#E5E8EC";
+const BG = "#EDF0F4";
+const BORDER = "#DCE1E7";
 const WHATSAPP = "#16A34A";
 
 type Product = {

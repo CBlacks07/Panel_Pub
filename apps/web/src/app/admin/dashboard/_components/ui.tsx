@@ -5,8 +5,8 @@ import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 /** Palette « Design Pro » : fond neutre, encre bleu nuit, bordures douces. */
 export const INK = "#0E1526";
 export const MUTED = "#5B6472";
-export const BORDER = "#E5E8EC";
-export const BG = "#F7F8FA";
+export const BORDER = "#DCE1E7";
+export const BG = "#EDF0F4";
 
 export const fmtNumber = (n: number) => n.toLocaleString("fr-FR");
 export const fmtPrice = (price: number, currency: string) =>

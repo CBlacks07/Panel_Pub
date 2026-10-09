@@ -286,7 +286,7 @@ export default function AddProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F8FA" },
+  container: { flex: 1, backgroundColor: "#EDF0F4" },
 
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
