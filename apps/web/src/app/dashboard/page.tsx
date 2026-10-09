@@ -10,7 +10,7 @@ import {
 
 type Product = { id: string; title: string; price: number; category: string; image_url: string | null; created_at: string };
 const PLAN_LABEL: Record<string, string> = { free: "Gratuit", pro: "Pro", annual: "Annuel" };
-type Profile = { shop_name: string; plan: string; business_type: string | null };
+type Profile = { shop_name: string; plan: string; business_type: string | null; planExpired?: boolean; planExpiresAt?: string | null };
 type Config = Record<string, string>;
 
 /** Compteur animé : monte de 0 à la valeur, sans animation si mouvement réduit. */
@@ -59,7 +59,7 @@ export default function VendorDashboardPage() {
 
       const [{ data: cfg }, { data: profileData }, { data: productsData }, { data: ratingsData }] = await Promise.all([
         supabase.from("app_config").select("key, value"),
-        supabase.from("users").select("shop_name, plan, business_type").eq("id", uid).single(),
+        supabase.from("users").select("shop_name, plan, plan_expires_at, business_type").eq("id", uid).single(),
         supabase.from("products").select("id, title, price, category, image_url, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("shop_ratings").select("rating").eq("shop_id", uid),
       ]);
@@ -71,7 +71,12 @@ export default function VendorDashboardPage() {
         : { data: [] as { product_id: string }[] };
 
       if (cfg) { const map: Config = {}; cfg.forEach((r) => { map[r.key] = r.value; }); setConfig(map); }
-      if (profileData) setProfile(profileData);
+      if (profileData) {
+        // Même règle que l'appli mobile et la base : un forfait payant expiré redevient gratuit.
+        const { plan_expires_at, ...rest } = profileData as typeof profileData & { plan_expires_at: string | null };
+        const expired = rest.plan !== "free" && !!plan_expires_at && new Date(plan_expires_at).getTime() < Date.now();
+        setProfile({ ...rest, plan: expired ? "free" : rest.plan, planExpired: expired, planExpiresAt: plan_expires_at });
+      }
       if (productsData) setProducts(productsData);
       setTotalViews(viewsData?.length ?? 0);
       if (ratingsData && ratingsData.length > 0)
@@ -265,7 +270,7 @@ export default function VendorDashboardPage() {
               { label: "Articles en ligne", value: <CountUp value={products.length} />, icon: Package, color: primary },
               { label: "Vues totales", value: <CountUp value={totalViews} />, icon: Eye, color: "#3b82f6" },
               { label: "Note moyenne", value: avgRating > 0 ? `${avgRating.toFixed(1).replace(".", ",")} / 5` : "Pas encore d'avis", icon: Star, color: "#f59e0b" },
-              { label: "Plan actuel", value: PLAN_LABEL[profile?.plan || "free"] || profile?.plan, icon: BarChart3, color: planColor },
+              { label: profile?.planExpired ? `Forfait expiré le ${new Date(profile.planExpiresAt!).toLocaleDateString("fr-FR")}` : profile?.planExpiresAt && profile.plan !== "free" ? `Plan actuel · jusqu'au ${new Date(profile.planExpiresAt).toLocaleDateString("fr-FR")}` : "Plan actuel", value: PLAN_LABEL[profile?.plan || "free"] || profile?.plan, icon: BarChart3, color: planColor },
             ].map(({ label, value, icon: Icon, color }, i) => (
               <div key={label} className="stagger-in card-lift bg-white rounded-2xl border border-gray-200 p-4 sm:p-5" style={{ ["--i" as string]: i }}>
                 <div className="flex items-center justify-between mb-3">
