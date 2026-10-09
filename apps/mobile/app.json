@@ -55,7 +55,11 @@
           "image": "./assets/splash-blank.png",
           "imageWidth": 1,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/splash-blank.png",
+            "backgroundColor": "#ffffff"
+          }
         }
       ],
       [
