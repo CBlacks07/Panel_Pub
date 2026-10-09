@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { BUSINESS_TYPES } from "@/lib/businessTypes";
 import { useCart } from "@/hooks/useCart";
 import { optimizeImage } from "@/lib/image";
-import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, Loader, ChevronLeft, ChevronRight, Star, Package } from "lucide-react";
+import { Search, Ban, ShoppingCart, X, Trash2, MessageCircle, ChevronLeft, ChevronRight, Star, Package, MapPin } from "lucide-react";
+import { cleanPlace, stripEmoji } from "@/app/marketplace/_components/ShopCard";
 
 /** Identité « Design Pro » — bleu profond, fonds neutres, sans corail. */
 const BLUE_DARK = "#142B6B";
@@ -22,7 +23,7 @@ type Product = {
 type Shop = {
   shop_name: string; slogan: string | null; description: string | null;
   phone_whatsapp: string | null; shop_logo_url: string | null; shop_cover_url: string | null;
-  business_type: string | null; suspended?: boolean;
+  business_type: string | null; suspended?: boolean; city?: string | null;
   avg_rating?: number; rating_count?: number;
 };
 type Config = Record<string, string>;
@@ -31,7 +32,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   const { shopId } = use(params);
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filtered, setFiltered] = useState<Product[]>([]);
+  const [query, setQuery] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   useEffect(() => {
     Promise.all([
       supabase.from("app_config").select("key, value"),
-      supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, shop_cover_url, business_type, suspended").eq("id", shopId).single(),
+      supabase.from("users").select("shop_name, slogan, description, phone_whatsapp, shop_logo_url, shop_cover_url, business_type, suspended, city").eq("id", shopId).single(),
       supabase.from("products").select("id, title, price, compare_at_price, description, category, image_url, images, product_variations(type, value)").eq("user_id", shopId).order("created_at", { ascending: false }),
       supabase.from("shop_ratings").select("rating").eq("shop_id", shopId),
     ]).then(([{ data: cfg }, { data: shopData }, { data: productsData }, { data: ratingsData }]) => {
@@ -59,7 +60,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
         setShop({ ...shopData, avg_rating: avg, rating_count: ratingsData?.length ?? 0 });
       }
       if (productsData) {
-        setProducts(productsData); setFiltered(productsData);
+        setProducts(productsData);
         setCategories(["Tout", ...Array.from(new Set(productsData.map((p) => p.category)))]);
       }
       setLoading(false);
@@ -70,10 +71,11 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   const appName = config["app_name"] || "Boutiki";
   const biz = BUSINESS_TYPES.find((b) => b.id === shop?.business_type) || BUSINESS_TYPES[0];
 
-  const filterCategory = (cat: string) => {
-    setActiveCategory(cat);
-    setFiltered(cat === "Tout" ? products : products.filter((p) => p.category === cat));
-  };
+  const filterCategory = (cat: string) => setActiveCategory(cat);
+  const q = query.trim().toLowerCase();
+  const filtered = products.filter((p) =>
+    (activeCategory === "Tout" || p.category === activeCategory) && (!q || p.title.toLowerCase().includes(q)));
+  const place = cleanPlace(shop?.city ?? null);
 
   const addToCart = () => {
     if (!selected) return;
@@ -104,9 +106,16 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-      <Loader size={32} className="animate-spin" style={{ color: primary }} />
-      <p className="text-sm text-gray-400">Chargement de la boutique...</p>
+    <div className="min-h-screen" style={{ background: BG }} aria-busy="true" aria-label="Chargement de la boutique">
+      <div className="skeleton h-[190px] sm:h-[230px] rounded-none" />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-11">
+        <div className="skeleton w-24 h-24 sm:w-28 sm:h-28 rounded-[26px] -mt-12 sm:-mt-14" />
+        <div className="skeleton h-7 w-56 mt-4" />
+        <div className="skeleton h-4 w-80 max-w-full mt-3" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[22px] mt-8">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-[250px] sm:h-[290px] rounded-[18px]" />)}
+        </div>
+      </div>
     </div>
   );
   if (!shop) return (
@@ -171,7 +180,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
           {shop.slogan && <p className="text-sm italic text-slate-500 mt-0.5">&quot;{shop.slogan}&quot;</p>}
           <div className="flex flex-wrap gap-2 mt-2">
             <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: primary, border: `1px solid ${BORDER}` }}>
-              {biz.emoji} {biz.label}
+              {stripEmoji(biz.label)}
             </span>
             {shop.avg_rating !== undefined && shop.avg_rating > 0 && (
               <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-amber-500 flex items-center gap-1" style={{ border: `1px solid ${BORDER}` }}>
@@ -181,25 +190,57 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
             <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white text-slate-500" style={{ border: `1px solid ${BORDER}` }}>
               {products.length} {biz.ui.itemLabel}{products.length > 1 ? "s" : ""}
             </span>
+            {place && (
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white text-slate-500 flex items-center gap-1" style={{ border: `1px solid ${BORDER}` }}>
+                <MapPin size={11} /> {place}
+              </span>
+            )}
           </div>
           {shop.description && <p className="text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">{shop.description}</p>}
         </div>
+
+        {shop.phone_whatsapp && (
+          <a href={`https://wa.me/${shop.phone_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
+            className="press animate-fade-up delay-200 self-start sm:mt-4 inline-flex items-center gap-2 text-[13px] font-extrabold text-white px-4 py-2.5 rounded-xl flex-shrink-0"
+            style={{ background: WHATSAPP }}>
+            <MessageCircle size={15} /> Écrire sur WhatsApp
+          </a>
+        )}
       </div>
 
       <div className="max-w-[1400px] mx-auto px-5 sm:px-11 pt-6">
 
-        {/* Filtres catégories */}
-        {categories.length > 2 && (
-          <div className="flex gap-3 overflow-x-auto pb-1 mb-6 scrollbar-hide">
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => filterCategory(cat)}
-                className="flex-shrink-0 px-[18px] py-2.5 rounded-full text-[13px] transition whitespace-nowrap"
-                style={activeCategory === cat
-                  ? { background: primary, color: "#fff", fontWeight: 700 }
-                  : { background: "#fff", color: "#5B6472", fontWeight: 600, border: `1px solid ${BORDER}` }}>
-                {cat}
-              </button>
-            ))}
+        {/* Recherche + filtres catégories */}
+        {(categories.length > 2 || products.length > 6) && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+            {products.length > 6 && (
+              <div className="relative sm:order-2 sm:w-64 flex-shrink-0">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input type="text" inputMode="search" value={query} onChange={(e) => setQuery(e.target.value)}
+                  placeholder={`Chercher un ${biz.ui.itemLabel}`} aria-label="Chercher dans la boutique"
+                  className="w-full pl-9 pr-9 py-2.5 rounded-full bg-white text-[13px] outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: `1px solid ${BORDER}` }} />
+                {query && (
+                  <button onClick={() => setQuery("")} aria-label="Effacer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            )}
+            {categories.length > 2 && (
+              <div className="flex gap-3 overflow-x-auto pb-1 flex-1 min-w-0 scrollbar-hide">
+                {categories.map((cat) => (
+                  <button key={cat} onClick={() => filterCategory(cat)}
+                    className="press flex-shrink-0 px-[18px] py-2.5 rounded-full text-[13px] transition whitespace-nowrap"
+                    style={activeCategory === cat
+                      ? { background: primary, color: "#fff", fontWeight: 700 }
+                      : { background: "#fff", color: "#5B6472", fontWeight: 600, border: `1px solid ${BORDER}` }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -213,7 +254,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-2">{biz.emoji}</div>
-            <p className="text-slate-500">Aucun {biz.ui.itemLabel} dans cette catégorie</p>
+            <p className="text-slate-500">{q ? `Aucun résultat pour « ${query.trim()} »` : `Aucun ${biz.ui.itemLabel} dans cette catégorie`}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[22px]">
@@ -236,7 +277,7 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
                     )}
                   </div>
                   <div className="px-4 pt-3.5 pb-[18px]">
-                    <p className="text-sm font-bold text-slate-900 leading-snug truncate">{product.title}</p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem]">{product.title}</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap mt-1.5">
                       <span className="text-[17px] font-extrabold" style={{ color: primary }}>{product.price.toLocaleString("fr-FR")} F</span>
                       {hasPromo && (
@@ -250,6 +291,12 @@ export default function ShopPage({ params }: { params: Promise<{ shopId: string 
           </div>
         )}
       </div>
+
+      <footer className="max-w-[1400px] mx-auto px-5 sm:px-11 pt-12 pb-10 text-center text-xs text-slate-400">
+        Boutique propulsée par <Link href="/" className="font-bold hover:underline" style={{ color: primary }}>{appName}</Link>
+        {" · "}
+        <Link href="/marketplace" className="font-semibold hover:underline">Découvrir d&apos;autres boutiques</Link>
+      </footer>
 
       {/* ── BARRE PANIER COLLANTE (WhatsApp) ── */}
       {cart.length > 0 && (
